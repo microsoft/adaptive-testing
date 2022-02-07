@@ -1,0 +1,14 @@
+gadfly.egg-info
+__pycache__
+*.pyc
+.vscode
+node_modules
+.jekyll-cache
+.ipynb_checkpoints
+.sass-cache
+adatest.egg-info
+dist/gadfly-*
+local_scratch*
+wandb
+local_data
+notebooks/TDD/data
