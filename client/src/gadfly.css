@@ -1,0 +1,254 @@
+.gadfly-button-container {
+    display: block;
+    width: 100%;
+    padding: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-size: 13px;
+}
+.gadfly-button-children {
+    display: flex;
+    vertical-align: top;
+    width: 100%;
+}
+
+.gadfly-button-box {
+    padding: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    display: flex;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 3px;
+    border: 1px solid #dddddd;
+}
+
+.gadfly-explore-toggle {
+    float: right;
+    color: #666666;
+    margin-top: 4px;
+    margin-left: 4px;
+    width: 30px;
+}
+
+.gadfly-add-topic {
+    color: #bbbbbb;
+    margin-top: 4px;
+    margin-left: 7px;
+    margin-right: 7px;
+    cursor: pointer;
+}
+.gadfly-add-topic-wrapper {
+    margin-top: 4px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gadfly-button-label {
+    flex: 1;
+    display: inline-block;
+    text-align: center;
+    user-select: none;
+}
+
+.gadfly-topic-label {
+    width: 300px;
+    border: 0px;
+    border-bottom: 1px solid #999999;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    outline: 0px solid transparent;
+    background: transparent;
+}
+.gadfly-topic-label:focus {
+    outline: 0px solid transparent;
+}
+
+.gadfly-children-frame {
+    padding: 0px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 10px 10px 10px 10px;
+}
+
+.gadfly-row-child {
+    display: flex;
+    padding: 0px;
+    padding-left: 5px;
+    padding-right: 0px;
+    min-height: 30px;
+    text-align: left;
+    border-radius: 0px;/*10px 10px 10px 10px;*/
+    outline: none;
+}
+.gadfly-row-hidden {
+    text-decoration: line-through;
+}
+
+.gadfly-row-score-plot-box {
+    float: right;
+    height: 10px;
+    flex: 0 0 100px;
+    margin-right: 10px;
+    padding-top: 5px;
+}
+
+.gadfly-row-add-button {
+    margin-top: 8px;
+    flex: 0 0 15px;
+    display: inline-block;
+    margin-left: 20px;
+}
+
+[contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* [contenteditable]:focus {
+    outline-width: 0px;
+} */
+
+.gadfly-plain-select {
+    margin-left: 4px;
+    appearance: none;
+    border: none;
+    background: none;
+    -webkit-appearance: none;
+    font-size: 13px;
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    margin: 0px;
+}
+.gadfly-plain-select:focus {
+    outline: 0px solid transparent;
+}
+
+.gadfly-hover-opacity {
+    opacity: 0.1;
+}
+.gadfly-hover-opacity:hover {
+    opacity: 0.6;
+}
+
+.gadfly-scroll-wrap::-webkit-scrollbar {
+    display: none;
+}
+
+.gadfly-row-hide-button {
+    opacity: 0;
+    margin-top: 8px;
+    /* line-height: 30px; */
+    flex: 0 0 15px;
+    display: inline-block;
+    margin-left: 10px;
+}
+.gadfly-row-hide-button:hover {
+    opacity: 0.6
+}
+.gadfly-row-hide-hovering {
+    opacity: 0.1;
+}
+.gadfly-row-hide-hidden {
+    opacity: 0.6;
+}
+
+.gadfly-row-score-text-box {
+    float: right;
+    text-align: right;
+    flex: 0 0 50px;
+    line-height: 30px;
+    height: 30px;
+    color: #999999;
+    padding-right: 5px;
+    font-size: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.gadfly-main-table {
+    margin-left: "auto";
+    margin-right: "auto";
+    background: #ffffff;
+    width: 100%;
+}
+
+.gadfly-main-table tbody tr:nth-child(odd) {
+    background: #ffffff;
+}
+
+.gadfly-main-table tbody tr:hover {
+    background: #ffffff;
+}
+
+
+.gadfly-output-text:focus {
+    outline: 0px solid transparent;
+}
+
+.gadfly-row-selected {
+    background: #00000008;
+    border-left: 3px solid #00000099;
+    padding-left: 2px;
+}
+
+.gadfly-row {
+    display: flex;
+    margin-top: 3px;
+}
+.gadfly-row-input {
+    flex: 1;
+    text-align: right;
+}
+.gadfly-row-editing {
+    border-bottom: 0px dashed rgb(0, 130, 248);
+}
+.gadfly-row-editing:focus {
+    outline: 0px solid transparent;
+}
+.gadfly-row-drop-highlighted {
+    background: #dddddd;
+}
+.gadfly-row-hover-highlighted {
+    background: #f0f0f0;
+}
+.gadfly-row-dragging {
+    background: #dddddd;
+}
+
+
+.gadfly-crum-selected {
+    background: #dddddd;
+}
+
+.gadfly-editable:focus {
+    outline: 0px solid transparent;
+}
+
+.gadfly-suggestions-box {
+    position: relative;
+    border-radius: 10px 10px 10px 10px;
+    background: rgb(241, 243, 244);
+    text-align: center;
+    padding: 0px;
+    padding-top: 10px;
+    padding-bottom: 0px;
+}
+.gadfly-suggestions-box-after {
+    content: 'werwerwe';
+    width: 100%;
+    height: 22px;    
+    position: absolute;
+    bottom: 0px;
+    background: linear-gradient(rgba(241, 243, 244, 0) 0px, rgb(241, 243, 244, 1) 18px);
+    pointer-events: none;
+    border-radius: 0px 0px 10px 10px;
+  }
+.gadfly-drop-highlighted {
+    background: #dddddd;
+}
+
+.gadfly-hover-gray:hover {
+    background: #dddddd;
+}
