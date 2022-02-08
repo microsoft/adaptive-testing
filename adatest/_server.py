@@ -70,7 +70,6 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
     if isinstance(authenticate, dict):
         auth_dict = authenticate
         def check_pass(user, password):
-            print(auth_dict.get(user, object()), password)
             return auth_dict.get(user, object()) == password
         authenticate = check_pass
 
