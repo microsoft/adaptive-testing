@@ -1,14 +1,78 @@
-# Project
+# AdaTest
+Adaptively test and debug any natural language machine learning model. Using AdaTest is an iterative process that uses a *testing loop* to find and categorize bugs in a target model with the assistance of another large backend language model. Bugs that are found can then be fixed through an outer *debugging loop*.
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/microsoft/adatest/master/docs/artwork/main_loops.png" width="300" alt="AdaTest loops" />
+</p>
 
-As the maintainer of this project, please make a few updates:
+## Install
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+```
+> pip install adatest
+```
+
+## Sentiment analysis example
+
+How to test a simple two-way sentiment analysis model using AdaTest running in a Jupyter notebook (full notebook [here](here)).
+
+```python
+import adatest
+import transformers
+import shap
+
+# create a HuggingFace sentiment analysis model
+classifier = transformers.pipeline("sentiment-analysis")
+tensor_output_model = shap.models.TransformersPipeline(classifier)
+
+# set AdaTest's language model backend (HuggingFace and AI21 also supported)
+adatest.backend = adatest.backends.OpenAI('davinci', api_key=OPENAI_API_KEY)
+
+# load a starting tree of tests targeted at sentiment analysis
+tests = adatest.TestTree("test_trees/sentiment_analysis/basic_two_way.csv", auto_save=True)
+
+# apply the tests to our model and launch an interactive testing loop
+# (wrap with `adatest.serve` to instead launch a separate web server)
+tests(tensor_output_model)
+```
+
+**Image showing the root and scores for the basic two way sentiment tree.**
+
+Once we have opened a test tree browser, we can navigate to specific topics of interest and then add new tests specifically targeted at our current model. Clicking 'Suggest tests` in a topic proposes a large number of new tests targeted at the current model that we can add to the test tree if we like.
+
+**Image showing many suggetions in a topic where the current model does not fail.**
+
+After multiple rounds of test suggestions AdaTest learns to find failures of the target model within the current topic.
+
+**Image showing lots of now-failing tests.**
+
+Once we have created enough new tests we can organize them into new topics or switch to another topic and continue the testing process. After we have found enough failed tests in the `testing loop`, we can then fine tune the model on the tests to fix the errors we have found. To prevent catastrohpic forgetting we fine tune on a 50/50 mix of tests and sample from the original fine-tuning dataset of the model.
+
+```python
+# create a new sentiment model that fixes the problems we found
+# note that the `fine_tune` method is defined the full sample notebook
+tensor_output_model2 = fine_tune(tensor_output_model, tests)
+
+# apply the tests to the new model
+tests(tensor_output_model2)
+```
+
+**Image showing the root and scores for the new model in the basic two way sentiment tree.**
+
+Note that almost all tests now pass in the new model, but that does not mean the model is perfect! Since we have used our tests as training data we need to create new tests to properly evaluate our model and make sure we have not missed problems or created new problems.
+
+**Image showing the root and scores for the new model in the basic two way sentiment tree with more errors after suggestions.**
+
+After letting AdaTest suggest new tests in all the topics we find that there are still remaining errors in the model. So we can repeat the fine tuning process to fix these new issues. This will again result in a passing set of tests. The debugging process can be repeated as long as desired, iteratively fixing bugs and so improving the target model performance for the capabilities measured in the test tree.
+
+
+## Translation example
+
+AdaTest can test any machine learning model that takes text as input, even models only accessable through an API. Here we demonstrate how to test the Azure Translation API using AdaTest.
+
+
+
+
+
 
 ## Contributing
 
