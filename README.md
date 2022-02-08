@@ -1,5 +1,5 @@
 # AdaTest
-AdaTest uses an iterative process to find and categorize bugs in a target model with the assistance of another large backend language model. These bugs can then be fixed, leading to an iterative debugging process similar to traditional software develeopment.
+AdaTest uses an iterative process to find and categorize bugs in a target model with the assistance of another large backend model. These bugs can then be fixed, leading to an iterative debugging process similar to traditional software develeopment.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/microsoft/adatest/master/docs/artwork/main_loops.png" width="300" alt="AdaTest loops" />
@@ -45,11 +45,11 @@ After multiple rounds of test suggestions AdaTest learns to find failures of the
 
 **Image showing lots of now-failing tests.**
 
-Once we have created enough new tests we can organize them into new topics or switch to another topic and continue the testing process. After we have found enough failed tests in the `testing loop`, we can then fine tune the model on the tests to fix the errors we have found. To prevent catastrohpic forgetting we fine tune on a 50/50 mix of tests and sample from the original fine-tuning dataset of the model.
+Once we have created enough new tests we can organize them into new topics or switch to another topic and continue the testing process. After we have found enough failed tests in the `testing loop`, we can then fine tune the model on the tests to fix the errors we have found. To prevent catastrophic forgetting we fine tune on a 50/50 mix of tests and sample from the original fine-tuning dataset of the model.
 
 ```python
 # create a new sentiment model that fixes the problems we found
-# note that the `fine_tune` method is defined the full sample notebook
+# (see the full sample notebook for the definition of the `fine_tune` method)
 tensor_output_model2 = fine_tune(tensor_output_model, tests)
 
 # apply the tests to the new model
