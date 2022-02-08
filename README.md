@@ -1,5 +1,5 @@
 # AdaTest
-Adaptively test and debug any natural language machine learning model. Using AdaTest is an iterative process that uses a *testing loop* to find and categorize bugs in a target model with the assistance of another large backend language model. Bugs that are found can then be fixed through an outer *debugging loop*.
+AdaTest uses an iterative process to find and categorize bugs in a target model with the assistance of another large backend language model. These bugs can then be fixed, leading to an iterative debugging process similar to traditional software develeopment.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/microsoft/adatest/master/docs/artwork/main_loops.png" width="300" alt="AdaTest loops" />
