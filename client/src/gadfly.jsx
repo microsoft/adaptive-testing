@@ -1649,9 +1649,9 @@ class IOPairChart extends React.Component {
               </div>
             }
             {!this.state.disable_suggestions && 
-              <div onClick={this.refreshSuggestions} style={{cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{opacity: "0.6", width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-                <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
+              <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length > 0 ? "0.6" : "0.2", cursor: this.state.tests.length > 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
                 {/* {!this.props.checklistMode && <select dir="rtl" title="Current suggestion engine" className="gadfly-plain-select" onClick={e => e.stopPropagation()} value={this.state.engine} onChange={this.changeEngine} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
                   <option value="davinci-msft">Creative</option>
                   <option value="davinci-instruct-beta">Creative Backup</option>
@@ -1660,8 +1660,13 @@ class IOPairChart extends React.Component {
               </div>
             }
             {this.state.suggestions_error && 
-              <div style={{cursor: "pointer", color: "#990000", display: "inline-block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px"}}>
-                The suggestion server had an error, and no suggestions were returned!
+              <div style={{cursor: "pointer", color: "#990000", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
+                The suggestion server had an error and no suggestions were returned, you might try again.
+              </div>
+            }
+            {this.state.loading_suggestions && this.state.tests.length < 5 &&
+              <div style={{cursor: "pointer", color: "#995500", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
+                Warning: Auto-suggestions may perform poorly with less than five tests in the current topic!
               </div>
             }
           </div>
@@ -2017,7 +2022,7 @@ class IOPairChart extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
-    if (this.state.loading_suggestions) return;
+    if (this.state.loading_suggestions || this.state.tests.length === 0) return;
     for (let k in Object.keys(this.state.selections)) {
       if (this.state.suggestions.includes(k)) {
         delete this.state.selections[k];
