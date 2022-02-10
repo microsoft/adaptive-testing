@@ -300,7 +300,7 @@ class TestTreeBrowser():
                     outputs = []
                     comparators = []
                     for k, test in self.test_tree.iterrows():
-                        if is_subtopic(self.current_topic, test.topic):
+                        if is_subtopic(self.current_topic, test.topic) and test.comparator != "topic_placeholder":
                             outputs.append(test.value2)
                             comparators.append(test.comparator)
                     outputs = set(outputs)
@@ -558,7 +558,8 @@ class TestTreeBrowser():
 
         # sort by score and always put new topics first
         sorted_children = sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]]))
-        sorted_children = sorted(sorted_children, key=lambda id: 0 if id.startswith("/New topic") or data[id]["value1"] == "New test" else 1)
+        log.debug("sorted_children", sorted_children)
+        sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id]["value1"] == "New test" else 1)
 
         # log.debug("AUTOFILTER %f" % autofilter)
         # log.debug("in _update_interface2", self.current_topic)
@@ -724,7 +725,7 @@ class TestTreeBrowser():
         # hacky way to get the prefix for the current topic
         prefix = "The model output for"
         for k, test in self.test_tree.iterrows():
-            if is_subtopic(topic, test["topic"]):
+            if is_subtopic(topic, test["topic"]) and test["comparator"] != "topic_placeholder":
                 prefix = test["prefix"]
                 break
 
@@ -841,7 +842,9 @@ class TestTreeBrowser():
         # topic_scaling_orig = np.array([1.0 if self.test_tree.loc[k, "topic"].startswith(topic) else 0 for k in ids])
         topic_scaling_orig = []
         for k in ids:
-            if is_subtopic(topic, self.test_tree.loc[k, "topic"]):
+            if self.test_tree.loc[k, "comparator"] == "topic_placeholder":
+                topic_scaling_orig.append(0.0)
+            elif is_subtopic(topic, self.test_tree.loc[k, "topic"]):
                 if topic == self.test_tree.loc[k, "topic"]:
                     topic_scaling_orig.append(1.0) # direct children get first priority
                 else:
