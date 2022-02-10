@@ -289,7 +289,44 @@ class TestTreeBrowser():
                     self._update_interface()
                 elif msg[k]["action"] == "add_new_topic":
                     log.debug("add_new_topic")
-                    self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                    new_id = uuid.uuid4().hex
+                    self.test_tree.loc[new_id, "topic"] = self.current_topic + "/New topic"
+                    self.test_tree.loc[new_id, "comparator"] = "topic_placeholder"
+                    self._update_interface()
+                elif msg[k]["action"] == "add_new_test":
+                    log.debug("add_new_test")
+                    
+                    # find the outputs in this subtopic
+                    outputs = []
+                    comparators = []
+                    for k, test in self.test_tree.iterrows():
+                        if is_subtopic(self.current_topic, test.topic):
+                            outputs.append(test.value2)
+                            comparators.append(test.comparator)
+                    outputs = set(outputs)
+                    common_output = outputs.pop() if len(outputs) == 1 else ""
+                    try:
+                        common_comparator = statistics.mode(comparators) if len(comparators) > 0 else "should not be"
+                    except:
+                        common_comparator = "should not be"
+
+                    # if not we append one
+                    row = {
+                        "topic": self.current_topic, # will get replaced with imputed version
+                        "prefix": self.test_tree.iloc[0].prefix if len(self.test_tree) > 0 else "The model output for",
+                        "value1": "New test",
+                        "comparator": common_comparator,
+                        "value2": common_output,
+                        "labeler": self.user
+                    }
+                    for c in self.score_columns:
+                        row[c] = np.nan
+                        row[c + " value1 outputs"] = "{}"
+                        row[c + " value2 outputs"] = "{}"
+                    new_id = uuid.uuid4().hex
+                    for k in row:
+                        self.test_tree.loc[new_id, k] = row[k]
+
                     self._update_interface()
                 elif msg[k]["action"] == "set_first_model":
                     log.debug("set_first_model")
@@ -382,7 +419,7 @@ class TestTreeBrowser():
         #     raise e
 
     def _ensure_add_item_row(self, suggestions):
-
+        return suggestions
         # find the outputs in this subtopic
         outputs = []
         comparators = []
@@ -481,8 +518,11 @@ class TestTreeBrowser():
                 "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
                 "topic_name": None,
                 "is_topic": False,
-                "hidden": self._hidden_topics.get(k, False)
+                "hidden": self._hidden_topics.get(k, False),
+                "editing": test.value1 == "New test"
             }
+            if test.value1 == "New test":
+                data[k]["editing"] = True
 
             if is_subtopic(self.current_topic, test.topic):
                 if test.topic != self.current_topic:
@@ -507,7 +547,7 @@ class TestTreeBrowser():
                     else:
                         for c in self.score_columns:
                             data[key]["scores"][c].extend([[k, v] for v in score_parts(test[c])])
-                else:
+                elif test.comparator != "topic_placeholder":
                     children.append(k)
         # TODO: This is a complete hack
         children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children])
@@ -516,12 +556,15 @@ class TestTreeBrowser():
         else:
             autofilter = min(children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2, 0)
 
+        # sort by score and always put new topics first
+        sorted_children = sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]]))
+        sorted_children = sorted(sorted_children, key=lambda id: 0 if id.startswith("/New topic") or data[id]["value1"] == "New test" else 1)
 
         # log.debug("AUTOFILTER %f" % autofilter)
         # log.debug("in _update_interface2", self.current_topic)
         data["test_chart"] = {
             "suggestions": sorted(list(self.suggestions.index), key=lambda id: -score_max(self.suggestions.loc[id, self.score_columns[0]])),
-            "tests": sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]])),
+            "tests": sorted_children,
             "topic": self.current_topic,
             "score_filter": autofilter if self.score_filter == "auto" else self.score_filter,
             "disable_suggestions": False if self.experiment is None else self.experiment.get("disable_suggestions", False),
@@ -1308,7 +1351,7 @@ class TestTree():
                  complete_diversity=False, prompt_diversity=True, use_focus=False, focus_decay=0.8, slot_randomization=0.25,
                  score_randomization=1.0, skip_randomization=0.25, temperature=0.95, subtopic_diversity=True, score_filter="auto",
                  experiment=None, embedding_model=None, user="anonymous", prompt_seperator=">", recompute_scores=False,
-                 drop_inactive_scores=True, backend=None, topic_model_scale=0, generate_outputs=True):
+                 drop_inactive_scores=False, backend=None, topic_model_scale=0, generate_outputs=True):
         """ Explores the space of input/output pairs in search of problematic examples with high scores.
 
         scorer : What scorer(s) to use for exploration (if no scorer is given then we are assumed to be in read-only mode).

@@ -68,9 +68,10 @@
 
 .gadfly-children-frame {
     padding: 0px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    border-radius: 10px 10px 10px 10px;
+    margin-top: 10px;
+    /* padding-bottom: 10px; */
+    border-radius: 7px 7px 7px 7px;
+    border: 1px solid rgb(216, 222, 228);
 }
 
 .gadfly-row-child {
@@ -82,6 +83,8 @@
     text-align: left;
     border-radius: 0px;/*10px 10px 10px 10px;*/
     outline: none;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 .gadfly-row-hidden {
     text-decoration: line-through;
@@ -97,9 +100,16 @@
 
 .gadfly-row-add-button {
     margin-top: 8px;
-    flex: 0 0 15px;
+    flex: 0 0 20px;
     display: inline-block;
-    margin-left: 20px;
+    margin-left: 10px;
+}
+
+.gadfly-top-add-button {
+    margin-top: 8px;
+    flex: 0 0 20px;
+    display: inline-block;
+    margin-left: 10px;
 }
 
 [contenteditable] {
@@ -189,8 +199,8 @@
 
 .gadfly-row-selected {
     background: #00000008;
-    border-left: 3px solid #00000099;
-    padding-left: 2px;
+    /* border-left: 3px solid #00000099; */
+    /* padding-left: 2px; */
 }
 
 .gadfly-row {
@@ -228,12 +238,14 @@
 
 .gadfly-suggestions-box {
     position: relative;
-    border-radius: 10px 10px 10px 10px;
-    background: rgb(241, 243, 244);
+    border-radius: 7px 7px 7px 7px;
+    background: rgb(246, 248, 250);
     text-align: center;
     padding: 0px;
     padding-top: 10px;
+    margin-top: 10px;
     padding-bottom: 0px;
+    border: 1px solid rgb(216, 222, 228);
 }
 .gadfly-suggestions-box-after {
     content: 'werwerwe';
@@ -241,9 +253,9 @@
     height: 22px;    
     position: absolute;
     bottom: 0px;
-    background: linear-gradient(rgba(241, 243, 244, 0) 0px, rgb(241, 243, 244, 1) 18px);
+    background: linear-gradient(rgba(246, 248, 250, 0) 0px, rgb(246, 248, 250, 1) 18px);
     pointer-events: none;
-    border-radius: 0px 0px 10px 10px;
+    border-radius: 0px 0px 7px 7px;
   }
 .gadfly-drop-highlighted {
     background: #dddddd;

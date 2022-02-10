@@ -17,7 +17,7 @@ import ReactDom from 'react-dom';
 import autoBind from 'auto-bind';
 import sanitizeHtml from 'sanitize-html';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faLongArrowAltRight, faArrowRight, faFolderPlus, faEyeSlash, faTimes, faEdit, faChevronDown, faChevronUp, faAngleRight, faRedo } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faFolderPlus, faCheck, faTimes, faFolder, faChevronDown, faRedo, faSearch, faFilter } from '@fortawesome/free-solid-svg-icons'
 import JupyterComm from './jupyter-comm'
 //import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 //import { makeStyles } from '@material-ui/core/styles';
@@ -438,7 +438,7 @@ class ContentEditable extends React.Component {
         if (mount) this.divRef.innerText = this.props.defaultText;
       }
     }
-    if (this.props.text && this.props.text.startsWith("New Folder") && this.props.editable) { // hacky but works for now
+    if (this.props.text && (this.props.text.startsWith("New topic") || this.props.text === "New test") && this.props.editable) { // hacky but works for now
       // console.log("HACK!", this.props.text)
       this.divRef.focus();
       selectElement(this.divRef);
@@ -581,9 +581,9 @@ class Row extends React.Component {
       }
       this.dataLoadActions = [];
     }
-
+    console.log("state.topic_name", state.topic_name)
     // we automatically start editing topics that are selected and have an imputed name
-    if (state.topic_name && state.topic_name.startsWith("New Folder") && this.props.soleSelected) {
+    if (state.topic_name && (state.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
       state["editing"] = true;
       console.log("setting editing state to true!")
     }
@@ -651,7 +651,7 @@ class Row extends React.Component {
       }
       if (this.props.value2Filter && this.state.value1 !== "") {
         const re = RegExp(this.props.value2Filter);
-        if (!re.test(this.state.value2)) return null;
+        if (!re.test(this.state.value2) && !re.test(this.state.value1) && !re.test(this.state.comparator)) return null;
       }
       let value1_outputs_strs = [];
       let found_values = false;
@@ -703,8 +703,8 @@ class Row extends React.Component {
       }
 
 
-    } else if (this.props.topicFilter) {
-      const re = RegExp(this.props.topicFilter);
+    } else if (this.props.value2Filter) {
+      const re = RegExp(this.props.value2Filter); // TODO: rename value2Filter to reflect it's global nature
       if (!re.test(this.state.topic_name)) return null;
     }
 
@@ -755,14 +755,12 @@ class Row extends React.Component {
       return null;
     }
 
-    
-
     // console.log("about to return code from Row render...", this.state, this.state.scores, overall_score, this.props.scoreColumns)
 
     return <div className={outerClasses} draggable onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut} onMouseDown={this.onMouseDown}
                 onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} onDragOver={this.onDragOver}
                 onDragEnter={this.onDragEnter} onDragLeave={this.onDragLeave} onDrop={this.onDrop} ref={(el) => this.divRef = el}
-                style={this.props.hideBorder ? {} : {borderTop: "1px solid rgba(0, 0, 0, 0.03)"}} tabindex="0" onKeyDown={this.keyDownHandler}>
+                style={this.props.hideBorder ? {} : {borderTop: "1px solid rgb(216, 222, 228)"}} tabindex="0" onKeyDown={this.keyDownHandler}>
       <ContextMenu top={this.state.contextTop} left={this.state.contextLeft} open={this.state.contextOpen}
                    onClose={this.closeContextMenu} rows={this.state.contextRows} onClick={this.handleContextMenuClick} />
       {/* {!this.props.isSuggestion && !this.props.hideButtons &&
@@ -772,19 +770,19 @@ class Row extends React.Component {
           }
         </div>
       } */}
-      {!this.props.isSuggestion && !this.props.hideButtons &&
+      {/* {!this.props.isSuggestion && !this.props.hideButtons &&
         <div onClick={this.addNewTopic} className={addTopicClasses} style={{marginLeft: "-25px", marginRight: "5px", cursor: "pointer"}}>
           <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Create new sub-topic" />
         </div>
-      }
+      } */}
       {/* {!this.props.isSuggestion &&
         <div onClick={this.toggleHideTopic} className={hideClasses} style={{marginLeft: "0px", marginRight: "0px", cursor: "pointer"}}>
           <FontAwesomeIcon icon={faEyeSlash} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
         </div>
       } */}
       {this.state.topic_name !== null &&
-        <div onClick={this.onOpen} class="gadfly-row-add-button" style={{marginLeft: "3px", lineHeight: "14px", opacity: "0.6", cursor: "pointer", paddingLeft: "4px", paddingRight: "0px", display: "inline-block"}}>
-          <FontAwesomeIcon icon={faAngleRight} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
+        <div onClick={this.onOpen} class="gadfly-row-add-button" style={{marginLeft: "6px", lineHeight: "14px", opacity: "1", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
+          <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", color: "rgb(84, 174, 255)", display: "inline-block"}} />
         </div>
       }
       {this.props.isSuggestion &&
@@ -794,7 +792,7 @@ class Row extends React.Component {
       }
       <div style={{padding: "5px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
         {this.state.topic_name !== null ? [
-          <div style={{display: "flex", marginTop: "3px"}}> 
+          <div style={{display: "flex", marginTop: "3px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "gadfly-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
               <ContentEditable onClick={this.clickTopicName} ref={el => this.topicNameEditable = el} text={this.state.topic_name} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
             </div>
@@ -876,7 +874,15 @@ class Row extends React.Component {
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
-        // console.log("in", k)
+        if (Number.isFinite(overall_score[k]) && this.props.updateTotals) {
+          this.props.updateTotals(
+            this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0),
+            this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)
+          );
+        }
+        
+        // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
+        // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         return <div className="gadfly-row-score-plot-box">
           {overall_score[k] > 0 ?
             <svg height="20" width="100">
@@ -888,17 +894,17 @@ class Row extends React.Component {
                               onMouseOut={e => this.onScoreOut(e, score[0])}
                               x1={50 + 48*scale_score(score[1])} y1="0"
                               x2={50 + 48*scale_score(score[1])} y2="20"
-                              style={{stroke: red_blue_color(score[1] <= 0 ? score_min : score_max, score_min, score_max), strokeWidth: "2"}}
+                              style={{stroke: score[1] <= 0 ? "rgb(26, 127, 55)" : "rgb(207, 34, 46)", strokeWidth: "2"}}
                         ></line>
                 }),
                 <line x1={50} y1="0"
                       x2={50} y2="20" stroke-dasharray="2"
                       style={{stroke: "#bbbbbb", strokeWidth: "1"}}
                 ></line>,
-                this.state.topic_name !== null && <text x="25" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(0, 199, 100, 1)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{Math.round(100*this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)/this.state.scores[k].length)}%</text>,
-                this.state.topic_name !== null && <text x="75" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(255, 44, 7, 1)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{Math.round(100*this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)/this.state.scores[k].length)}%</text>,
-                this.state.topic_name === null && <text x="75" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(255, 44, 7, 1)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>,
-                this.state.topic_name === 3324 && !isNaN(overall_score[k]) && <text x={(48*scale_score(overall_score[k]) > 3000 ? 50 + 5 : 50 + 48*scale_score(overall_score[k]) + 5)} y="11" dominant-baseline="middle" text-anchor="start" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(255, 44, 7, 1)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
+                this.state.topic_name !== null && <text x="25" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>,
+                this.state.topic_name !== null && <text x="75" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)}</text>,
+                this.state.topic_name === null && <text x="75" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>,
+                this.state.topic_name === 3324 && !isNaN(overall_score[k]) && <text x={(48*scale_score(overall_score[k]) > 3000 ? 50 + 5 : 50 + 48*scale_score(overall_score[k]) + 5)} y="11" dominant-baseline="middle" text-anchor="start" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(207, 34, 46)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
               ]}
             </svg>
           :
@@ -910,17 +916,17 @@ class Row extends React.Component {
                               onMouseOut={e => this.onScoreOut(e, score[0])}
                               x1={50 + 48*scale_score(score[1])} y1="0"
                               x2={50 + 48*scale_score(score[1])} y2="20"
-                              style={{stroke: red_blue_color(score[1] <= 0 ? score_min : score_max, score_min, score_max), strokeWidth: "2"}}
+                              style={{stroke: score[1] <= 0 ? "rgb(26, 127, 55)" : "rgb(207, 34, 46)", strokeWidth: "2"}}
                         ></line>
                 }),
                 <line x1={50} y1="0"
                       x2={50} y2="20" stroke-dasharray="2"
                       style={{stroke: "#bbbbbb", strokeWidth: "1"}}
                 ></line>,
-                this.state.topic_name !== null && <text x="25" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(0, 199, 100, 1)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>100%</text>,
-                this.state.topic_name !== null && <text x="75" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(255, 44, 7, 1)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>0%</text>,
-                this.state.topic_name === null && <text x="25" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(0, 199, 100, 1)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>,
-                this.state.topic_name === 2342 && !isNaN(overall_score[k]) && <text x={(48*scale_score(overall_score[k]) < -3000 ? 50 - 5 : 50 + 48*scale_score(overall_score[k]) - 5)} y="11" dominant-baseline="middle" text-anchor="end" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(0, 199, 100, 1)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
+                this.state.topic_name !== null && <text x="25" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>100%</text>,
+                this.state.topic_name !== null && <text x="75" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>0%</text>,
+                this.state.topic_name === null && <text x="25" y="11" dominant-baseline="middle" text-anchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>,
+                this.state.topic_name === 2342 && !isNaN(overall_score[k]) && <text x={(48*scale_score(overall_score[k]) < -3000 ? 50 - 5 : 50 + 48*scale_score(overall_score[k]) - 5)} y="11" dominant-baseline="middle" text-anchor="end" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(26, 127, 55)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
               ]}
             </svg>
           }
@@ -1019,7 +1025,7 @@ class Row extends React.Component {
     this.props.comm.send(this.props.id, {"hidden": !this.state.hidden});
   }
 
-  addNewTopic(e) {
+  /* addNewTopic(e) {
     e.preventDefault();
     e.stopPropagation();
     const newName = this.props.generateTopicName();
@@ -1030,7 +1036,7 @@ class Row extends React.Component {
       this.props.comm.send(this.props.id, {"topic": newTopic + "/" + this.state.topic_name});
     }
     this.props.setSelected(newTopic);
-  }
+  } */
 
   onMouseOver(e) {
     //console.log("onMouseOver")
@@ -1298,14 +1304,41 @@ class BreadCrum extends React.Component {
   }
 }
 
+class TotalValue extends React.Component {
+  constructor(props) {
+    super(props);
+    autoBind(this);
+
+    // our starting state 
+    this.state = {
+      // note that all the ids will also be properties of the state
+    };
+  }
+
+  setSubtotal(id, subtotal) {
+    let update = {};
+    update[id] = subtotal;
+    this.setState(update);
+  }
+
+  render() {
+    // we just sum up the current active subtotals
+    let total = 0;
+    for (let i in this.props.activeIds) {
+      total += get(this.state, this.props.activeIds[i], 0);
+    }
+    
+    return <span>
+      {total}
+    </span>
+  }
+}
+
 
 class IOPairChart extends React.Component {
   constructor(props) {
     super(props);
     autoBind(this);
-
-    // let { id } = useParams();
-    // console.log("url id", id)
 
     // our starting state 
     this.state = {
@@ -1412,7 +1445,12 @@ class IOPairChart extends React.Component {
     // console.log("location.pathname", location.pathname);
 
     let topicPath = "";
-    console.log("tests.render4", this.state.tests, stripSlash(this.stripPrefix(this.props.location.pathname)), this.state.topic);
+    // console.log("tests.render4", this.state.tests, stripSlash(this.stripPrefix(this.props.location.pathname)), this.state.topic);
+
+    let breadCrumbParts = stripSlash(this.stripPrefix(this.state.topic)).split("/");
+
+    let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
+    let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
     return (<div onKeyDown={this.keyDownHandler} tabindex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
       {this.state.timerExpired && <div style={{fontSize: "20px", paddingTop: "100px", color: "#ffffff", background: "#880000", position: "absolute", top: "0px", left: "0px", width: "100%", height: "100%", zIndex: "1000", opacity: 0.9, textAlign: "center", verticalAlign: "middle"}}>
@@ -1439,12 +1477,29 @@ class IOPairChart extends React.Component {
           <span>Fill-ins</span>
         </div>
       </div>}
+
+      <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+        {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
+      </div>
+      <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+        {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
+      </div>
+      <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+        <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
+          <ContentEditable defaultText="filter tests" text={this.state.value2Filter} onInput={this.inputValue2Filter} />
+        </span>
+      </div>
+      
+
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
-        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", borderBottom: "1px solid #aaaaaa"}}>
+        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "5px"}}>
           {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
-              <div style={{float: "right", width: "52px", color: red_blue_100[99], textAlign: "left", boxSizing: "border-box", paddingLeft: "3px"}}>
+              {/* <div style={{float: "right", width: "52px", color: red_blue_100[99], textAlign: "left", boxSizing: "border-box", paddingLeft: "3px"}}>
                 Fail
               </div>
               <div style={{float: "right", width: "5px", height: "20px", color: red_blue_100[99], textAlign: "center"}}>
@@ -1457,7 +1512,7 @@ class IOPairChart extends React.Component {
               </div>
               <div style={{float: "right", width: "48px", color: red_blue_100[0], textAlign: "right", paddingRight: "4px"}}>
                 Pass
-              </div>
+              </div> */}
             </div>
           })}
           {/* <div style={{float: "right", width: "205px", color: "#999999", textAlign: "left"}}>
@@ -1469,22 +1524,24 @@ class IOPairChart extends React.Component {
           <div style={{float: "right", color: "#999999", textAlign: "right"}}>
             Input
           </div> */}
-          {stripSlash(this.stripPrefix(this.state.topic)).split("/").map((name, index) => {
+          <span style={{fontSize: "16px"}}>
+          {breadCrumbParts.map((name, index) => {
             //console.log("bread crum", name, index);
-            const out = <span>
-              {index > 0 && <span> / </span>}
+            const out = <span style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
+              {index > 0 && <span style={{color: "black"}}> / </span>}
               <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
             </span>
             if (index !== 0) topicPath += "/";
             topicPath += name;
             return index === 0 && this.props.checklistMode ? undefined : out;
           })}
+          </span>
           <div style={{clear: "both"}}></div>
           <div></div>
         </div>
+        <div clear="all"></div>
 
-
-        <div style={{marginTop: "5px", opacity: 0.6}}>
+        {/* <div style={{marginTop: "5px", opacity: 0.6}}>
           <div className="gadfly-row-child">
             <div style={{paddingRight: "5px", flex: 1}}>  
               <div className="gadfly-row">
@@ -1514,7 +1571,7 @@ class IOPairChart extends React.Component {
               </svg>
             </div>
           </div>
-        </div>
+        </div> */}
         
         {/* {this.props.checklistMode && <div style={{boxSizing: "border-box", borderBottom: "0px solid #999999", height: "30px", borderRadius: "10px 10px 10px 10px", width: "600px", marginRight: "auto", marginLeft: "auto", marginBottom: "12px", background: "#f5f5f5", padding: "8px"}}>
           <ContentEditable defaultText="template string" text={this.state.suggestionsTemplate} onInput={this.inputSuggestionsTemplate} />
@@ -1587,19 +1644,19 @@ class IOPairChart extends React.Component {
           <div className="gadfly-suggestions-box-after"></div>
           <div style={{position: "absolute", top: "10px", width: "100%"}}>
             {this.state.suggestions.length > 1 &&
-              <div onClick={this.clearSuggestions} className="gadfly-row-add-button gadfly-hover-opacity" style={{marginTop: "0px", left: "-2px", top: "4px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
+              <div onClick={this.clearSuggestions} className="gadfly-row-add-button gadfly-hover-opacity" style={{marginTop: "0px", left: "6px", top: "4px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
                 <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
             }
             {!this.state.disable_suggestions && 
               <div onClick={this.refreshSuggestions} style={{cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{opacity: "0.6", width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-                <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest tests</span>
-                {!this.props.checklistMode && <select dir="rtl" title="Current suggestion engine" className="gadfly-plain-select" onClick={e => e.stopPropagation()} value={this.state.engine} onChange={this.changeEngine} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
+                <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
+                {/* {!this.props.checklistMode && <select dir="rtl" title="Current suggestion engine" className="gadfly-plain-select" onClick={e => e.stopPropagation()} value={this.state.engine} onChange={this.changeEngine} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
                   <option value="davinci-msft">Creative</option>
                   <option value="davinci-instruct-beta">Creative Backup</option>
                   <option value="curie-msft">Fast</option>
-                </select>}
+                </select>} */}
               </div>
             }
             {this.state.suggestions_error && 
@@ -1609,14 +1666,27 @@ class IOPairChart extends React.Component {
             }
           </div>
         </div>}
+
+        {/* <div style={{textAlign: "left"}}>
+          <div onClick={this.onOpen} class="gadfly-top-add-button" style={{marginLeft: "12px", lineHeight: "14px", opacity: "0.2", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
+            <FontAwesomeIcon icon={faPlus} style={{fontSize: "14px", color: "rgb(10, 10, 10)", display: "inline-block"}} />
+          </div>
+          <div onClick={this.onOpen} class="gadfly-top-add-button" style={{marginLeft: "10px", lineHeight: "14px", opacity: "0.2", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
+            <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "rgb(10, 10, 10)", display: "inline-block"}} />
+          </div>
+        </div> */}
         
         <div className="gadfly-children-frame">
+          {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
+            This topic is empty. Click the plus (+) button to add a test.
+          </div>}
           {this.state.tests.map((id, index) => {
             return <div key={id}>
               <Row
                 id={id}
                 ref={(el) => this.rows[id] = el}
                 topic={this.state.topic}
+                hideBorder={index == 0}
                 topicFilter={this.state.topicFilter}
                 value1Filter={this.state.value1Filter}
                 comparatorFilter={this.state.comparatorFilter}
@@ -1627,6 +1697,10 @@ class IOPairChart extends React.Component {
                 onOpen={this.setLocation}
                 onSelectToggle={this.toggleSelection}
                 onDrop={this.onDrop}
+                updateTotals={(passes, failures) => {
+                  this.totalPassesObj.setSubtotal(id, passes);
+                  this.totalFailuresObj.setSubtotal(id, failures);
+                }}
                 comm={this.comm}
                 selectWidth={maxSelectWidth}
                 forceRelayout={this.debouncedForceUpdate}
@@ -1648,6 +1722,18 @@ class IOPairChart extends React.Component {
       {/* <div style={{borderRadius: "8px", background: "#77f", padding: "20px", position: "relative", zIndex: 1000}}>
           This is test documentation.
       </div> */}
+
+        <div style={{textAlign: "right"}}>
+          <div onClick={this.onOpen} class="gadfly-top-add-button" style={{marginRight: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
+            <FontAwesomeIcon icon={faCheck} style={{fontSize: "14px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
+            <span style={{lineHeight: "20px"}}>{totalPasses}</span>
+            {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
+          </div>
+          <div onClick={this.onOpen} class="gadfly-top-add-button" style={{marginRight: "12px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
+            <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
+            <span style={{lineHeight: "20px"}}>{totalFailures}</span>
+          </div>
+        </div>
     </div>);
   }
 
@@ -1745,9 +1831,18 @@ class IOPairChart extends React.Component {
       data["loading_suggestions"] = false;
     }
 
+    console.log("data", data);
+
+    // always select new topics for renaming when they exist
+    for (let i in data.tests) {
+      if (data.tests[i].startsWith("/New topic")) {
+        data.selections = {};
+        data.selections[data.tests[i]] = true;
+        break;
+      }
+    }
+
     // select the first suggestion if we have several and there is no current selection
-    // console.log("ASDFAS data", data)
-    // console.log("newDataxx", Object.keys(this.state.selections).length, data.suggestions.length);
     if (Object.keys(this.state.selections).length === 0 && data.suggestions.length > 1) {
       data.selections = {};
       data.selections[data.suggestions[0]] = true;
@@ -1872,7 +1967,7 @@ class IOPairChart extends React.Component {
   generateTopicName() {
 
     // get a unique new topic name
-    let new_topic_name = "New Folder";
+    let new_topic_name = "New topic";
     let suffix = "";
     let count = 0;
     while (this.state.tests.includes(this.state.topic + "/" + new_topic_name + suffix)) {
@@ -1884,24 +1979,19 @@ class IOPairChart extends React.Component {
     return new_topic_name;
   }
 
-  /* addNewTopic(e) {
+  addNewTopic(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    // get a unique new topic name
-    new_topic_name = "New Topic";
-    suffix = "";
-    count = 0;
-    while (this.state.topic + "/" + new_topic_name + suffix in this.state.tests) {
-      count += 1;
-      suffix = " " + count;
-    }
-    new_topic_name = new_topic_name + suffix
-
-    this.state.tests.push(this.state.topic + "/" + new_topic_name)
-
     this.comm.send(this.id, {action: "add_new_topic"});
-  } */
+  }
+
+  addNewTest(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.comm.send(this.id, {action: "add_new_test"});
+  }
 
   inputValue2Filter(text) {
     this.setState({value2Filter: text});
@@ -2112,7 +2202,7 @@ export default class Gadfly extends React.Component {
 
     return (
       <div style={{maxWidth: "1000px", marginLeft: "auto", marginRight: "auto"}}>
-        <div style={{paddingLeft: "25px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
+        <div style={{paddingLeft: "0px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
           <Router>
             <IOPairChartWithRouter
               interfaceId={this.props.interfaceId} environment={this.props.environment}

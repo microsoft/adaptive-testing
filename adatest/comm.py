@@ -13,7 +13,7 @@ class JupyterComm():
             def comm_opened(comm, open_msg):
                 self.jcomm = comm
                 self.jcomm.on_msg(self._fire_callback)
-            get_ipython().kernel.comm_manager.register_target(self.target_name, comm_opened)
+            get_ipython().kernel.comm_manager.register_target(self.target_name, comm_opened) # noqa: F821
         elif mode == "open":
             self.jcomm = Comm(target_name=target_name)
             self.jcomm.on_msg(self._fire_callback)
