@@ -1,5 +1,5 @@
 # AdaTest
-AdaTest uses an iterative process to find and categorize bugs in a target model with the assistance of another large backend model. These bugs can then be fixed, leading to an iterative debugging process similar to traditional software develeopment.
+AdaTest uses language models against themselves to find and fix bugs. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests then leads to an iterative debugging process similar to traditional software develeopment.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/microsoft/adatest/master/docs/artwork/main_loops.png" width="300" alt="AdaTest loops" />
