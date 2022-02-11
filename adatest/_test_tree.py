@@ -366,7 +366,8 @@ class TestTreeBrowser():
                         df.loc[k, self.score_columns] = np.nan
                     else:
                         df.loc[k, self.score_columns] = None
-                        del self._embeddings[k]
+                        if k in self._embeddings:
+                            del self._embeddings[k]
                         self._compute_embeddings_and_scores(df)
                     data = {k: {
                         "scores": {c: [[k, v] for v in score_parts(df.loc[k, c])] for c in self.score_columns},

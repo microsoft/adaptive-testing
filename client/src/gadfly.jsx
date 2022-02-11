@@ -1074,9 +1074,7 @@ class Row extends React.Component {
   inputValue1(text) {
     console.log("inputValue1", text)
     this.setState({value1: text, scores: null});
-    if (!text.includes("/")) {
-      this.props.comm.debouncedSend500(this.props.id, {value1: text});
-    }
+    this.props.comm.debouncedSend500(this.props.id, {value1: text});
   }
 
   finishValue1(text) {
@@ -1102,13 +1100,13 @@ class Row extends React.Component {
   }
 
   inputTopicName(text) {
-    this.setState({topic_name: text.replace("\\", "")});
+    this.setState({topic_name: text.replace("\\", "").replace("\n", "")});
   }
 
   finishTopicName(text) {
     console.log("finishTopicName", text)
     
-    this.setState({topic_name: text.replace("\\", ""), editing: false});
+    this.setState({topic_name: text.replace("\\", "").replace("\n", ""), editing: false});
     this.props.comm.send(this.props.id, {topic: this.props.topic + "/" + text});
   }
   
@@ -1665,7 +1663,7 @@ class IOPairChart extends React.Component {
               </div>
             }
             {this.state.loading_suggestions && this.state.tests.length < 5 &&
-              <div style={{cursor: "pointer", color: "#995500", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
+              <div style={{cursor: "pointer", color: "#995500", display: "block", fontWeight: "normal", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
                 Warning: Auto-suggestions may perform poorly with less than five tests in the current topic!
               </div>
             }
@@ -1765,11 +1763,11 @@ class IOPairChart extends React.Component {
 
   // This is a poor man's hack for what should eventually be multiple cursors
   value2Edited(id, old_value, new_value) {
-    console.log("value2Editedcccccc", id, old_value, new_value)
     const keys = Object.keys(this.state.selections);
-    if (keys.length > 0) {
+    console.log("value2Editedcccccc", id, old_value, new_value, keys)
+    if (keys.length > 1 && this.state.selections[id]) {
       for (const k in this.state.selections) {
-        console.log("K", k, this.comm.data[k].value2)
+        console.log("K", k, this.comm.data[k].value2, id)
         if (k !== id && this.rows[k].state.value2 === old_value) {
           // console.log("setting new value", new_value)
           this.rows[k].setValue2(new_value);
