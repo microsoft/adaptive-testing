@@ -1,5 +1,5 @@
 # AdaTest
-AdaTest uses language models against themselves to find and fix bugs. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests then leads to an iterative debugging process similar to traditional software develeopment.
+AdaTest uses language models against themselves to build suites of unit tests. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests with fine-tuning then leads to an iterative debugging process similar to traditional software develeopment.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/microsoft/adatest/master/docs/artwork/main_loops.png" width="300" alt="AdaTest loops" />
@@ -16,23 +16,20 @@ AdaTest uses language models against themselves to find and fix bugs. It is an i
 How to test a simple two-way sentiment analysis model using AdaTest running in a Jupyter notebook (full notebook [here](here)).
 
 ```python
-import adatest
 import transformers
-import shap
+import adatest
 
 # create a HuggingFace sentiment analysis model
 classifier = transformers.pipeline("sentiment-analysis")
-tensor_output_model = shap.models.TransformersPipeline(classifier)
 
 # set AdaTest's language model backend (HuggingFace and AI21 also supported)
 adatest.backend = adatest.backends.OpenAI('davinci', api_key=OPENAI_API_KEY)
 
 # load a starting tree of tests targeted at sentiment analysis
-tests = adatest.TestTree("test_trees/sentiment_analysis/basic_two_way.csv", auto_save=True)
+tests = adatest.TestTree("test_trees/sentiment_analysis/two_way_demo.csv", auto_save=True)
 
-# apply the tests to our model and launch an interactive testing loop
-# (wrap with `adatest.serve` to instead launch a separate web server)
-tests(tensor_output_model)
+# apply the tests to our model to launch a notebook-based testing interface
+tests(classifier) # wrap with adatest.serve to launch a standalone server
 ```
 
 **Image showing the root and scores for the basic two way sentiment tree.**
@@ -45,12 +42,11 @@ After multiple rounds of test suggestions AdaTest learns to find failures of the
 
 **Image showing lots of now-failing tests.**
 
-Once we have created enough new tests we can organize them into new topics or switch to another topic and continue the testing process. After we have found enough failed tests in the `testing loop`, we can then fine tune the model on the tests to fix the errors we have found. To prevent catastrophic forgetting we fine tune on a 50/50 mix of tests and sample from the original fine-tuning dataset of the model.
+Once we have created enough new tests we can organize them into new topics or switch to another topic and continue the testing process. After we have found enough failed tests in the *testing loop*, we can then fine tune the model on the tests to fix the errors we have found. To prevent catastrophic forgetting we fine tune on a 50/50 mix of tests and samples from the original fine-tuning dataset of the model.
 
 ```python
 # create a new sentiment model that fixes the problems we found
-# (see the full sample notebook for the definition of the `fine_tune` method)
-tensor_output_model2 = fine_tune(tensor_output_model, tests)
+tensor_output_model2 = fine_tune(tensor_output_model, tests) # see sample notebook for definition
 
 # apply the tests to the new model
 tests(tensor_output_model2)
@@ -62,7 +58,7 @@ Note that almost all tests now pass in the new model, but that does not mean the
 
 **Image showing the root and scores for the new model in the basic two way sentiment tree with more errors after suggestions.**
 
-After letting AdaTest suggest new tests in all the topics we find that there are still remaining errors in the model. So we can repeat the fine tuning process to fix these new issues. This will again result in a passing set of tests. The debugging process can be repeated as long as desired, iteratively fixing bugs and so improving the target model performance for the capabilities measured in the test tree.
+After letting AdaTest suggest new tests we find that there are still remaining errors in the model. So we can repeat the fine tuning process to fix these new issues. This will again result in a passing set of tests. The debugging process can be repeated as long as desired, iteratively fixing bugs and so improving the target model performance for the capabilities measured in the test tree.
 
 
 ## Translation example
