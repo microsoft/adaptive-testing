@@ -39,21 +39,19 @@ from ._scorer import expand_template, clean_template, Scorer, ClassifierScorer, 
 import adatest
 
 # from ttps://gist.github.com/walkermatt/2871026
-def debounce(wait):
+def throttle(interval):
     """ Decorator that will postpone a functions
-        execution until after wait seconds
-        have elapsed since the last time it was invoked. """
+        execution so it does not run more than once per
+        interval of time.
+    """
     def decorator(fn):
-        def debounced(*args, **kwargs):
-            def call_it():
-                fn(*args, **kwargs)
-            try:
-                debounced.t.cancel()
-            except(AttributeError):
-                pass
-            debounced.t = Timer(wait, call_it)
-            debounced.t.start()
-        return debounced
+        def throttled(*args, **kwargs):
+            if not hasattr(throttled, "t") or not throttled.t.is_alive():
+                def call_it():
+                    fn(*args, **kwargs)
+                throttled.t = Timer(interval, call_it)
+                throttled.t.start()
+        return throttled
     return decorator
 
 log = logging.getLogger(__name__)
@@ -177,7 +175,7 @@ class TestTreeBrowser():
         log.debug(f"passed embedding_model {embedding_model}")
         if self.scorer is not None and embedding_model is None:
             if cached_embedding_model is None:
-                cached_embedding_model = sentence_transformers.SentenceTransformer('stsb-roberta-large')
+                cached_embedding_model = sentence_transformers.SentenceTransformer('stsb-roberta-base') # was large not base
             self.embedding_model = cached_embedding_model
         else:
             self.embedding_model = embedding_model
@@ -345,8 +343,8 @@ class TestTreeBrowser():
 
                     self._update_interface()
 
-            elif k == "test_chart" and msg[k].get("engine", None) is not None:
-                self.engine = msg[k]["engine"]
+            elif k == "test_chart" and msg[k].get("model", None) is not None:
+                self.backend.model = msg[k]["model"]
 
             # if we are updating a row in suggestions or tests then we recompute the scores
             elif "hidden" in msg[k] and len(msg[k]) == 1:
@@ -560,7 +558,6 @@ class TestTreeBrowser():
 
         # sort by score and always put new topics first
         sorted_children = sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]]))
-        log.debug("sorted_children", sorted_children)
         sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id]["value1"] == "New test" else 1)
 
         # log.debug("AUTOFILTER %f" % autofilter)
@@ -576,7 +573,9 @@ class TestTreeBrowser():
             "experiment_locations": None if self.experiment is None else self.experiment.get("locations", None),
             "read_only": self.scorer is None,
             "score_columns": self.score_columns,
-            "suggestions_error": self.suggestions_error
+            "suggestions_error": self.suggestions_error,
+            "model_options": self.backend.models,
+            "model": self.backend.model
         }
         for k, test in self.suggestions.iterrows():
             data[k] = {
@@ -872,13 +871,13 @@ class TestTreeBrowser():
 
         # scores are used directly as the priority for putting something in the prompt
         scores = np.array([score_max(self.test_tree.loc[k, self.score_columns[0]]) for k in ids])
-        log.debug(f"np.nanmin(scores) = {np.nanmin(scores)}")
+        # log.debug(f"np.nanmin(scores) = {np.nanmin(scores)}")
         scores -= np.nanmin(scores) - 1e-8
         scores = np.nan_to_num(scores)
 
         # randomize the scores a bit to allow for diversity in our prompts
         std_dev = np.sqrt(np.cov(scores, aweights=topic_scaling_orig))
-        log.debug(f"score_randomization std = {std_dev}")
+        # log.debug(f"score_randomization std = {std_dev}")
         if not np.isnan(std_dev):
             scores += score_randomization * std_dev * np.random.rand(len(ids))
 
@@ -896,12 +895,12 @@ class TestTreeBrowser():
             similarities = sentence_transformers.util.pytorch_cos_sim(embeddings, embeddings).numpy()
         hard_avoidance = np.zeros(len(ids))
         diversity = np.ones(len(ids))
-        log.debug(f"sim_avoidance is None = {sim_avoidance is None}")
+        # log.debug(f"sim_avoidance is None = {sim_avoidance is None}")
 
         # compute how many greedy and how many random positions we will have
         num_random = max(0, min(np.random.binomial(prompt_size, slot_randomization), len(ids) - prompt_size))
         num_greedy = max(0, min(prompt_size - num_random, len(ids) - num_random))
-        log.debug(f"num_random = {num_random}, num_greedy = {num_greedy}")
+        # log.debug(f"num_random = {num_random}, num_greedy = {num_greedy}")
         prompt_ids = []
         while len(prompt_ids) < num_greedy + num_random:
 
@@ -913,15 +912,15 @@ class TestTreeBrowser():
             if sim_avoidance is not None:
                 diversity = 1 - (similarities * sim_avoidance).max(1)
             rank_vals = scores * topic_scaling * diversity * (1 - hard_avoidance) * hidden_scaling
-            log.debug(f"np.nanmax(rank_vals) {np.nanmax(rank_vals)}")
+            # log.debug(f"np.nanmax(rank_vals) {np.nanmax(rank_vals)}")
 
             if np.nanmax(rank_vals) <= 0 and len(prompt_ids) > 0: # stop if we have run out of the current subtree
                 break
 
             new_ind = np.nanargmax(rank_vals)
-            log.debug(f"new_ind {new_ind} {self.test_tree.iloc[new_ind]['value1']}")
+            # log.debug(f"new_ind {new_ind} {self.test_tree.iloc[new_ind]['value1']}")
             if np.random.rand() < skip_randomization:
-                log.debug(f"skip {new_ind}")
+                # log.debug(f"skip {new_ind}")
                 avoidance_level = 1 - 0.0001
             else:
                 prompt_ids.append(ids[new_ind])
@@ -956,7 +955,7 @@ class TestTreeBrowser():
                     self.test_tree.loc[k, "focus"] *= focus_decay
             for k in prompt_ids:
                 self.test_tree.loc[k, "focus"] = min(self.test_tree.loc[k, "focus"] + 0.33, 1)
-        log.debug(f"prompt_ids={prompt_ids}, include_value2={include_value2}")
+        # log.debug(f"prompt_ids={prompt_ids}, include_value2={include_value2}")
 
         # see if we are generating comparators because we have multiple types of them
         comparators = set([self.test_tree.loc[k, "comparator"] for k in prompt_ids])
@@ -969,58 +968,42 @@ class TestTreeBrowser():
             prompt.append((row["value1"], row["comparator"], row["value2"]))
 
         return prompt
-        # # make the prompt text
-        # prompt = ""
-        # for k in reversed(prompt_ids):
-        #     row = self.test_tree.loc[k]
-        #     if include_value2:
-        #         if include_comparator:
-        #             prompt += f'"{row["value1"]}" {comparator} "{row["value2"]}"\n'
-        #         else:
-        #             prompt += f'"{row["value1"]}" {self.prompt_seperator} "{row["value2"]}"\n'
-        #     else:
-        #         prompt += f'"{row["value1"]}"\n'
 
-        # return {
-        #     "prompt": prompt + "\"",
-        #     "implicit_comparator": None if include_comparator else comparator
-        # }
+    # def _complete_prompt(self, prompts, n, temperature, valid_outputs, implicit_output):
+    #     log.debug(f"_complete_prompt(prompts={prompts}, n={n}, temperature={temperature}")
 
-    def _complete_prompt(self, prompts, n, temperature, valid_outputs, implicit_output):
-        log.debug(f"_complete_prompt(prompts={prompts}, n={n}, temperature={temperature}")
+    #     response = openai.Completion.create(
+    #         engine=self.engine, prompt=[p["prompt"] for p in prompts], max_tokens=50, # "curie-msft"
+    #         temperature=temperature, n=n, stop="\n"
+    #     )
 
-        response = openai.Completion.create(
-            engine=self.engine, prompt=[p["prompt"] for p in prompts], max_tokens=50, # "curie-msft"
-            temperature=temperature, n=n, stop="\n"
-        )
+    #     lines = [choice["text"] for choice in response["choices"]]
+    #     log.debug(f"response lines = {lines}")
 
-        lines = [choice["text"] for choice in response["choices"]]
-        log.debug(f"response lines = {lines}")
+    #     suggested_tests = []
+    #     for i, line in enumerate(lines):
+    #         match = re.search('^([^"]*)"\W+([^"]*)\W+"([^"]*)"', line)
+    #         if match is not None:
+    #             value1,comparator,value2 = match.groups()
+    #             if prompts[i//n]["implicit_comparator"] is not None:
+    #                 comparator = prompts[i//n]["implicit_comparator"]
+    #             elif comparator not in valid_comparators:
+    #                 comparator = random.choice(valid_comparators)
+    #         elif implicit_output:
+    #             match = re.search('^([^"]*)"[^"]*', line)
+    #             if match is not None:
+    #                 value1 = match.groups()[0]
+    #                 value2 = None if valid_outputs is None or len(valid_outputs) != 1 else valid_outputs[0]
+    #                 comparator = prompts[i//n]["implicit_comparator"]
+    #             else:
+    #                 continue
+    #         else:
+    #             continue
 
-        suggested_tests = []
-        for i, line in enumerate(lines):
-            match = re.search('^([^"]*)"\W+([^"]*)\W+"([^"]*)"', line)
-            if match is not None:
-                value1,comparator,value2 = match.groups()
-                if prompts[i//n]["implicit_comparator"] is not None:
-                    comparator = prompts[i//n]["implicit_comparator"]
-                elif comparator not in valid_comparators:
-                    comparator = random.choice(valid_comparators)
-            elif implicit_output:
-                match = re.search('^([^"]*)"[^"]*', line)
-                if match is not None:
-                    value1 = match.groups()[0]
-                    value2 = None if valid_outputs is None or len(valid_outputs) != 1 else valid_outputs[0]
-                    comparator = prompts[i//n]["implicit_comparator"]
-                else:
-                    continue
-            else:
-                continue
+    #         suggested_tests.append((value1, comparator, value2))
 
-            suggested_tests.append((value1, comparator, value2))
-
-        #log.debug("suggested_tests", suggested_tests)
-        return suggested_tests
+    #     #log.debug("suggested_tests", suggested_tests)
+    #     return suggested_tests
 
     def _compute_embeddings_and_scores(self, tests, recompute=False):
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
@@ -1346,13 +1329,13 @@ class TestTree():
     def to_csv(self, file):
         self._tests.to_csv(file)
 
-    @debounce(5)
+    @throttle(20)
     def _auto_save(self):
         if not self._tests.equals(self._last_saved_tests):
             self.to_csv(self._tests_location)
             self._last_saved_tests = self._tests.copy()
 
-    def __call__(self, scorer=None, starting_topic="", max_suggestions=100, max_suggestions_display=20, prompt_size=7, prompt_threads=10,
+    def __call__(self, scorer=None, starting_topic="", max_suggestions=50, max_suggestions_display=20, prompt_size=7, prompt_threads=10,
                  complete_diversity=False, prompt_diversity=True, use_focus=False, focus_decay=0.8, slot_randomization=0.25,
                  score_randomization=1.0, skip_randomization=0.25, temperature=0.95, subtopic_diversity=True, score_filter="auto",
                  experiment=None, embedding_model=None, user="anonymous", prompt_seperator=">", recompute_scores=False,

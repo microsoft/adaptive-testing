@@ -1650,11 +1650,12 @@ class IOPairChart extends React.Component {
               <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length > 0 ? "0.6" : "0.2", cursor: this.state.tests.length > 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
                 <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
-                {/* {!this.props.checklistMode && <select dir="rtl" title="Current suggestion engine" className="gadfly-plain-select" onClick={e => e.stopPropagation()} value={this.state.engine} onChange={this.changeEngine} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
-                  <option value="davinci-msft">Creative</option>
-                  <option value="davinci-instruct-beta">Creative Backup</option>
-                  <option value="curie-msft">Fast</option>
-                </select>} */}
+                {this.state.model_options && this.state.model_options.length > 1 &&
+                <select dir="rtl" title="Current suggestion engine" className="gadfly-plain-select" onClick={e => e.stopPropagation()} value={this.state.model} onChange={this.changeModel} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
+                  {this.state.model_options.map((model_option) => {
+                    return <option>{model_option}</option>
+                  })}
+                </select>}
               </div>
             }
             {this.state.suggestions_error && 
@@ -1811,9 +1812,9 @@ class IOPairChart extends React.Component {
     }
   }
 
-  changeEngine(e) {
-    this.comm.send(this.id, {"engine": e.target.value});
-    this.setState({engine: e.target.value});
+  changeModel(e) {
+    this.comm.send(this.id, {"model": e.target.value});
+    this.setState({model: e.target.value});
   }
 
   setLocation(pathname) {

@@ -10,10 +10,13 @@ class Backend():
     """ Abstract class for language model backends.
     """
     
-    def __init__(self, model, sep, subsep, quote):
+    def __init__(self, models, sep, subsep, quote):
         """ Create a new backend with the given separators and max length.
         """
-        self.model = model
+        if not isinstance(models, list) and not isinstance(models, tuple):
+            models = [models]
+        self.model = models[0]
+        self.models = models
         self.subsep = subsep
         self.sep = sep
         self.quote = quote
@@ -167,8 +170,8 @@ class OpenAI(Backend):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
     
-    def __init__(self, model, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=0.95):
-        super().__init__(model, sep=sep, subsep=subsep, quote=quote)
+    def __init__(self, models, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=0.95):
+        super().__init__(models, sep=sep, subsep=subsep, quote=quote)
         self.temperature = temperature
         if api_key is not None:
             openai.api_key = api_key
