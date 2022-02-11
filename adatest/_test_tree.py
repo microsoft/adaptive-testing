@@ -1014,8 +1014,8 @@ class TestTreeBrowser():
         if self.embedding_model is not None:
             new_embedding_ids = [k for k in tests.index if k not in self._embeddings]
             if len(new_embedding_ids) > 0:
-                new_value1_embeddings = self.embedding_model.encode([tests.loc[k, "value1"] for k in tests.index if k not in self._embeddings], convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value2_embeddings = self.embedding_model.encode([tests.loc[k, "value2"] for k in tests.index if k not in self._embeddings], convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value1_embeddings = self.embedding_model.encode([str(tests.loc[k, "value1"]) for k in tests.index if k not in self._embeddings], convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value2_embeddings = self.embedding_model.encode([str(tests.loc[k, "value2"]) for k in tests.index if k not in self._embeddings], convert_to_tensor=True, show_progress_bar=False).cpu()
                 for i,k in enumerate(new_embedding_ids):
                     self._embeddings[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i]])
 
