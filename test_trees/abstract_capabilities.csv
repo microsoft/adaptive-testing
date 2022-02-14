@@ -1,0 +1,391 @@
+,topic,prefix,value1,comparator,value2,labeler,score value1 outputs,score value2 outputs,score
+8ec9906bd8d64c32b8a6ac671fd12236,DO_DELETE__djk39sd,The model output for,This is good.,should be the same as for,This is good. https://t.co/J1GH2,anonymous,"{""POSITIVE"": 0.999834418296814, ""NEGATIVE"": 0.00016551936278119683}","{""POSITIVE"": 0.9997945427894592, ""NEGATIVE"": 0.00020546597079373896}",-1.0
+3a684176ab1d43de91844fa787cd2422,DO_DELETE__djk39sd,The model output for,What a bad event.,should be the same as for,What a bad event. https://t.co/324GH,anonymous,"{""NEGATIVE"": 0.9997658133506775, ""POSITIVE"": 0.000234166654990986}","{""NEGATIVE"": 0.9998102784156799, ""POSITIVE"": 0.00018975940474774688}",-1.0
+1ff9119da17c4b3f807e9a18ae0e548d,DO_DELETE__djk39sd,The model output for,This is average.,should be the same as for,This is average. https://t.co/v89P,anonymous,"{""NEGATIVE"": 0.7636028528213501, ""POSITIVE"": 0.2363971322774887}","{""NEGATIVE"": 0.9936842322349548, ""POSITIVE"": 0.0063156867399811745}",-0.961
+93bf5c1cbf1348af9e4a0dbfa6ba315a,DO_DELETE__djk39sd,The model output for,What an average event.,should be the same as for,What an average event. https://t.co/PMLGH,anonymous,"{""POSITIVE"": 0.9735355377197266, ""NEGATIVE"": 0.02646448463201523}","{""NEGATIVE"": 0.9800978899002075, ""POSITIVE"": 0.019902043044567108}",1.0
+710a42def178467c89e6236007314ec0,DO_DELETE__djk39sd,The model output for,I want to help everyone.,should be the same as for,I want to help everyone. https://t.co/O5FGH,anonymous,"{""POSITIVE"": 0.9950031638145447, ""NEGATIVE"": 0.004996795207262039}","{""POSITIVE"": 0.7503183484077454, ""NEGATIVE"": 0.24968162178993225}",-0.957
+02821bb9325d4bbb8d72f72386045da0,DO_DELETE__djk39sd,The model output for,I want to help everyone.,should be the same as for,I want to help everyone. https://t.co/O5FGH ,anonymous,"{""POSITIVE"": 0.9950031638145447, ""NEGATIVE"": 0.004996795207262039}","{""POSITIVE"": 0.7503183484077454, ""NEGATIVE"": 0.24968162178993225}",-0.957
+a178f55e8b7c4cebbbd5fb84bef12787,DO_DELETE__djk39sd,The model output for,I want to help no one.,should be the same as for,I want to help no one. https://t.co/6hHFT,anonymous,"{""NEGATIVE"": 0.9941413998603821, ""POSITIVE"": 0.0058585298247635365}","{""NEGATIVE"": 0.9970012307167053, ""POSITIVE"": 0.0029987518209964037}",-1.0
+af63fc8f358f4a20983158613a637d20,DO_DELETE__djk39sd,The model output for,I will be happy if everyone is happy.,should be the same as for,I will be happy if everyone is happy. https://t.co/OHGH.,anonymous,"{""POSITIVE"": 0.9998167157173157, ""NEGATIVE"": 0.000183283380465582}","{""NEGATIVE"": 0.7908999919891357, ""POSITIVE"": 0.20909996330738068}",0.972
+95600b1711d54f6d88ea3760c17a9976,DO_DELETE__djk39sd,The model output for,What a strange event.,should be the same as for,What a strange event. https://t.co/lX9GH,anonymous,"{""POSITIVE"": 0.8640968203544617, ""NEGATIVE"": 0.13590317964553833}","{""NEGATIVE"": 0.9865787625312805, ""POSITIVE"": 0.013421188108623028}",0.993
+9fb522345c054b158ffffc76a00dc2ab,DO_DELETE__djk39sd,The model output for,We want to help everyone.,should be the same as for,We want to help everyone. https://t.co/9WiGH,anonymous,"{""POSITIVE"": 0.9923214316368103, ""NEGATIVE"": 0.007678522262722254}","{""NEGATIVE"": 0.7383859753608704, ""POSITIVE"": 0.26161402463912964}",0.932
+527a7f63ccfd455c9d3a99e477c87aaf,DO_DELETE__djk39sd,The model output for,I was surprised that I brought #5.,should be the same as for,I was surprised that I brought #5. https://t.co/PvGH2,anonymous,"{""POSITIVE"": 0.999193012714386, ""NEGATIVE"": 0.0008070405456237495}","{""POSITIVE"": 0.9724394679069519, ""NEGATIVE"": 0.027560530230402946}",-1.0
+89d7c7a9c26946dba824e36660a09b57,DO_DELETE__djk39sd,The model output for,What a tiny event.,should be the same as for,What a tiny event. https://t.co/X4ggL,anonymous,"{""POSITIVE"": 0.9996341466903687, ""NEGATIVE"": 0.0003658487112261355}","{""POSITIVE"": 0.9941850304603577, ""NEGATIVE"": 0.005814989563077688}",-1.0
+b6b0efda7483468682fb63538eaff565,DO_DELETE__djk39sd,The model output for,I will be happy no matter what.,should be the same as for,I will be happy no matter what. https://t.co/PMLGH,anonymous,"{""POSITIVE"": 0.9998295307159424, ""NEGATIVE"": 0.0001703812595224008}","{""POSITIVE"": 0.9985176920890808, ""NEGATIVE"": 0.001482281251810491}",-1.0
+0ae70f72086e4d0ca3b3b0f827ba7e40,DO_DELETE__djk39sd,The model output for,I have 11 apples.,should be the same as for,I have 11 apples. https://t.co/ZLJH.,anonymous,"{""POSITIVE"": 0.9795778393745422, ""NEGATIVE"": 0.020422201603651047}","{""NEGATIVE"": 0.9797573685646057, ""POSITIVE"": 0.020242678001523018}",1.0
+5eded904dd4048cc86cb9670f07cdc1a,DO_DELETE__djk39sd,The model output for,It hasn't been easy on you.,should be the same as for,It hasn't been easy on you. https://t.co/W0HGH,anonymous,"{""POSITIVE"": 0.9062888026237488, ""NEGATIVE"": 0.09371118247509003}","{""NEGATIVE"": 0.9866791367530823, ""POSITIVE"": 0.013320858590304852}",0.999
+516cc87c70c74f568bca263bbd322849,DO_DELETE__djk39sd,The model output for,I can do it tomorrow.,should be the same as for,I can do it tomorrow. https://t.co/MV8GH,anonymous,"{""POSITIVE"": 0.9993244409561157, ""NEGATIVE"": 0.0006755395443178713}","{""NEGATIVE"": 0.6870657801628113, ""POSITIVE"": 0.3129342198371887}",0.874
+19aaab8f226842f997360239087dfa35,DO_DELETE__djk39sd,The model output for,What a normal event.,should be the same as for,What a normal event. https://t.co/Ly9GH,anonymous,"{""POSITIVE"": 0.9991361498832703, ""NEGATIVE"": 0.0008639304433017969}","{""POSITIVE"": 0.5103621482849121, ""NEGATIVE"": 0.4896378815174103}",-0.512
+2c210b1dc1b74bfc8a4d45dc44c72350,DO_DELETE__djk39sd,The model output for,Joe will come late again.,should be the same as for,Joe will come late again. https://t.co/l5GH,anonymous,"{""POSITIVE"": 0.9568988680839539, ""NEGATIVE"": 0.04310112074017525}","{""NEGATIVE"": 0.9484565854072571, ""POSITIVE"": 0.05154348164796829}",1.0
+7f07b2d930364df1b657db37cacb217a,DO_DELETE__djk39sd,The model output for,That wasn't as hard as I thought it would be.,should be the same as for,That wasn't as hard as I thought it would be. https://t.co/VJKGH,anonymous,"{""POSITIVE"": 0.9837014079093933, ""NEGATIVE"": 0.016298625618219376}","{""NEGATIVE"": 0.9259525537490845, ""POSITIVE"": 0.07404745370149612}",1.0
+117b61852848412e9c14150debf79351,DO_DELETE__djk39sd,The model output for,I heard #1.,should be the same as for,I heard #1. https://t.co/34GH.,anonymous,"{""POSITIVE"": 0.9945660829544067, ""NEGATIVE"": 0.00543389655649662}","{""NEGATIVE"": 0.9799798727035522, ""POSITIVE"": 0.02002010866999626}",1.0
+4253523d841841d2813502e17c926be2,DO_DELETE__djk39sd,The model output for,This is a good event.,should be the same as for,This is a good evnt.,anonymous,"{""POSITIVE"": 0.9998657703399658, ""NEGATIVE"": 0.0001342543982900679}","{""POSITIVE"": 0.9998689889907837, ""NEGATIVE"": 0.00013094085443299264}",-1.0
+9db9fcc763ab4ac68cc8105e84ab1e5e,DO_DELETE__djk39sd,The model output for,What a great place to eat!,should be the same as for,What a great plaec to eat!,anonymous,"{""POSITIVE"": 0.9998784065246582, ""NEGATIVE"": 0.00012161320046288893}","{""POSITIVE"": 0.9995946288108826, ""NEGATIVE"": 0.00040532989078201354}",-1.0
+4efe4eabf647488b8ae5b5537ed7506d,DO_DELETE__djk39sd,The model output for,This was my first time missing out.,should be the same as for,This was my first time mising out.,anonymous,"{""NEGATIVE"": 0.9959467053413391, ""POSITIVE"": 0.0040533156134188175}","{""NEGATIVE"": 0.9989066123962402, ""POSITIVE"": 0.0010933444136753678}",-1.0
+3165c3facf234d038be61df7fab0d6e2,DO_DELETE__djk39sd,The model output for,This is my third time going to my conference.,should be the same as for,This is my thrid time going to my conference.,anonymous,"{""POSITIVE"": 0.9947199821472168, ""NEGATIVE"": 0.0052800290286540985}","{""NEGATIVE"": 0.9966651797294617, ""POSITIVE"": 0.0033348635770380497}",1.0
+c3f4801cbb374de7af91848849924578,DO_DELETE__djk39sd,The model output for,We got in the car and headed home.,should be the same as for,We got in the car and headed hoem.,anonymous,"{""POSITIVE"": 0.9912545680999756, ""NEGATIVE"": 0.008745362982153893}","{""NEGATIVE"": 0.99204421043396, ""POSITIVE"": 0.007955706678330898}",1.0
+0a10365c9898448c961650e9e368da08,DO_DELETE__djk39sd,The model output for,This is a perfect product,should be the same as for,This is a perfeect produt,anonymous,"{""POSITIVE"": 0.999875545501709, ""NEGATIVE"": 0.00012438690464477986}","{""NEGATIVE"": 0.9702085256576538, ""POSITIVE"": 0.02979150228202343}",1.0
+55f9bf3338224b9a87336bbe159653aa,DO_DELETE__djk39sd,The model output for,I am the one going.,should be the same as for,I am th e one goin g.,anonymous,"{""POSITIVE"": 0.9995074272155762, ""NEGATIVE"": 0.0004925195244140923}","{""NEGATIVE"": 0.9468459486961365, ""POSITIVE"": 0.053154107183218}",1.0
+b145a0d35a3f4571989ce279b0bbcfe4,DO_DELETE__djk39sd,The model output for,Which season do you like best?,should be the same as for,Which seasn do you lik best?,anonymous,"{""POSITIVE"": 0.9960033297538757, ""NEGATIVE"": 0.0039966413751244545}","{""NEGATIVE"": 0.9113997220993042, ""POSITIVE"": 0.08860030025243759}",1.0
+8e7e29dbf3774eb2aef0544e25d1ac4f,DO_DELETE__djk39sd,The model output for,Where are you going on vacation?,should be the same as for,Where are you going on vacatiuon?,anonymous,"{""NEGATIVE"": 0.9349668025970459, ""POSITIVE"": 0.06503321975469589}","{""NEGATIVE"": 0.9983612895011902, ""POSITIVE"": 0.0016387071227654815}",-1.0
+65a0c5796f144c7fb2e666f579d92e7a,DO_DELETE__djk39sd,The model output for,Where are you going on holiday?,should be the same as for,Where are you going on holliday?,anonymous,"{""NEGATIVE"": 0.9441348314285278, ""POSITIVE"": 0.0558650903403759}","{""NEGATIVE"": 0.991563081741333, ""POSITIVE"": 0.00843690987676382}",-1.0
+2ff94ee87e6c44de97519efacf900957,DO_DELETE__djk39sd,The model output for,This may be my last time.,should be the same as for,Ths may be my las timet.,anonymous,"{""NEGATIVE"": 0.9854677319526672, ""POSITIVE"": 0.014532302506268024}","{""NEGATIVE"": 0.9629557728767395, ""POSITIVE"": 0.0370442271232605}",-1.0
+fdfdce10e78d4779a2b1bb81b8f90928,DO_DELETE__djk39sd,The model output for,That was really nice of you.,should be the same as for,That ws really nce of you.,anonymous,"{""POSITIVE"": 0.9998304843902588, ""NEGATIVE"": 0.0001694813690846786}","{""POSITIVE"": 0.9786181449890137, ""NEGATIVE"": 0.02138182334601879}",-1.0
+dcfa7db1b07849f7886c58d5e6613dc2,DO_DELETE__djk39sd,The model output for,This is an important speech.,should be the same as for,This is an impotant spech.,anonymous,"{""POSITIVE"": 0.9994742274284363, ""NEGATIVE"": 0.0005258314195089042}","{""NEGATIVE"": 0.9982072114944458, ""POSITIVE"": 0.0017927753506228328}",1.0
+b91832daec1447f0aacdebc45d6630d4,DO_DELETE__djk39sd,The model output for,I was excited over his special plan.,should be the same as for,I was exsited over his specia plan.,anonymous,"{""POSITIVE"": 0.9996711015701294, ""NEGATIVE"": 0.0003288819862063974}","{""NEGATIVE"": 0.9973692893981934, ""POSITIVE"": 0.002630695467814803}",1.0
+b3ae40a45bf24c2f9a8218cc5e3788e0,DO_DELETE__djk39sd,The model output for,What is your favourite band?,should be the same as for,What is your favirte band?,anonymous,"{""POSITIVE"": 0.9972779154777527, ""NEGATIVE"": 0.0027220682241022587}","{""NEGATIVE"": 0.9945967197418213, ""POSITIVE"": 0.005403241608291864}",1.0
+138a87683d254634a58cadeae9cd53ee,DO_DELETE__djk39sd,The model output for,I went to my conference.,should be the same as for,I went to my confernece.,anonymous,"{""POSITIVE"": 0.9274839162826538, ""NEGATIVE"": 0.07251609116792679}","{""NEGATIVE"": 0.9689928293228149, ""POSITIVE"": 0.0310071911662817}",0.999
+a98bb99b8fb44c669ec31072e1df16b0,DO_DELETE__djk39sd,The model output for,We have got some news.,should be the same as for,We have got som news.,anonymous,"{""POSITIVE"": 0.9971796274185181, ""NEGATIVE"": 0.0028204352129250765}","{""NEGATIVE"": 0.8978628516197205, ""POSITIVE"": 0.10213715583086014}",0.997
+a09748a2f0694d049d5d6280f05a7490,DO_DELETE__djk39sd,The model output for,Which seasons do you like best?,should be the same as for,Which seasns do you lik best?,anonymous,"{""POSITIVE"": 0.9892227649688721, ""NEGATIVE"": 0.010777286253869534}","{""NEGATIVE"": 0.8148456811904907, ""POSITIVE"": 0.18515431880950928}",0.979
+9ac01e739d464bc9bcef445117cb3a5e,DO_DELETE__djk39sd,The model output for,Yesterday she did a lot at the store.,should be the same as for,Yesderday she did a lot at the store.,anonymous,"{""NEGATIVE"": 0.9021981954574585, ""POSITIVE"": 0.09780185669660568}","{""POSITIVE"": 0.8009231686592102, ""NEGATIVE"": 0.19907689094543457}",0.982
+9499a2827e194d22882abf10f715b352,DO_DELETE__djk39sd,The model output for,"I used to think that this was bad, but now I like it.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9977600574493408, ""NEGATIVE"": 0.0022399132139980793}",{},-1.0
+d99e781cc0f64aaba19d26d92fc397a4,DO_DELETE__djk39sd,The model output for,"While once this was a sub-par place, now it has really become nice.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9996886253356934, ""NEGATIVE"": 0.0003113962593488395}",{},-1.0
+7953154d7acc45549d099905d7482137,DO_DELETE__djk39sd,The model output for,"I used to hate things like this, but now I think that they are great.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9997259974479675, ""NEGATIVE"": 0.00027404027059674263}",{},-1.0
+2b749b8335b243a5a87b24c92bb5187d,DO_DELETE__djk39sd,The model output for,"Used to think that this was lame, but I don't think so now.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9960764050483704, ""POSITIVE"": 0.00392359122633934}",{},1.0
+afccc7a003f74b55bb0736d063abd7f2,DO_DELETE__djk39sd,The model output for,"I hated things like this, but since it's been redone, I've changed my mind.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.8213924765586853, ""POSITIVE"": 0.1786074936389923}",{},0.987
+86af0ad711634367a3b3cede9246e988,DO_DELETE__djk39sd,The model output for,"This place used to be run-down, but now it's better.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9761996865272522, ""NEGATIVE"": 0.0238003171980381}",{},-1.0
+f930090975214c90b1f32ae1ef27cb50,DO_DELETE__djk39sd,The model output for,"Used to think that this was lame, but now I like this.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9968917965888977, ""NEGATIVE"": 0.0031082562636584044}",{},-1.0
+a0bfaff44c13409dbee793ce4f2fe2be,DO_DELETE__djk39sd,The model output for,"In this past this was nothing but chaos. Now, we can relax in the city.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9977849125862122, ""NEGATIVE"": 0.0022151365410536528}",{},-1.0
+b56db99e645849dab2e2f72736c15013,DO_DELETE__djk39sd,The model output for,"This used to be a slum, but now it has become organized.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.995460569858551, ""POSITIVE"": 0.004539418965578079}",{},1.0
+9dfd253999ce4c3c9d7f5ea290bf31b3,DO_DELETE__djk39sd,The model output for,"Used to hate this sort of thing, but now I think differently.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.6060395836830139, ""POSITIVE"": 0.39396047592163086}",{},0.769
+a0683cb2a53540a087e65dddfe76bc66,DO_DELETE__djk39sd,The model output for,"Used to be bad, now it's better.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.8284788131713867, ""NEGATIVE"": 0.1715211570262909}",{},-0.99
+d9c968a5da0f489b9a6f1116edccea69,DO_DELETE__djk39sd,The model output for,"When it was messed up, life was no good. Since they have rebuilt it, things are better now.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9652136564254761, ""NEGATIVE"": 0.03478633239865303}",{},-1.0
+63af267fd15f41a3863a460fc1304edb,DO_DELETE__djk39sd,The model output for,"In this city, there used to be rampant crime, but now it's better.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9822620153427124, ""NEGATIVE"": 0.01773793436586857}",{},-1.0
+985bebbfe6dc4ac19e68ccba12fdf911,DO_DELETE__djk39sd,The model output for,"This place used to be a terrible place, but now it's a lot better.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9945574998855591, ""NEGATIVE"": 0.005442531779408455}",{},-1.0
+c8af52bbefb64694bc3d28088e1c3180,DO_DELETE__djk39sd,The model output for,"Used to think that this was bad, but now I like it.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9966216087341309, ""NEGATIVE"": 0.0033784101251512766}",{},-1.0
+94429c7e2b3f44e1ba60a0f6888e6e09,DO_DELETE__djk39sd,The model output for,"Used to hate this place, but now I think that it's not so bad.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9971967935562134, ""NEGATIVE"": 0.0028031370602548122}",{},-1.0
+946b405f74dc4c33a9d48bbf44a3e2dc,DO_DELETE__djk39sd,The model output for,"Used to hate this, but now I like it.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9984756112098694, ""NEGATIVE"": 0.001524347928352654}",{},-1.0
+e9fbcbbc25e14b32bd4721f8602bee70,DO_DELETE__djk39sd,The model output for,"Thought it was lame, but now I like it.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9985748529434204, ""NEGATIVE"": 0.0014251613756641746}",{},-1.0
+aad1d8eb714247908f8b73ecbfede258,DO_DELETE__djk39sd,The model output for,"I thought that this was a downer, but now I think it's okay.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9986308217048645, ""NEGATIVE"": 0.0013691416243091226}",{},-1.0
+94a17c9b559740a792e1be85e1fef236,DO_DELETE__djk39sd,The model output for,"This, I thought to be bland, but now it's pretty neat.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9988616704940796, ""NEGATIVE"": 0.0011383118107914925}",{},-1.0
+998b24635bd247cfa9ced4af1f6b0b24,DO_DELETE__djk39sd,The model output for,"This used to be a good place, but now it is not.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.998399555683136, ""POSITIVE"": 0.0016004890203475952}",{},-1.0
+6038819a6e3942ac98c5f42dc8223d6f,DO_DELETE__djk39sd,The model output for,"While this was once a great place, it is not anymore.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9952186942100525, ""POSITIVE"": 0.0047812494449317455}",{},-1.0
+f7305f182d934ac99c59465d1197d510,DO_DELETE__djk39sd,The model output for,"In the past this was the best, now it is lame.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9996318817138672, ""POSITIVE"": 0.0003680437512230128}",{},-1.0
+7888a85eae6a4c5bb6e5c7442f57fce0,DO_DELETE__djk39sd,The model output for,"Once upon a time this was the best, not anymore though.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.999692440032959, ""NEGATIVE"": 0.0003075359854847193}",{},1.0
+e5534521e3a94950a902923dc1ac439e,DO_DELETE__djk39sd,The model output for,"While once this was the best, not currently.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.6399972438812256, ""NEGATIVE"": 0.36000269651412964}",{},0.833
+19c2e023008743a3be80dffb641e343d,DO_DELETE__djk39sd,The model output for,"This once was a place with dignity, but not any longer.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.8463454842567444, ""POSITIVE"": 0.1536545604467392}",{},-0.994
+858f76ca07454e869c799efd3cc39043,DO_DELETE__djk39sd,The model output for,"This used to be a great place, but not anymore.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.8908016681671143, ""POSITIVE"": 0.10919832438230515}",{},-0.995
+8413ac487b5a45e4a65336b1df3917a1,DO_DELETE__djk39sd,The model output for,This was once good but not anymore.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9863619804382324, ""POSITIVE"": 0.013637994416058064}",{},-0.999
+90f10d1ba63a4cf983e018ef2a7b7bc8,DO_DELETE__djk39sd,The model output for,"In the past I've enjoyed this place more, but now I don't care.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.98763507604599, ""POSITIVE"": 0.012364868074655533}",{},-0.999
+195b2591d602480c8f67f2ebf23261e9,DO_DELETE__djk39sd,The model output for,"Once it was great, but now it sucks.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.991724967956543, ""POSITIVE"": 0.00827497523277998}",{},-1.0
+a4fa733526c34d979229facdd0ce38ea,DO_DELETE__djk39sd,The model output for,"While I used to like this place, I do not like it anymore.""",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9920085668563843, ""POSITIVE"": 0.007991472259163857}",{},-1.0
+0788705fb0d5489ea1f9998927aaf529,DO_DELETE__djk39sd,The model output for,"This was a great place… ""once""",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.998986542224884, ""NEGATIVE"": 0.001013423316180706}",{},1.0
+da2c6e4e5de840e588c202943b351f11,DO_DELETE__djk39sd,The model output for,"At one time this was great, not anymore though.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9979199767112732, ""NEGATIVE"": 0.002079989295452833}",{},1.0
+c5bd78871c704cb4aba60a389abd571a,DO_DELETE__djk39sd,The model output for,"This place used to be the best, not anymore.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9942271709442139, ""NEGATIVE"": 0.005772827658802271}",{},1.0
+fa8fa2bc75064ca496439f148d80e173,DO_DELETE__djk39sd,The model output for,This was a great place. I do not think it is anymore.,should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9934862852096558, ""NEGATIVE"": 0.006513664498925209}",{},1.0
+4ae59ecf979f44dcbd39516cacbef52e,DO_DELETE__djk39sd,The model output for,"This was the best, now it sucks.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9453637599945068, ""NEGATIVE"": 0.05463626980781555}",{},1.0
+0d1e272ffde9457997e6e2b324df896b,DO_DELETE__djk39sd,The model output for,This place used to be good. Not now though.,should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.8291435837745667, ""NEGATIVE"": 0.17085647583007812}",{},0.99
+2258470288e44b928edf5f1b6c4bc479,DO_DELETE__djk39sd,The model output for,"In the past this was great, but now it sucks.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.7110356092453003, ""NEGATIVE"": 0.2889644205570221}",{},0.931
+12f0515dd8874983a3e65d07888494ba,DO_DELETE__djk39sd,The model output for,"Once upon a time it was great, but not any more.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.5402637124061584, ""NEGATIVE"": 0.45973628759384155}",{},0.5900000000000001
+d34008e5fa394793ac017669c2e3882c,DO_DELETE__djk39sd,The model output for,"I used to like this place, but not anymore.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.5460697412490845, ""POSITIVE"": 0.45393019914627075}",{},-0.6
+2938eb555ee84b03be2e805f11521c7d,DO_DELETE__djk39sd,The model output for,"At one time this was a good place, but not any more.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.6636680960655212, ""POSITIVE"": 0.33633190393447876}",{},-0.872
+9ab248b27c36429c93de8c5e18bed42e,DO_DELETE__djk39sd,The model output for,"Once this town was a place of elegance, but not anymore.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.6694169640541077, ""POSITIVE"": 0.33058300614356995}",{},-0.883
+2b51713917b54dfaa9b20e34289bd9c8,DO_DELETE__djk39sd,The model output for,"While this was once the best, not anymore.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.7015774250030518, ""POSITIVE"": 0.298422634601593}",{},-0.926
+8783fba017df440c9612caafd3d62bf2,DO_DELETE__djk39sd,The model output for,"I used to really like this place, but not any longer.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.7174663543701172, ""POSITIVE"": 0.2825336456298828}",{},-0.934
+6c9c09559c65467791218376c8008615,DO_DELETE__djk39sd,The model output for,"While I once had fun here, not anymore.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.7670294642448425, ""POSITIVE"": 0.2329704910516739}",{},-0.962
+ed806e6dcf4141d38ded1876105c9e24,DO_DELETE__djk39sd,The model output for,"This was a great place to be, and it still is.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998382329940796, ""NEGATIVE"": 0.0001617741072550416}",{},-1.0
+83672f5bb3e541e68220e69d83a9c4b9,DO_DELETE__djk39sd,The model output for,"I have always liked this place, and it is still my go-to.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9997939467430115, ""NEGATIVE"": 0.00020603646407835186}",{},-1.0
+a5a3f0ddeb134ccda184d116c44b2960,DO_DELETE__djk39sd,The model output for,"In the past this was the top destination, and it remains so.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9989185333251953, ""NEGATIVE"": 0.00108151335734874}",{},-1.0
+194b9a195aff4063bd4a9475106ecae4,DO_DELETE__djk39sd,The model output for,This was the number one venue and it still is.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9996389150619507, ""NEGATIVE"": 0.00036105781327933073}",{},-1.0
+642ef2c12388460793b21321623e1cac,DO_DELETE__djk39sd,The model output for,"I have always liked this place, and i still do.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998086094856262, ""NEGATIVE"": 0.00019141506345476955}",{},-1.0
+a893082ef910477986658bd3e25e2e98,DO_DELETE__djk39sd,The model output for,"This was a favorite place to visit, and it remains so.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.998468816280365, ""NEGATIVE"": 0.001531103509478271}",{},-1.0
+0aa0058765f844299bc4a469baae718b,DO_DELETE__djk39sd,The model output for,"This was the favorite place, and it remains so.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9987539052963257, ""NEGATIVE"": 0.0012461357982829213}",{},-1.0
+55fcc986bc024fd789229abde3e636ec,DO_DELETE__djk39sd,The model output for,"This was basically my venue of choice, and it still is.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9991697072982788, ""NEGATIVE"": 0.0008303773938678205}",{},-1.0
+83b041dbe633482baae27bf0264f0006,DO_DELETE__djk39sd,The model output for,This place remains my top option.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9993293285369873, ""NEGATIVE"": 0.0006707291468046606}",{},-1.0
+ff6ad0b3396e49779dcc929b461fbf7e,DO_DELETE__djk39sd,The model output for,In the past this was the number one venue and it still is.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9993330836296082, ""NEGATIVE"": 0.0006668745190836489}",{},-1.0
+7cc546f538d843feb23d6d98b525cc7d,DO_DELETE__djk39sd,The model output for,"This used to be a lame place, and nothing has changed.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9966049194335938, ""POSITIVE"": 0.003395048202946782}",{},-1.0
+a0205bf7cdd24dd8951e84aa9e02a475,DO_DELETE__djk39sd,The model output for,"In the past I hated this place, and I still do.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.8757551312446594, ""POSITIVE"": 0.124244824051857}",{},-0.998
+73e39b16ca9c40869edb384d3d42ce6e,DO_DELETE__djk39sd,The model output for,This has always been the lowest of the low.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9901217818260193, ""POSITIVE"": 0.00987817719578743}",{},-1.0
+2cda3cc599934630b4a529048fe6ab9b,DO_DELETE__djk39sd,The model output for,"I was scared to come here before, and I'm scared now.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9799134731292725, ""POSITIVE"": 0.020086567848920822}",{},-1.0
+ccd84f3fdcf24f78a1da2e333889b487,DO_DELETE__djk39sd,The model output for,It's as pathetic as it was thirty years ago.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997512698173523, ""POSITIVE"": 0.0002486803859937936}",{},-1.0
+570ff85fbb7645799321ad5e3f277a20,DO_DELETE__djk39sd,The model output for,"This used to be lame, and now it's really lame.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997631907463074, ""POSITIVE"": 0.00023686076747253537}",{},-1.0
+67260831ce3d46e880ab2d91f2187f00,DO_DELETE__djk39sd,The model output for,"This used to be the scariest place for me, and it still is.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9971596002578735, ""NEGATIVE"": 0.002840424655005336}",{},1.0
+1c1b4c67af9544cabc209810de3ef16d,DO_DELETE__djk39sd,The model output for,This has always been the trash dump of campus.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9989765882492065, ""POSITIVE"": 0.0010234066285192966}",{},-1.0
+6d1a88b975ed483aafa106cc0ef90890,DO_DELETE__djk39sd,The model output for,"It's worse now than it was 30 years ago, because the city is bankrupt.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997244477272034, ""POSITIVE"": 0.00027551886159926653}",{},-1.0
+e27a565dec824512bcb3b261dea0a456,DO_DELETE__djk39sd,The model output for,"Things were a mess before, now everything's clean.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9976270794868469, ""POSITIVE"": 0.0023729910608381033}",{},1.0
+929b361c681d4ff18c4494d468bc6eab,DO_DELETE__djk39sd,The model output for,It was scary for me then and it's scary for me now.,should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9989249110221863, ""NEGATIVE"": 0.0010750582441687584}",{},1.0
+0b09bbcf5b4042978af69f6612321da7,DO_DELETE__djk39sd,The model output for,This used to be the best. Not anymore though.,should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9954065084457397, ""NEGATIVE"": 0.004593462683260441}",{},1.0
+9d5fe1b13f284afbad381f194256b146,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+3b525e47513541268c3847a11026aea1,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+d3322af0dabb4fd9a2819f1c34c80ff6,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+dfd0922d3e074940a1e6251b96a682fb,suggestion,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+a9fb619f92a44561b4cb0ea6e087dde4,suggestion,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+861144dcda1f4a35820ad3d93ded8262,suggestion,The model output for,New test,should be the same as for,nan,anonymous,"{""POSITIVE"": 0.8306877613067627, ""NEGATIVE"": 0.1693122237920761}","{""POSITIVE"": 0.9541467428207397, ""NEGATIVE"": 0.04585332050919533}",-0.99
+1a7d837d1baa4090baf21bfc6885a94f,DO_DELETE__djk39sd,The model output for,This is still my number one choice.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9997668862342834, ""NEGATIVE"": 0.00023309183598030359}",{},-1.0
+0ae9dc12388540b88c2e99196414651a,DO_DELETE__djk39sd,The model output for,This remains a great venue.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999790370464325, ""NEGATIVE"": 0.00020966149168089032}",{},-1.0
+b72f54bb56ec458c87138faf4ef64f4f,/Semantic Role Labeling,nan,nan,topic_placeholder,nan,nan,{},{},
+3c506e4cbcc14d87ac0c6e3169beeb0f,/Logic,nan,nan,topic_placeholder,nan,nan,{},{},
+2cb3c973d2b446cfb1f4a4a7f40f7253,/Named Entity Recognition,nan,nan,topic_placeholder,nan,nan,{},{},
+9037cb78df8e4b09bab972c5661b735d,/Vocabulary+POS,nan,nan,topic_placeholder,nan,nan,{},{},
+480258ecc6654efb879d29726fc05507,/Fairness,nan,nan,topic_placeholder,nan,nan,{},{},
+87c8b63256d0486fb306b9b13d042ad6,/Negation,nan,nan,topic_placeholder,nan,nan,{},{},
+2c2cccc2ae714d77a33ec72a93339739,/Coreference,nan,nan,topic_placeholder,nan,nan,{},{},
+4a923ed4739040859f9aa8d4db2a82cb,/Semantic Role Labeling/Author most important,nan,nan,topic_placeholder,nan,nan,{},{},
+c2487f622354434c888353567cec2b4a,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+d7afe2dea0e74263bd37a9fcc83b59a9,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+5116087e3e154d77b7aad10a6f5120b5,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+6b8fbaa6022a4d7bac05771fcece2ca1,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+06e76fd318e348f9a0d747e04b17df0e,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+13c129a04a96447d924fd365a1f6ca8c,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+fc1702a4a6b64e74a50d7993a0d4da7f,/Semantic Role Labeling/Author most important,The model output for,New test,topic_placeholder,nan,anonymous,{},{},
+32c609d011e94acdae29d1b23a254c0e,DO_DELETE__djk39sd,The model output for,"Other people consider this place bad, but I think it is good.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9988823533058167, ""NEGATIVE"": 0.0011176185216754675}",{},-1.0
+4577a75a5b8043adbdeb5852b690ee98,DO_DELETE__djk39sd,The model output for,"They think you are mean, but I think you are nice.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998041987419128, ""NEGATIVE"": 0.00019586249254643917}",{},-1.0
+e04bb784674d4fb8af48beafc5152152,DO_DELETE__djk39sd,The model output for,"Some don't like you, but I think you are great.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999875545501709, ""NEGATIVE"": 0.00012445573520381004}",{},-1.0
+71245edc2ceb4bb096bac86f116f459e,DO_DELETE__djk39sd,The model output for,"Other people consider you not very hardworking, but I think you are hardworker.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.684576690196991, ""POSITIVE"": 0.31542330980300903}",{},0.9
+42549a10d8ea421686393b1a986068c1,DO_DELETE__djk39sd,The model output for,"My friends think that this place is good, but I think it is bad.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9991294741630554, ""POSITIVE"": 0.0008705145446583629}",{},-1.0
+021b5b02928c46ba8cd90fca2372ec27,DO_DELETE__djk39sd,The model output for,"I don't like you, but other people think you are nice.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9993788003921509, ""NEGATIVE"": 0.0006211154395714402}",{},1.0
+983dfa01a09d4fe2a75ce1618d8a681b,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+b098b359383d4d67b8cff16562d2f6cf,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+8f18bb4b18954a6e9f824da3aceca0b0,DO_DELETE__djk39sd,The model output for,"They think you are very mean, but I think you are good.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998509883880615, ""NEGATIVE"": 0.0001489986461820081}",{},-1.0
+dddbf5930abf4f01ab2c1ced03b1bf9c,DO_DELETE__djk39sd,The model output for,"Other people don't like you, but I do.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9954025745391846, ""NEGATIVE"": 0.004597395192831755}",{},-1.0
+cf3552a5174e44f5b9150e3d0d4474fe,DO_DELETE__djk39sd,The model output for,"They think you are mean, but I think you are beauiful.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.8033467531204224, ""POSITIVE"": 0.19665327668190002}",{},0.978
+470cbbd90aa34082af5d1e48c78bcb7f,DO_DELETE__djk39sd,The model output for,"Other people think you are ugly, but I think you are pretty.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9884195327758789, ""NEGATIVE"": 0.01158046256750822}",{},-0.999
+9e7a9a0af49d4a04bffb0ab23654f6d8,DO_DELETE__djk39sd,The model output for,"Other people believe this place is not good, but I believe it is good.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9996191263198853, ""NEGATIVE"": 0.00038088540895842016}",{},-1.0
+c6b9619dccc248f7b4b2807734e59a2a,DO_DELETE__djk39sd,The model output for,"Other people don't like you, but I think you are cool.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9997749924659729, ""NEGATIVE"": 0.00022496072051580995}",{},-1.0
+cacce4b79bf846c6b5133c8285f160bd,DO_DELETE__djk39sd,The model output for,"They think you're not very talented, but I think you are quite talented.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9996988773345947, ""NEGATIVE"": 0.0003010982181876898}",{},-1.0
+c9759738af4343a8b346f80007b63d47,DO_DELETE__djk39sd,The model output for,"They think you are not kind, but I think you are nice.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998314380645752, ""NEGATIVE"": 0.0001685865136096254}",{},-1.0
+4d036a2f20834a29ae7893350909339d,DO_DELETE__djk39sd,The model output for,"Other people think you are not kind, but I think you are kind.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9984503984451294, ""NEGATIVE"": 0.0015495666302740574}",{},-1.0
+dfacb71b58c74a83a6b8a7537faa5527,DO_DELETE__djk39sd,The model output for,"They consider you not polite, but I think you are very polite and friendly.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9996846914291382, ""NEGATIVE"": 0.00031527451938018203}",{},-1.0
+c39475b22e8a4d96a31a71ec9178841f,DO_DELETE__djk39sd,The model output for,"Some other people love this place, but I dislike it.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9740516543388367, ""POSITIVE"": 0.025948384776711464}",{},-1.0
+b1200ebde4fb46c0a316d3b87b3891dd,DO_DELETE__djk39sd,The model output for,"I think that this place is boring, but my friends like it very much.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9990583062171936, ""NEGATIVE"": 0.0009417574619874358}",{},1.0
+ae0505fd96bc4f6c92382df3ace08505,DO_DELETE__djk39sd,The model output for,"Some people like you, but I dislike you.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.5278388857841492, ""POSITIVE"": 0.47216105461120605}",{},-0.561
+7b40631e065246e8af799e9adf286a8c,DO_DELETE__djk39sd,The model output for,"Other people like you, but I do not.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9437845349311829, ""POSITIVE"": 0.056215494871139526}",{},-1.0
+adeb2ed10f9a4051a49aee2442020c53,DO_DELETE__djk39sd,The model output for,"I think you are bad, but other people think you are a good person.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9910213351249695, ""NEGATIVE"": 0.008978684432804585}",{},1.0
+5031bf3a5681459da8d4f9a86e6cbe0a,DO_DELETE__djk39sd,The model output for,"Other people love this place, but I detest it.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.8380084037780762, ""POSITIVE"": 0.1619916707277298}",{},-0.992
+101b31603cd240b19eb11a76e83ff72a,DO_DELETE__djk39sd,The model output for,"Some other people like this place, but I do not.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9274911284446716, ""POSITIVE"": 0.07250885665416718}",{},-0.999
+0beefd78615249398cca94d8107faa9d,DO_DELETE__djk39sd,The model output for,"Other people love this place, but I do not; I think it is boring.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9971684813499451, ""POSITIVE"": 0.0028315167874097824}",{},-1.0
+ed8ae980321c42239b3257fe8efcc544,DO_DELETE__djk39sd,The model output for,"Some other people like this book, but I do not.",should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9603368639945984, ""POSITIVE"": 0.039663080126047134}",{},-1.0
+ad283505300c4fe8b2db5bb45839627a,DO_DELETE__djk39sd,The model output for,"I think this place is boring, but my friends love it very much.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9997463822364807, ""NEGATIVE"": 0.0002535636303946376}",{},1.0
+60523c52cc874a97bdae32f2dc0f6f48,DO_DELETE__djk39sd,The model output for,"I think that this book is boring, but other people find it very interesting.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9971323013305664, ""NEGATIVE"": 0.002867624396458268}",{},1.0
+c027dce00d9f485a93df09001eeee408,DO_DELETE__djk39sd,The model output for,"I do not like you, but my friend does",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.996664822101593, ""NEGATIVE"": 0.0033351199235767126}",{},1.0
+74b99a66ef8c439ba50758952032b45e,DO_DELETE__djk39sd,The model output for,"I think that you are boring, but the others think you are interesting.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9981676340103149, ""NEGATIVE"": 0.00183233676943928}",{},1.0
+aaaa48be06fe497fb2f81f42d4a751d1,DO_DELETE__djk39sd,The model output for,"I don't like you, but some other people think you are nice.",should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.999238133430481, ""NEGATIVE"": 0.000761858478654176}",{},1.0
+1dc890ca05324589be04b74ca41f5726,DO_DELETE__djk39sd,The model output for,I do not like this place.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9961458444595337, ""POSITIVE"": 0.003854105481877923}",{},-1.0
+34b0acad61d34669958a5410817934d8,DO_DELETE__djk39sd,The model output for,I don't love this kinds of things.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9973981380462646, ""POSITIVE"": 0.0026019031647592783}",{},-1.0
+10ae2eb478274b28a931ee94516326fe,DO_DELETE__djk39sd,The model output for,"I wish I could have liked this place, but I didn't.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9955006241798401, ""POSITIVE"": 0.004499340429902077}",{},-1.0
+983001b298af482aa287c4ada50bbe56,DO_DELETE__djk39sd,The model output for,This is not a very good place to me.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9998028874397278, ""POSITIVE"": 0.000197163040866144}",{},-1.0
+56c9f962d7794f799a884785ee51e895,DO_DELETE__djk39sd,The model output for,This place is not my style after all.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9997734427452087, ""POSITIVE"": 0.00022652916959486902}",{},-1.0
+75054e3349f843b5ae0aa6938c2d8f53,DO_DELETE__djk39sd,The model output for,This is not good.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9997877478599548, ""POSITIVE"": 0.0002122636797139421}",{},-1.0
+7d6f482f37b249d5b27893bedfe77d55,DO_DELETE__djk39sd,The model output for,I won't see anything good of life.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9997709393501282, ""POSITIVE"": 0.00022905638616066426}",{},-1.0
+c82d9ab5fbd64481a3e012d79dbcdb94,DO_DELETE__djk39sd,The model output for,I don't love this place at all.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9986720085144043, ""POSITIVE"": 0.0013280317652970552}",{},-1.0
+33386b7ebc95416e9b6f42543a845b02,DO_DELETE__djk39sd,The model output for,This place is not something good.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9998045563697815, ""POSITIVE"": 0.00019547012925613672}",{},-1.0
+ee0da35f100b45ac8364716214c30cae,DO_DELETE__djk39sd,The model output for,This is not worth a visit.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9997958540916443, ""POSITIVE"": 0.00020414084428921342}",{},-1.0
+349af68ce47e415d8c6622e5254f9521,DO_DELETE__djk39sd,The model output for,"This is a place I thought I would love, but I was wrong.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9923602938652039, ""POSITIVE"": 0.007639707997441292}",{},-1.0
+2ea4c7d63e154998b51449aeb26a0e26,DO_DELETE__djk39sd,The model output for,"What seemed like a good place, turned out not to be.",should not be,POSITIVE,anonymous,"{""POSITIVE"": 0.9983982443809509, ""NEGATIVE"": 0.0016017159214243293}",{},1.0
+44d6b4fd4cf245bdb9eb1f4665c1249b,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+964096de471f4ad69a15fde5f22b0882,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+76dcc15879ff4a73bf7e15e4f47d002a,/Named Entity Recognition/Name invariances,nan,nan,topic_placeholder,nan,nan,{},{},
+9f6219c302c547d5bc4fbc5f6d05fed9,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+e2e4514403384582be6993b3873954ae,DO_DELETE__djk39sd,The model output for,We had a good time in Denver.,should be the same as for,We had a good time in Los Angles.,anonymous,"{""POSITIVE"": 0.9998668432235718, ""NEGATIVE"": 0.00013315871183294803}","{""POSITIVE"": 0.9998369216918945, ""NEGATIVE"": 0.00016306959150824696}",-1.0
+1edb8458d23449e5adfa8833e367d017,DO_DELETE__djk39sd,The model output for,It is just like that in Colorado.,should be the same as for,It is just like that in Main.,anonymous,"{""POSITIVE"": 0.9993979930877686, ""NEGATIVE"": 0.0006020086584612727}","{""POSITIVE"": 0.9993271827697754, ""NEGATIVE"": 0.0006727871368639171}",-1.0
+165aa2a38ad24119a131d0fcc5aa08aa,DO_DELETE__djk39sd,The model output for,Meet me in Paris.,should be the same as for,Meet me in Madrid.,anonymous,"{""POSITIVE"": 0.9992857575416565, ""NEGATIVE"": 0.0007142375106923282}","{""POSITIVE"": 0.9991579055786133, ""NEGATIVE"": 0.0008420957019552588}",-1.0
+b21345bd984c4066aad0c763178709c9,DO_DELETE__djk39sd,The model output for,I wish I lived in Hawaii.,should be the same as for,I wish I lived in California.,anonymous,"{""NEGATIVE"": 0.9965608716011047, ""POSITIVE"": 0.0034391151275485754}","{""NEGATIVE"": 0.995909571647644, ""POSITIVE"": 0.004090417642146349}",-1.0
+a68dfffed07647eb8a25c81aeecd5b49,DO_DELETE__djk39sd,The model output for,It is just like that in Tennessee.,should be the same as for,It is just like that in London.,anonymous,"{""POSITIVE"": 0.9984719157218933, ""NEGATIVE"": 0.0015280311927199364}","{""POSITIVE"": 0.9993330836296082, ""NEGATIVE"": 0.00066684081684798}",-1.0
+c6941852f6e64e6691d232b36bbb5659,DO_DELETE__djk39sd,The model output for,The rain comes in Colorado.,should be the same as for,The rain comes in Spain.,anonymous,"{""POSITIVE"": 0.9620969295501709, ""NEGATIVE"": 0.03790305182337761}","{""POSITIVE"": 0.9771619439125061, ""NEGATIVE"": 0.022838087752461433}",-1.0
+7ca30c2517ee41988459100ab3a29aef,DO_DELETE__djk39sd,The model output for,You look good in Sacramento.,should be the same as for,You look good in Brussels.,anonymous,"{""POSITIVE"": 0.9998619556427002, ""NEGATIVE"": 0.00013807583309244365}","{""POSITIVE"": 0.9998558759689331, ""NEGATIVE"": 0.0001440760534023866}",-1.0
+67fbc9e899ca4074b4672775ad992f55,DO_DELETE__djk39sd,The model output for,Meet me in Palm Springs.,should be the same as for,Meet me in The Hague.,anonymous,"{""POSITIVE"": 0.9994876384735107, ""NEGATIVE"": 0.0005123727023601532}","{""POSITIVE"": 0.9970442652702332, ""NEGATIVE"": 0.002955760108307004}",-1.0
+af33ecf862db4b3d93d52b21f7b96768,DO_DELETE__djk39sd,The model output for,Service is for sale in Florida.,should be the same as for,Service is for sale in Nevada.,anonymous,"{""POSITIVE"": 0.8364593982696533, ""NEGATIVE"": 0.1635405719280243}","{""NEGATIVE"": 0.6941097974777222, ""POSITIVE"": 0.30589020252227783}",0.877
+f85eb65e90a849d2a2065ecbb24784e4,DO_DELETE__djk39sd,The model output for,The snow falls in Alaska.,should be the same as for,The snow falls in London.,anonymous,"{""POSITIVE"": 0.7435309290885925, ""NEGATIVE"": 0.25646910071372986}","{""NEGATIVE"": 0.6049245595932007, ""POSITIVE"": 0.3950754404067993}",0.72
+544afcec3f96436db9a137e999d50b4c,DO_DELETE__djk39sd,The model output for,Do you live in Long Beach?,should be the same as for,Do you live in Houston?,anonymous,"{""POSITIVE"": 0.5410425066947937, ""NEGATIVE"": 0.4589574933052063}","{""NEGATIVE"": 0.6697973608970642, ""POSITIVE"": 0.330202579498291}",0.531
+28cd8538e1c24744829bf66d64837538,DO_DELETE__djk39sd,The model output for,Do you live in Los Angeles?,should be the same as for,Do you live in London?,anonymous,"{""NEGATIVE"": 0.7837404608726501, ""POSITIVE"": 0.21625950932502747}","{""NEGATIVE"": 0.5622205138206482, ""POSITIVE"": 0.4377795159816742}",-0.662
+641f07f7889047ee9cceda7ad239ffae,DO_DELETE__djk39sd,The model output for,Do you live in Miami?,should be the same as for,Do you live in Amsterdam?,anonymous,"{""NEGATIVE"": 0.6040235161781311, ""POSITIVE"": 0.3959764838218689}","{""NEGATIVE"": 0.7394645810127258, ""POSITIVE"": 0.26053544878959656}",-0.698
+deb8a1a3060740ca83ad8cd2ad43729c,DO_DELETE__djk39sd,The model output for,We shoot in New York.,should be the same as for,We shoot in Edinburgh.,anonymous,"{""NEGATIVE"": 0.7350760102272034, ""POSITIVE"": 0.26492398977279663}","{""NEGATIVE"": 0.9679812788963318, ""POSITIVE"": 0.032018713653087616}",-0.929
+ddbe755011334cd5b825e05dd5f7e1cd,DO_DELETE__djk39sd,The model output for,I like to take a walk in Chicago.,should be the same as for,I like to take a walk in New York.,anonymous,"{""POSITIVE"": 0.9992058873176575, ""NEGATIVE"": 0.0007940782234072685}","{""POSITIVE"": 0.9994955062866211, ""NEGATIVE"": 0.0005045306752435863}",-1.0
+1a6f43462d24425fa5d891ac4b12543c,DO_DELETE__djk39sd,The model output for,It is just like that in Sydney.,should be the same as for,It is just like that in Phoenix.,anonymous,"{""POSITIVE"": 0.9994623064994812, ""NEGATIVE"": 0.0005376994959078729}","{""POSITIVE"": 0.9992984533309937, ""NEGATIVE"": 0.0007014911971054971}",-1.0
+275f00a594b04ab0837df62b1c3ca1c3,DO_DELETE__djk39sd,The model output for,We are going to live in Paris.,should be the same as for,We are going to live in France.,anonymous,"{""POSITIVE"": 0.9985446929931641, ""NEGATIVE"": 0.0014553512446582317}","{""POSITIVE"": 0.9986633062362671, ""NEGATIVE"": 0.001336736953817308}",-1.0
+6fb29a6f23ca4d508f5b27d0c3f076fd,DO_DELETE__djk39sd,The model output for,I love Tokyo.,should be the same as for,I love Mozambique.,anonymous,"{""POSITIVE"": 0.9998257756233215, ""NEGATIVE"": 0.00017423569806851447}","{""POSITIVE"": 0.9993895292282104, ""NEGATIVE"": 0.0006103988853283226}",-1.0
+e80d92734f8448608ef49045ad976059,DO_DELETE__djk39sd,The model output for,Sunnin' in Palm Springs?,should be the same as for,Sunnin' in Honolulu?,anonymous,"{""NEGATIVE"": 0.9697041511535645, ""POSITIVE"": 0.030295901000499725}","{""NEGATIVE"": 0.9853429794311523, ""POSITIVE"": 0.014657000079751015}",-1.0
+86a0edc0474046ea9a74133cd6adf9ce,DO_DELETE__djk39sd,The model output for,I am glad my cousin lives in Sydney.,should be the same as for,I am glad my cousin lives in Amsterdam.,anonymous,"{""POSITIVE"": 0.9971615076065063, ""NEGATIVE"": 0.002838496584445238}","{""POSITIVE"": 0.9965277314186096, ""NEGATIVE"": 0.0034722888376563787}",-1.0
+61bcad402f464e48b052a037cf7db044,DO_DELETE__djk39sd,The model output for,We plan to live in Salt Lake City.,should be the same as for,We plan to live in Death Valley.,anonymous,"{""POSITIVE"": 0.9951514005661011, ""NEGATIVE"": 0.004848601762205362}","{""NEGATIVE"": 0.9367910623550415, ""POSITIVE"": 0.06320888549089432}",1.0
+5d6b36bc353b4d62a7878aba82ba4528,DO_DELETE__djk39sd,The model output for,Is it hot in Texas?,should be the same as for,Is it hot in India?,anonymous,"{""NEGATIVE"": 0.5390995740890503, ""POSITIVE"": 0.4609003961086273}","{""POSITIVE"": 0.7457579374313354, ""NEGATIVE"": 0.25424206256866455}",0.597
+1c4665d1aa1946ce9fcbf0b8ed2704ef,DO_DELETE__djk39sd,The model output for,Will you marry me in San Francisco?,should be the same as for,Will you marry me in New Hampshire?,anonymous,"{""POSITIVE"": 0.9353418946266174, ""NEGATIVE"": 0.06465806812047958}","{""POSITIVE"": 0.5970035791397095, ""NEGATIVE"": 0.40299639105796814}",-0.736
+7556dda3d5a34788bebf52bf035d0e5e,DO_DELETE__djk39sd,The model output for,He came in Paris.,should be the same as for,He came in Germany.,anonymous,"{""POSITIVE"": 0.9870277643203735, ""NEGATIVE"": 0.012972211465239525}","{""POSITIVE"": 0.6066345572471619, ""NEGATIVE"": 0.39336544275283813}",-0.76
+72ece28ea60a4fc7b3bf5730daaa28f7,DO_DELETE__djk39sd,The model output for,She cries a lot in Miami.,should be the same as for,She cries a lot in New Orleans.,anonymous,"{""NEGATIVE"": 0.8911775350570679, ""POSITIVE"": 0.10882243514060974}","{""NEGATIVE"": 0.743383526802063, ""POSITIVE"": 0.256616473197937}",-0.936
+518f960a234347ef9498ca0f0dd6fc4b,DO_DELETE__djk39sd,The model output for,What do you say in Argentina?,should be the same as for,What do you say in Greece?,anonymous,"{""NEGATIVE"": 0.8492214679718018, ""POSITIVE"": 0.15077847242355347}","{""NEGATIVE"": 0.7753180861473083, ""POSITIVE"": 0.22468191385269165}",-0.96
+54423d43f0a642fe89095c227353306f,DO_DELETE__djk39sd,The model output for,I visited your store in New York.,should be the same as for,I visited your store in Paris.,anonymous,"{""NEGATIVE"": 0.6092760562896729, ""POSITIVE"": 0.39072397351264954}","{""NEGATIVE"": 0.6263294219970703, ""POSITIVE"": 0.3736705780029297}",-0.969
+994dca40119947d693cdcdec04bf48de,DO_DELETE__djk39sd,The model output for,I can't see good things about this place.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9984622001647949, ""POSITIVE"": 0.0015378043754026294}",{},-1.0
+47cb868d18b04378a59580fc4083c301,DO_DELETE__djk39sd,The model output for,I don't think like it.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9985865354537964, ""POSITIVE"": 0.0014134320663288236}",{},-1.0
+3e000686e6d64e8698a060eb186a5616,DO_DELETE__djk39sd,The model output for,I do not go for this place.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.999142050743103, ""POSITIVE"": 0.0008578969282098114}",{},-1.0
+89dd72ed11eb49af9a210414e96b9b69,DO_DELETE__djk39sd,The model output for,This place is not good for your health.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9997971653938293, ""POSITIVE"": 0.00020285134087316692}",{},-1.0
+268dbfa6d5ee49618bbacd9f407e14e7,DO_DELETE__djk39sd,The model output for,This is not a nice place like it is said.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.999794065952301, ""POSITIVE"": 0.00020595299429260194}",{},-1.0
+053f9b9b5c5e4201bd0177d9057c0d69,DO_DELETE__djk39sd,The model output for,This is not a very good place.,should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9998041987419128, ""POSITIVE"": 0.00019584849360398948}",{},-1.0
+0cbc26c1d852471084bc4abc214aba5e,DO_DELETE__djk39sd,The model output for,"One I would think I would enjoy, but I don't.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9889059066772461, ""POSITIVE"": 0.011094089597463608}",{},-1.0
+1e50b1f2f94041a2939715adb213826a,DO_DELETE__djk39sd,The model output for,"I thought this was a great place, but it was not.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9829716086387634, ""POSITIVE"": 0.017028389498591423}",{},-1.0
+b2cb54283d904ed1baa382e982b1b3a7,DO_DELETE__djk39sd,The model output for,"I thought this town would be nice, but it wasn't.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9950900077819824, ""POSITIVE"": 0.004910011775791645}",{},-1.0
+86b4a7f237544f08a53e58ce48f7a5ae,DO_DELETE__djk39sd,The model output for,"This is a town I thought I would enjoy, but it is gone.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9990473389625549, ""POSITIVE"": 0.0009526636567898095}",{},-1.0
+b470f07af98b48628a5d94eb1521856f,DO_DELETE__djk39sd,The model output for,"I thought this would be nice, but it really wasn't.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9952067732810974, ""POSITIVE"": 0.004793212749063969}",{},-1.0
+9a972af43dd740b6868e133934c0cd14,DO_DELETE__djk39sd,The model output for,"What seemed like a fun place, turned out not to be.",should not be,POSITIVE,anonymous,"{""POSITIVE"": 0.9965026378631592, ""NEGATIVE"": 0.0034974077716469765}",{},1.0
+23e56e8e023a4bd8ab9cca720aa72139,DO_DELETE__djk39sd,The model output for,"This is a town I thought I would want, but I don't.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9856513738632202, ""POSITIVE"": 0.014348598197102547}",{},-1.0
+f4f18ca2022c4615869992de1e743508,DO_DELETE__djk39sd,The model output for,"This is a town I thought I would love, but I did not.",should not be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9564076066017151, ""POSITIVE"": 0.04359236732125282}",{},-1.0
+67785a0d1f9e4510984392b3220bf3d8,DO_DELETE__djk39sd,The model output for,"What seemed like a good place at first, turned out not to be.",should not be,POSITIVE,anonymous,"{""POSITIVE"": 0.9951321482658386, ""NEGATIVE"": 0.004867789335548878}",{},1.0
+0d38c1ebe6fc4434ab5166c47e347098,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+7f4bb031115342eb912f5986200148a9,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+e653206b81c5493da7186da712aadd6b,DO_DELETE__djk39sd,The model output for,This is great.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999879002571106, ""NEGATIVE"": 0.00012099596642656252}",{},-1.0
+a12e254077404fc68608a018d278e39a,DO_DELETE__djk39sd,The model output for,What a wonderful place.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998823404312134, ""NEGATIVE"": 0.00011764045484596863}",{},-1.0
+db444a0f03894ce5a465f039239690a0,DO_DELETE__djk39sd,The model output for,I would love to come back here.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9993045330047607, ""NEGATIVE"": 0.0006954410928301513}",{},-1.0
+7debb321851f4d6c8367300faa48855a,DO_DELETE__djk39sd,The model output for,Just incredible!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998806715011597, ""NEGATIVE"": 0.00011927444575121626}",{},-1.0
+22c20dba72284dd5bfd3d5c554f5251b,DO_DELETE__djk39sd,The model output for,This is swell.,should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9939928650856018, ""POSITIVE"": 0.006007162854075432}",{},1.0
+085b708ad5604d7a9c9b9d460de93289,DO_DELETE__djk39sd,The model output for,This is perfect.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999862551689148, ""NEGATIVE"": 0.0001374716666759923}",{},-1.0
+66af0d2453f34b27bbe55a32670bc127,DO_DELETE__djk39sd,The model output for,My fiance and I love it!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998787641525269, ""NEGATIVE"": 0.00012122625048505142}",{},-1.0
+525a3990c2b3496cbc0181b2cb9c942f,DO_DELETE__djk39sd,The model output for,It is truly beautiful.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999882698059082, ""NEGATIVE"": 0.00011732866551028565}",{},-1.0
+83ae7f69c1b5406a8a754eaaf594a0ac,DO_DELETE__djk39sd,The model output for,Can't think of a better place to raise the kids.,should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9996269941329956, ""POSITIVE"": 0.00037299239193089306}",{},1.0
+f3744f7384e44ed4b38868d27b0a6fb6,DO_DELETE__djk39sd,The model output for,It's all good!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998401403427124, ""NEGATIVE"": 0.0001598224334884435}",{},-1.0
+73342f571a6747029e9f7b60385e7c06,DO_DELETE__djk39sd,The model output for,The most fun I've had since I got here!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998506307601929, ""NEGATIVE"": 0.00014937849482521415}",{},-1.0
+13da2a24c4764f2bab9884ccc02ff2c1,DO_DELETE__djk39sd,The model output for,I like this place very much.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998688697814941, ""NEGATIVE"": 0.0001310862717218697}",{},-1.0
+d6bbecda924a488193ba8b44ed3ebc42,DO_DELETE__djk39sd,The model output for,It's beautiful and meaningful.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999875545501709, ""NEGATIVE"": 0.00012449632049538195}",{},-1.0
+b17d486c8344499a817cebd28dd6279f,DO_DELETE__djk39sd,The model output for,This is amazing.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999879002571106, ""NEGATIVE"": 0.00012097162107238546}",{},-1.0
+cc8ab0b4125e4a75bfe7eac4fa019145,DO_DELETE__djk39sd,The model output for,I love it!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998781681060791, ""NEGATIVE"": 0.0001218740435433574}",{},-1.0
+bd318e02753e4f8e8a4066907f2725f6,DO_DELETE__djk39sd,The model output for,This is the best!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998407363891602, ""NEGATIVE"": 0.0001592412154423073}",{},-1.0
+7e8d6ad10eff48479eeebf4757efc2c0,DO_DELETE__djk39sd,The model output for,We had a wonderful time.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999881386756897, ""NEGATIVE"": 0.00011861479288199916}",{},-1.0
+967c78482f654be7beb55696af2ef8e3,DO_DELETE__djk39sd,The model output for,This is a little palace!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9989287257194519, ""NEGATIVE"": 0.0010712300427258015}",{},-1.0
+e603649d612f4a4c82cb75658d52fca3,DO_DELETE__djk39sd,The model output for,It's pretty great!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998668432235718, ""NEGATIVE"": 0.00013312773080542684}",{},-1.0
+43b96ea2cc6b4bc2ba9b1fbd726ecdf2,DO_DELETE__djk39sd,The model output for,I've never seen anything so beautiful!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9997802376747131, ""NEGATIVE"": 0.0002198166912421584}",{},-1.0
+8d4644cd6689469896430a9113e07b5c,DO_DELETE__djk39sd,The model output for,"I like this place, a lot.",should be,POSITIVE,anonymous,"{""POSITIVE"": 0.999842643737793, ""NEGATIVE"": 0.0001573060144437477}",{},-1.0
+4ab60ef0c97440e98690120eaee16657,DO_DELETE__djk39sd,The model output for,I like this scenery.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998579025268555, ""NEGATIVE"": 0.00014212213864084333}",{},-1.0
+3bae4b79a16a4a52aca35133b2c52d94,DO_DELETE__djk39sd,The model output for,I'm blown away by the view.,should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9977536797523499, ""POSITIVE"": 0.002246344229206443}",{},1.0
+5568a7e8253d49279746c04f273fceae,DO_DELETE__djk39sd,The model output for,You must go on a vacation here!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9981865286827087, ""NEGATIVE"": 0.0018134458223357797}",{},-1.0
+27da02b3abf845bba0c137bc74ad3fc9,DO_DELETE__djk39sd,The model output for,This is having a good time.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998658895492554, ""NEGATIVE"": 0.00013404358469415456}",{},-1.0
+25905b5059b040f086e7e3baaa9b4967,DO_DELETE__djk39sd,The model output for,I feel right at home.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998410940170288, ""NEGATIVE"": 0.00015882615116424859}",{},-1.0
+fbcfd017870244d3aa702cd4bdb34eeb,DO_DELETE__djk39sd,The model output for,It's a nice place to live.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998742341995239, ""NEGATIVE"": 0.00012574765423778445}",{},-1.0
+75efebc65f5145458b6c391c7d7e937b,DO_DELETE__djk39sd,The model output for,A real friendly place.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.99986732006073, ""NEGATIVE"": 0.00013261268031783402}",{},-1.0
+d6f35ca1bb7544a6916d2794e659ca6a,DO_DELETE__djk39sd,The model output for,The scenery is simply breathtaking.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9998806715011597, ""NEGATIVE"": 0.00011931505287066102}",{},-1.0
+9edeac02e9df4e30b75180548ce03765,DO_DELETE__djk39sd,The model output for,A private paradise!,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9997854828834534, ""NEGATIVE"": 0.0002145668986486271}",{},-1.0
+31f49b99decb4b909609fc9acc5c3fc8,DO_DELETE__djk39sd,The model output for,It's the bee's knees.,should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.9932217597961426, ""POSITIVE"": 0.006778234150260687}",{},1.0
+e4d8dd915bd4445e9689ac872129fe0a,DO_DELETE__djk39sd,The model output for,"All my cares, just fade away.",should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.999574601650238, ""POSITIVE"": 0.000425390200689435}",{},1.0
+eaf490cc37274bb8831ed45ebaa13fd2,DO_DELETE__djk39sd,The model output for,Some of the rooms have new glasses. Try those.,should be,POSITIVE,anonymous,"{""NEGATIVE"": 0.8990758657455444, ""POSITIVE"": 0.10092408210039139}",{},0.995
+ead7100264fc4981972a6fd837bed605,DO_DELETE__djk39sd,The model output for,I feel comfy already.,should be,POSITIVE,anonymous,"{""POSITIVE"": 0.9996925592422485, ""NEGATIVE"": 0.00030752105521969497}",{},-1.0
+520edc471c5b4e0395189e0478ea2494,DO_DELETE__djk39sd,The model output for,This is a bad place,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.999812662601471, ""POSITIVE"": 0.00018738264043349773}",{},-1.0
+90b08a8630fc490d88ddd21b5dcb25ed,DO_DELETE__djk39sd,The model output for,What a terrible time.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9995249509811401, ""POSITIVE"": 0.00047501613153144717}",{},-1.0
+231c893cdf8b49548ceecd2b03730c71,DO_DELETE__djk39sd,The model output for,Nothing about this was enjoyable.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9995763897895813, ""POSITIVE"": 0.0004236149543430656}",{},-1.0
+e3ffd77f99734562861a5c7e006a4467,DO_DELETE__djk39sd,The model output for,I disliked the food.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9994425177574158, ""POSITIVE"": 0.0005574537790380418}",{},-1.0
+b131ecfeb6e34e00844fc0d576d540a2,DO_DELETE__djk39sd,The model output for,What a terrible place.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9994813799858093, ""POSITIVE"": 0.0005186143098399043}",{},-1.0
+8e8989d97aa7406b9930fdea1c394ee5,DO_DELETE__djk39sd,The model output for,I didn't see anything enjoyable.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997084736824036, ""POSITIVE"": 0.00029154345975257456}",{},-1.0
+79d35736000d4ff681b910336741d2e5,DO_DELETE__djk39sd,The model output for,I didn't like anything,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9989691972732544, ""POSITIVE"": 0.0010308237979188561}",{},-1.0
+8902df9579154cc097cb058b8d515b93,DO_DELETE__djk39sd,The model output for,I want my money back,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9987865090370178, ""POSITIVE"": 0.001213490148074925}",{},-1.0
+33f61955c0e1400e90ed52aaf9a89946,DO_DELETE__djk39sd,The model output for,I didn't see anything that I like.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9986691474914551, ""POSITIVE"": 0.001330826198682189}",{},-1.0
+efbd182157aa448bb3568eb40907777e,DO_DELETE__djk39sd,The model output for,I would never come back again.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.7950498461723328, ""POSITIVE"": 0.20495019853115082}",{},-0.978
+76088c9e5b194d8192417ae406755058,DO_DELETE__djk39sd,The model output for,I will never come here again,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.8423054218292236, ""POSITIVE"": 0.15769457817077637}",{},-0.992
+fe52947d6a8f4302a6b2aad5f601b415,DO_DELETE__djk39sd,The model output for,You should go somewhere else,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9876403212547302, ""POSITIVE"": 0.012359709478914738}",{},-0.999
+d9d66ed1d81c4484bb8b269ba40c09b4,DO_DELETE__djk39sd,The model output for,This is worth no stars.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9988507032394409, ""POSITIVE"": 0.001149305491708219}",{},-1.0
+05e9b93093a140f789f179fdcf40cba0,DO_DELETE__djk39sd,The model output for,This isn't a good restaurant,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997673630714417, ""POSITIVE"": 0.00023267263895832002}",{},-1.0
+9f1cbce5601b4e089d93e3e616ef0286,DO_DELETE__djk39sd,The model output for,None of the people were good.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997774958610535, ""POSITIVE"": 0.00022253705537877977}",{},-1.0
+8aa5dd72662640fda9e69ed3b819291f,DO_DELETE__djk39sd,The model output for,I don't like how you do things,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.995470404624939, ""POSITIVE"": 0.004529625177383423}",{},-1.0
+f167dbdc5dcd402ab6fbe03b0996c8a5,DO_DELETE__djk39sd,The model output for,I would never recommend it to a friend.,should be,NEGATIVE,anonymous,"{""POSITIVE"": 0.9816291332244873, ""NEGATIVE"": 0.01837088167667389}",{},1.0
+92df167a3bc04e2196eb489c9428f824,DO_DELETE__djk39sd,The model output for,Poor service,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9996534585952759, ""POSITIVE"": 0.000346516928402707}",{},-1.0
+4f1d28384d884ad4ba6c65ac059a36a9,DO_DELETE__djk39sd,The model output for,I didn't like anything.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9992749094963074, ""POSITIVE"": 0.0007250498165376484}",{},-1.0
+543b0b6e1a3747018423c8bc58b1bb7b,DO_DELETE__djk39sd,The model output for,There is no value of money here,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9996434450149536, ""POSITIVE"": 0.0003564978833310306}",{},-1.0
+5250ac0fab654465bddb118585a51d5c,DO_DELETE__djk39sd,The model output for,There is no value here.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9997294545173645, ""POSITIVE"": 0.00027053357916884124}",{},-1.0
+08dd4fbe8656498689eabdfa39caa04c,DO_DELETE__djk39sd,The model output for,It's so poorly run here.,should be,NEGATIVE,anonymous,"{""NEGATIVE"": 0.9998146891593933, ""POSITIVE"": 0.00018528579676058143}",{},-1.0
+3eb405c6ab6a4eeb95c57f00c2f8c542,/Fairness/Race,nan,nan,topic_placeholder,nan,nan,{},{},
+6287a53a733e454796a05efd939e0903,/Fairness/Gender and sexuality,nan,nan,topic_placeholder,nan,nan,{},{},
+cd722a3a511a4b2cbb211eab3435a968,/Fairness/Gender and sexuality/LGBTQ,nan,nan,topic_placeholder,nan,nan,{},{},
+8f16c69e8fe3490b8be6c9fcafb8dc2f,/Fairness/Political,nan,nan,topic_placeholder,nan,nan,{},{},
+fe40a6e72696481aaf6e4f575868c8b2,/Robustness/Adding irrelevant punctuation,nan,nan,topic_placeholder,nan,nan,{},{},
+683233e699c14d54a6801acdca3b08d3,/Robustness/Spelling errors,nan,nan,topic_placeholder,nan,nan,{},{},
+c12be5d95344420a8bf191f52c45d5ce,/Robustness/Adding a random URL,nan,nan,topic_placeholder,nan,nan,{},{},
+aa31686abd3947cf88a3d5cecd54785b,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+045f4ad7e36a4f1694f9260a6d8f32ab,/Fairness/Religon,nan,nan,topic_placeholder,nan,nan,{},{},
+9ce174f1fc544297becdeef49cc061db,/Fairness/Disabilities,nan,nan,topic_placeholder,nan,nan,{},{},
+083c43df349c4cc7bbdc68d29d38f739,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+66e59dfdcc5f4a6a9d541c3d13466b11,/Fairness/Gender and sexuality/Female,nan,nan,topic_placeholder,nan,nan,{},{},
+b6b16c4f70d447549cfbec8e60c42f81,/Fairness/Gender and sexuality/Male,nan,nan,topic_placeholder,nan,nan,{},{},
+e6a7264a9ce1475091d8fa841a3b758d,/Fairness/Age,nan,nan,topic_placeholder,nan,nan,{},{},
+de24fb3cb0884f6da2764d5a136934fd,/Named Entity Recognition/Place invariances,nan,nan,topic_placeholder,nan,nan,{},{},
+022942349c854e678b4623f37fdd6cd6,/Logic/Symmetry,nan,nan,topic_placeholder,nan,nan,{},{},
+eda7126ae4c2400ea2b22135b19fd5f5,/Logic/Implications,nan,nan,topic_placeholder,nan,nan,{},{},
+5b2621ecc57f4052bc5218049faf825c,/Taxonomy/Synonyms,nan,nan,topic_placeholder,nan,nan,{},{},
+5fe557f4efda4c18956dbf72729e69b2,/Taxonomy/Antonyms,nan,nan,topic_placeholder,nan,nan,{},{},
+066a23c33cf84f9a90af7c2c0892ea2a,DO_DELETE__djk39sd,nan,nan,topic_placeholder,nan,nan,{},{},
+45784b5867f24d70bae80cbf60100bc5,/Robustness/@ mentions,nan,nan,topic_placeholder,nan,nan,,,
+7d00b5c1b43046d28ecfed25860a83b7,/Fairness/Religon/Christianity,nan,nan,topic_placeholder,nan,nan,,,
+6f192e1dd87c4441a9121fba0da8534f,/Fairness/Religon/Islam,nan,nan,topic_placeholder,nan,nan,,,
+7b3addf57c3c46249e819b624909033f,/Fairness/Religon/Hinduism,nan,nan,topic_placeholder,nan,nan,,,
+cc309caf440a49c1a4636808ce811e58,/Fairness/Religon/Buddhism,nan,nan,topic_placeholder,nan,nan,,,
+bc1e8ab4711c4bbfb26876e95bd2ee95,/Fairness/Religon/Judaism,nan,nan,topic_placeholder,nan,nan,,,
+14187c4c7c9243a193758455bbaa7776,/Fairness/Religon/Shinto,nan,nan,topic_placeholder,nan,nan,,,
+9a12e7319fc3417d85e837daef62449b,/Fairness/Religon/Taoism,nan,nan,topic_placeholder,nan,nan,,,
+382da467f7b04ea296f81fdd897e45a0,/Fairness/Religon/Jainism,nan,nan,topic_placeholder,nan,nan,,,
+6f1298d713be4fdc9c1f668c31b38b50,/Fairness/Religon/Atheism,,,topic_placeholder,,,,,
+58c32b204151411f94078d89d4516ea5,/Fairness/Religon/Sikhism,,,topic_placeholder,,,,,
+936b858cc6684230987ee8d3e12ee8c1,/Fairness/Religon/Spiritism,,,topic_placeholder,,,,,
+5f1457585d3743a68d0e891ff5d43e51,/Fairness/Religon/Bahai Faith,,,topic_placeholder,,,,,
+c66b61b6c0e9478fbae3b3883d9c6efb,/Fairness/Age/Young,,,topic_placeholder,,,,,
+b88fa13816c7485f8006bd90948dce0a,/Fairness/Age/Old,,,topic_placeholder,,,,,
+3d97bfa9f086421a8f30683f4e00b653,/Fairness/Disabilities/Autism spectrum disorders,,,topic_placeholder,,,,,
+0a3a12c82c53428d8b17aa33f6b893c0,/Fairness/Disabilities/Deaf and hard of hearing,,,topic_placeholder,,,,,
+1464613188b74cae9a64f72bafe9e7e6,/Fairness/Disabilities/Visual impairments,,,topic_placeholder,,,,,
+3b9c6615468f4699b589f0e0d590b388,/Fairness/Disabilities/Learning disabilities,,,topic_placeholder,,,,,
+2f3d38e7a0c247e8b1854b78dfb9de70,/Fairness/Disabilities/Mobility disabilities,,,topic_placeholder,,,,,
+2b69cb088cb64c0dbbf56e67722ce535,/Fairness/Race/East Asian,,,topic_placeholder,,,,,
+bb62f5f3b53447e282f7fbbb77c014e7,/Fairness/Race/European,,,topic_placeholder,,,,,
+eac2219f50954542a5a53d53e5390247,/Fairness/Race/Indigenous American,,,topic_placeholder,,,,,
+8e3ebca3b259483c837d52e51a9e724c,/Fairness/Race/Sub-Saharan African,,,topic_placeholder,,,,,
+2312dee91409400f86a75f6992a148f7,/Fairness/Race/North African,,,topic_placeholder,,,,,
+72dda66a4ea944249ca55f3d502b60f2,/Fairness/Race/West Asian,,,topic_placeholder,,,,,
+93715bd783e640ca8be8d32d9ddb9ace,/Fairness/Race/Melanesian,,,topic_placeholder,,,,,
+734d00bbdd664182b96115eeda255c00,/Fairness/Race/Central & South Asian,,,topic_placeholder,,,,,
+1c856fe4b2f048eab2a9b0302c7c735f,/Fairness/Race/European/Northwestern European,,,topic_placeholder,,,,,
+6fb01ad5445f42e2b19d390da4e922a8,/Fairness/Race/European/Jewish,,,topic_placeholder,,,,,
+30d9d929aecd411d86b278c1958e1662,/Fairness/Race/European/Eastern European,,,topic_placeholder,,,,,
+84d0247422a24e529360a24fdc95944e,/Fairness/Race/European/Southern European,,,topic_placeholder,,,,,
+05ce2308a4974026ac1ea52be07fbea3,"/Fairness/Race/Arab, Egyptian & Levantine",,,topic_placeholder,,,,,
+b64f34df1c40453196ed5874f8a56a43,/Fairness/Race/European/Northwestern European/British & Irish,,,topic_placeholder,,,,,
+c33650d6aea543c1813e04d8a914f423,/Fairness/Race/European/Northwestern European/Scandinavian,,,topic_placeholder,,,,,
+990d9443b2d943fb91ed8c5e959e7ba5,/Fairness/Race/European/Northwestern European/French & German,,,topic_placeholder,,,,,
+fa65eedda36b4e0882ff9649b46f30a8,/Fairness/Race/European/Northwestern European/Finnish,,,topic_placeholder,,,,,
+bc1b76925b474d2e9bafda65a0c1e246,/Fairness/Race/European/Southern European/Greek & Balkan,,,topic_placeholder,,,,,
+2440037191764f3bb1d76601f1560296,/Fairness/Race/European/Southern European/Italian,,,topic_placeholder,,,,,
+e9c73fe0f30e41c6bc489b82e66fec87,/Fairness/Race/European/Southern European/Sardinian,,,topic_placeholder,,,,,
+872478a8298e439b96e17ff072c330fe,/Fairness/Race/European/Southern European/Spanish & Portuguese,,,topic_placeholder,,,,,
+18400d3dbec24d5b9524a8f4bd52dd3e,/Fairness/Ethnicity,,,topic_placeholder,,,,,
+eaefb247d21f4d1580d489e045ee3666,/Fairness/Ethnicity/Black or African American,,,topic_placeholder,,,,,
+dc5d4e7ee670443cb6401b629a068c50,/Fairness/Ethnicity/White,,,topic_placeholder,,,,,
+00b80e0768c94a25acf2cea654b068a8,/Fairness/Ethnicity/Hispanic,,,topic_placeholder,,,,,
+4d1cfc27dfbf45569e53ed54a1db73ca,/Fairness/Ethnicity/Asian,,,topic_placeholder,,,,,
+46fe783a83c647058396ea7d5e723f31,/Fairness/Ethnicity/Arab,,,topic_placeholder,,,,,
+ae02ab0695cc474db66b4c1ec3e26cac,/Fairness/Ethnicity/Jewish,,,topic_placeholder,,,,,
+fea6dba1333d4ba8820135c85b13ea7f,/Fairness/Ethnicity/Black or African American/Black or African American,,,topic_placeholder,,,,,
+86bd9c19b41647519618f94157e57e56,/Fairness/Nationality,,,topic_placeholder,,,,,
+e6d782ca2f964c1787dfabb070ce9e01,/Fairness/Nationality/American,,,topic_placeholder,,,,,
+c553bb653f1d42afa0c9a2ae9bc9137b,/Fairness/Nationality/Chinese,,,topic_placeholder,,,,,
+0b2e5161d82d40bf8588a896c0a88333,/Fairness/Nationality/British,,,topic_placeholder,,,,,
+5c688fa9edd34e998b1a646e5cc92d1e,/Fairness/Nationality/Irish,,,topic_placeholder,,,,,
+b09935df44a24257bcbf18180ec015b9,/Fairness/Nationality/Israeli,,,topic_placeholder,,,,,
+2a8fc16f6f544fd59dd82cca9fac89cb,/Fairness/Nationality/Egyptian,,,topic_placeholder,,,,,
+001d29ac38a846eaaeb4b670842d4685,/Fairness/Nationality/Mexican,,,topic_placeholder,,,,,
+f7fca049c61948fbbbd952616104d59b,/Fairness/Nationality/Canadian,,,topic_placeholder,,,,,
+6f0ebdf0d13a4eddb45808ed1c831f0a,/Fairness/Nationality/Brazilian,,,topic_placeholder,,,,,
+5aef5b9ecde2464d8bf6e54f34db55b8,/Fairness/Nationality/Indonesian,,,topic_placeholder,,,,,
+6062d425b1f745bf97a6331d59925e0a,/Fairness/Nationality/Russian,,,topic_placeholder,,,,,
+fdb8fe1da4db47e1b1df4696644df6c9,/Fairness/Nationality/Indian,,,topic_placeholder,,,,,
+c8a4d9a49ca94ff194238d7df9040bb2,/Fairness/Nationality/Pakistani,,,topic_placeholder,,,,,
+4fc69a320a60438e936f450f234c18d1,/Fairness/Nationality/Nigerian,,,topic_placeholder,,,,,
+65c9db7b6d13432da1cc6f236b7340c5,/Fairness/Nationality/Bangladeshi,,,topic_placeholder,,,,,
+4b51ae3043c145de8919dced27724fa4,/Fairness/Nationality/Japanese,,,topic_placeholder,,,,,
+39952472ab7e45908dbba6e13c131403,/Fairness/Nationality/Ethiopian,,,topic_placeholder,,,,,
+6fcc5a84123a42239a9abbb47251c2b9,/Fairness/Nationality/Filipino,,,topic_placeholder,,,,,
+01450c14171d44559113adc39ede0d3f,/Fairness/Nationality/Vietnamese,,,topic_placeholder,,,,,
+d6f8f0aa6c2a49459af593b2ac34320b,/Fairness/Nationality/Congolese,,,topic_placeholder,,,,,
+47c0c7dd5e924010914836602f1c02b6,/Fairness/Nationality/Iranian,,,topic_placeholder,,,,,
+79872f5db4ee45b8bde7a54c2f113d58,/Fairness/Nationality/Turkish,,,topic_placeholder,,,,,
+eb229bf76b624ada96a4f7ecb913016d,/Fairness/Nationality/German,,,topic_placeholder,,,,,
+8e2ce2153c4a4ef4bd1e3947c0064fcf,/Fairness/Nationality/French,,,topic_placeholder,,,,,
+07affcfaa3f045aebed2861e6df89234,/Fairness/Nationality/Italian,,,topic_placeholder,,,,,
+b41f2aefe1ca47cebb7955c90b315474,/Fairness/Nationality/Spanish,,,topic_placeholder,,,,,
+ef25682376c44ba3822eeddf03fcb082,/Fairness/Nationality/Korean,,,topic_placeholder,,,,,
+a1b7b5aa36444e839987b3c98a6b3940,/Fairness/Nationality/Australian,,,topic_placeholder,,,,,
+1f792e47ee404f9182f97e76fda15419,/Literary Devices/Analogies,,,topic_placeholder,,,,,
+c2ab86dd60434b78b33058a9a44b3cd7,/Literary Devices/Analogies,,,topic_placeholder,,,,,
+ef2f42885c98445dbbb2be0fca994d6c,/Literary Devices/Analogies,,,topic_placeholder,,,,,
+cfb77d784eac4cf5abeb11f919e4c64f,/Literary Devices,,,topic_placeholder,,,,,
+2782002c34c345d6a112665c02e5e9e2,/Literary Devices/Metaphor,,,topic_placeholder,,,,,
+2d921ac3158748eeb443eaa5880ee5f4,/Literary Devices/Irony+Sarcasm,,,topic_placeholder,,,,,
+e5bdc973808f44b090bc358433976648,/Literary Devices/Hyperbole,,,topic_placeholder,,,,,
+9465029dfb0844b4b28222633e4ee9da,/Literary Devices/Allusions,,,topic_placeholder,,,,,
+2a6d5758bf7e487a8b08f40d06e60315,/Literary Devices/Personification,,,topic_placeholder,,,,,
+97317d629a29480cbcf6a77d9d78d679,/Literary Devices/Imagery,,,topic_placeholder,,,,,
+5d2ebde64275493da3592b711a53f16d,"/Literary Devices/Simile
+",,,topic_placeholder,,,,,
+93cd0029f5ff41628474aa46007f21e8,"/Literary Devices/Symbolism
+",,,topic_placeholder,,,,,
+61cd12099c67425aa2a2a1873a473eb7,/Literary Devices/Puns,,,topic_placeholder,,,,,
