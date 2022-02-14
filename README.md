@@ -20,7 +20,7 @@ import transformers
 import adatest
 
 # create a HuggingFace sentiment analysis model
-classifier = transformers.pipeline("sentiment-analysis")
+classifier = transformers.pipeline("sentiment-analysis", return_all_scores=True)
 
 # set AdaTest's language model backend (HuggingFace and AI21 also supported)
 adatest.backend = adatest.backends.OpenAI('davinci', api_key=OPENAI_API_KEY)
