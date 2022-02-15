@@ -6,6 +6,8 @@ import itertools
 import sentence_transformers
 import openai
 import scipy.stats
+import transformers
+import shap
 #from transformers.tokenization_utils_base import ExplicitEnum
 #from ._explorer import file_log
 
@@ -67,9 +69,17 @@ class ClassifierScorer(Scorer):
 
         self._id = uuid.uuid4().hex
         self.model = model
+
+        # wrap transformer pipeline objects for convenience
+        if isinstance(self.model, transformers.Pipeline):
+            self.model = shap.models.TransformersPipeline(self.model)
+        
         self.output_names = output_names
-        if self.output_names is None:
+
+        # extract output names from model if not provided
+        if self.output_names is None and hasattr(self.model, "output_names"):
             self.output_names = self.model.output_names
+        
         if not callable(self.output_names):
             self._output_name_to_index = {v: i for i, v in enumerate(self.output_names)}
         self.topk = topk

@@ -287,7 +287,9 @@ class TestTreeBrowser():
                     self._update_interface()
                 elif msg[k]["action"] == "add_new_topic":
                     log.debug("add_new_topic")
+                    
                     new_id = uuid.uuid4().hex
+                    self.test_tree.loc[new_id, "prefix"] = self.test_tree.iloc[0].prefix if len(self.test_tree) > 0 else "The model output for"
                     self.test_tree.loc[new_id, "topic"] = self.current_topic + "/New topic"
                     self.test_tree.loc[new_id, "comparator"] = "topic_placeholder"
                     self._update_interface()
@@ -370,7 +372,7 @@ class TestTreeBrowser():
                     data = {k: {
                         "scores": {c: [[k, v] for v in score_parts(df.loc[k, c])] for c in self.score_columns},
                         "comparator": df.loc[k, "comparator"],
-                        "value2": df.loc[k, "value2"],
+                        #"value2": df.loc[k, "value2"], # removed because it causes cursor problems during typing in the interface
                         "value1_outputs": {c: [[k, json.loads(df.loc[k].get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
                         "value2_outputs": {c: [[k, json.loads(df.loc[k].get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
                     }}
@@ -388,6 +390,7 @@ class TestTreeBrowser():
                     self.test_tree.loc[k] = self.suggestions.loc[k]
                     self.suggestions.drop(k, inplace=True)
                     self.suggestions = self._ensure_add_item_row(self.suggestions)
+                
                 elif k in self.test_tree.index:
                     if msg[k]["topic"] == "DO_DELETE__djk39sd": # this means delete the test
                         self.test_tree.drop(k, inplace=True)
@@ -408,6 +411,13 @@ class TestTreeBrowser():
                                 self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
+                    for id, test in self.suggestions.iterrows():
+                        if is_subtopic(k, test.topic):
+                            log.debug(f"test.topic {test.topic} {msg[k]['topic'] + test.topic[len(k):]}")
+                            if msg[k]["topic"] != "suggestion":
+                                self.suggestions.loc[id, "topic"] = msg[k]["topic"]
+                                self.test_tree.loc[id] = self.suggestions.loc[id]
+                                self.suggestions.drop(id, inplace=True)
                 self._update_interface()
 
             else:
@@ -506,90 +516,99 @@ class TestTreeBrowser():
 
         # get the children of the current focus topic
         data = {}
-        children = []
-        for k, test in self.test_tree.iterrows():
-            data[k] = {
-                "prefix": test.prefix,
-                "value1": test.value1,
-                "value1_outputs": {c: [[k, safe_json_load(test.get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
-                "comparator": test.comparator,
-                "value2": test.value2,
-                "value2_outputs": {c: [[k, safe_json_load(test.get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
-                "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
-                "topic_name": None,
-                "is_topic": False,
-                "hidden": self._hidden_topics.get(k, False),
-                "editing": test.value1 == "New test"
-            }
-            if test.value1 == "New test":
-                data[k]["editing"] = True
 
-            if is_subtopic(self.current_topic, test.topic):
-                if test.topic != self.current_topic:
-                    child_topic = test.topic[len(self.current_topic):].split("/")[1]
-                    key = self.current_topic+"/"+child_topic
-                    if key not in children:
-                        # log.debug("key", key, self._hidden_topics.get(key, False))
-                        data[key] = {
-                            "topic_name": child_topic,
-                            "prefix": test.prefix,
-                            "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
-                            "value1": None,
-                            "value1_outputs": {},
-                            "comparator": "should not be",
-                            "value2": None,
-                            "is_topic": True,
-                            "hidden": self._hidden_topics.get(key, False)
-                        }
-                        if child_topic == "New topic": # we start editing new topics by default
-                            data[key]["editing"] = True
-                        children.append(key)
-                    else:
-                        for c in self.score_columns:
-                            data[key]["scores"][c].extend([[k, v] for v in score_parts(test[c])])
-                elif test.comparator != "topic_placeholder":
-                    children.append(k)
-        # TODO: This is a complete hack
-        children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children])
-        if len(children_scores) < 5:
-            autofilter = -1000000
+        def create_children(data, tests):
+            children = []
+            for k, test in tests.iterrows():
+                data[k] = {
+                    "prefix": test.prefix,
+                    "value1": test.value1,
+                    "value1_outputs": {c: [[k, safe_json_load(test.get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
+                    "comparator": test.comparator,
+                    "value2": test.value2,
+                    "value2_outputs": {c: [[k, safe_json_load(test.get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
+                    "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
+                    "topic_name": None,
+                    "is_topic": False,
+                    "hidden": self._hidden_topics.get(k, False),
+                    "editing": test.value1 == "New test"
+                }
+                if test.value1 == "New test":
+                    data[k]["editing"] = True
+
+                if is_subtopic(self.current_topic, test.topic):
+                    if test.topic != self.current_topic:
+                        child_topic = test.topic[len(self.current_topic):].split("/")[1]
+                        key = self.current_topic+"/"+child_topic
+                        if key not in children:
+                            # log.debug("key", key, self._hidden_topics.get(key, False))
+                            data[key] = {
+                                "topic_name": child_topic,
+                                "prefix": test.prefix,
+                                "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
+                                "value1": None,
+                                "value1_outputs": {},
+                                "comparator": "should not be",
+                                "value2": None,
+                                "is_topic": True,
+                                "hidden": self._hidden_topics.get(key, False)
+                            }
+                            if child_topic == "New topic": # we start editing new topics by default
+                                data[key]["editing"] = True
+                            children.append(key)
+                        else:
+                            for c in self.score_columns:
+                                data[key]["scores"][c].extend([[k, v] for v in score_parts(test[c])])
+                    elif test.comparator != "topic_placeholder":
+                        children.append(k)
+
+            # sort by score and always put new topics first
+            sorted_children = sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]]))
+            sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id]["value1"] == "New test" else 1)
+
+            return sorted_children
+        children = create_children(data, self.test_tree)
+        children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children])      
+
+        suggestions_children = create_children(data, self.suggestions)
+        suggestions_children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in suggestions_children])
+
+        # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
+        if len(children_scores) < 10:
+            autofilter = -1e12
         else:
-            autofilter = min(children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2, 0)
-
-        # sort by score and always put new topics first
-        sorted_children = sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]]))
-        sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id]["value1"] == "New test" else 1)
+            autofilter = min(children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2, np.nanmax(suggestions_children_scores)-1e-2)
 
         # log.debug("AUTOFILTER %f" % autofilter)
         # log.debug("in _update_interface2", self.current_topic)
         data["test_chart"] = {
-            "suggestions": sorted(list(self.suggestions.index), key=lambda id: -score_max(self.suggestions.loc[id, self.score_columns[0]])),
-            "tests": sorted_children,
+            "suggestions": suggestions_children,
+            "tests": children,
             "topic": self.current_topic,
             "score_filter": autofilter if self.score_filter == "auto" else self.score_filter,
             "disable_suggestions": False if self.experiment is None else self.experiment.get("disable_suggestions", False),
             #"test_prefix": self.test_tree.test_prefix,
             "experiment": self.experiment is not None,
             "experiment_locations": None if self.experiment is None else self.experiment.get("locations", None),
-            "read_only": self.scorer is None,
+            "read_only": False, #self.scorer is None,
             "score_columns": self.score_columns,
             "suggestions_error": self.suggestions_error,
             "model_options": self.backend.models,
             "model": self.backend.model
         }
-        for k, test in self.suggestions.iterrows():
-            data[k] = {
-                "prefix": test.prefix,
-                "value1": test.value1,
-                "value1_outputs": {c: [[k, safe_json_load(test.get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
-                "comparator": test.comparator,
-                "value2": test.value2,
-                "value2_outputs": {c: [[k, safe_json_load(test.get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
-                "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
-                "is_topic": False,
-                "topic_name": None,
-                "hidden": self._hidden_topics.get(k, False)
-            }
+        # for k, test in self.suggestions.iterrows():
+        #     data[k] = {
+        #         "prefix": test.prefix,
+        #         "value1": test.value1,
+        #         "value1_outputs": {c: [[k, safe_json_load(test.get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
+        #         "comparator": test.comparator,
+        #         "value2": test.value2,
+        #         "value2_outputs": {c: [[k, safe_json_load(test.get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
+        #         "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
+        #         "is_topic": False,
+        #         "topic_name": None,
+        #         "hidden": self._hidden_topics.get(k, False)
+        #     }
         # log.debug(f"in _update_interface3 {data} x", )
         self.comm.send(data)
 
@@ -672,6 +691,14 @@ class TestTreeBrowser():
         if valid_outputs is not None and value2_filter is not None:
             valid_outputs = [s for s in valid_outputs if re.search(value2_filter, s) is not None]
 
+        # see if we have only topics are direct children, if so, we suggest topics
+        has_direct_tests = False
+        for k, test in self.test_tree.iterrows():
+            if test["topic"] == topic and test["comparator"] != "topic_placeholder":
+                has_direct_tests = True
+                break
+        suggest_topics = not has_direct_tests
+
         # see if all our outputs seem to be the same
         if valid_outputs is not None and len(valid_outputs) == 1:
             include_value2 = False
@@ -706,7 +733,8 @@ class TestTreeBrowser():
                 use_focus=use_focus,
                 comparator_filter=comparator_filter,
                 subtopic_diversity=subtopic_diversity,
-                include_value2=include_value2
+                include_value2=include_value2,
+                suggest_topics=suggest_topics,
                 ) for _ in range(prompt_threads)]
         #log.debug("prompt", prompts)
         self.backend.temperature = temperature
@@ -753,12 +781,17 @@ class TestTreeBrowser():
 
         suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
         self._compute_embeddings_and_scores(suggestions)
-        suggestions = suggestions.dropna(subset=[self.score_columns[0]])
+        if not suggest_topics:
+            suggestions = suggestions.dropna(subset=[self.score_columns[0]])
+        else:
+            for k, test in suggestions.iterrows():
+                suggestions.loc[k, "topic"] = self.current_topic + "/" + test["value1"]
+                suggestions.loc[k, "value1"] = ""
 
         # When we have outputs filled in by the scorer we might have more duplicates we need to remove
         duplicates = []
         for k,row in suggestions.iterrows():
-            str_val = row.value1.lower() + " " + row.comparator + " " + row.value2.lower()
+            str_val = row.topic.lower() + " " + row.value1.lower() + " " + row.comparator + " " + row.value2.lower()
             if str_val in test_map:
                 duplicates.append(k)
             test_map[str_val] = True
@@ -800,7 +833,8 @@ class TestTreeBrowser():
             row["score"] = float(row["score"]) + topic_model_scale * sim_scores[i]
 
     def _make_prompt(self, topic, prompt_size=None, focus_decay=None, slot_randomization=None, score_randomization=None, skip_randomization=None,
-                     use_focus=None, prompt_diversity=None, comparator_filter=None, complete_diversity=None, subtopic_diversity=None, include_value2='auto'):
+                     use_focus=None, prompt_diversity=None, comparator_filter=None, complete_diversity=None, subtopic_diversity=None,
+                     include_value2='auto', suggest_topics=False):
         """ This builds a prompt for GPT3 that elicits useful input examples.
         """
 
@@ -852,6 +886,20 @@ class TestTreeBrowser():
                     topic_scaling_orig.append(0.01)
             else:
                 topic_scaling_orig.append(0.0)
+        
+        # if we don't have tests in the topic, we should suggest new direct child topics, not new tests
+        if suggest_topics:
+            topic_scaling_orig = []
+            for k in ids:
+                if self.test_tree.loc[k, "comparator"] == "topic_placeholder" and self.test_tree.loc[k, "topic"].rsplit('/', 1)[0] == topic:
+                    topic_scaling_orig.append(1.0)
+                else:
+                    topic_scaling_orig.append(0.0)
+            # we turn off options that are unsupported for topic suggestions
+            complete_diversity = False
+            use_focus = False
+            prompt_diversity = False
+        
         topic_scaling_orig = np.array(topic_scaling_orig)
         # topic_scaling_orig = np.array([1.0 if is_subtopic(topic, self.test_tree.loc[k, "topic"]) else 0 for k in ids])
         topic_scaling = topic_scaling_orig.copy()
@@ -876,7 +924,7 @@ class TestTreeBrowser():
         scores = np.nan_to_num(scores)
 
         # randomize the scores a bit to allow for diversity in our prompts
-        std_dev = np.sqrt(np.cov(scores, aweights=topic_scaling_orig))
+        std_dev = np.sqrt(np.cov(scores, aweights=topic_scaling_orig)) + 1e-6
         # log.debug(f"score_randomization std = {std_dev}")
         if not np.isnan(std_dev):
             scores += score_randomization * std_dev * np.random.rand(len(ids))
@@ -965,7 +1013,10 @@ class TestTreeBrowser():
         prompt = []
         for k in reversed(prompt_ids):
             row = self.test_tree.loc[k]
-            prompt.append((row["value1"], row["comparator"], row["value2"]))
+            if suggest_topics:
+                prompt.append((row["topic"].rsplit("/", 1)[-1], "topic_placeholder", "")) # we are suggesting topis, not tests
+            else:
+                prompt.append((row["value1"], row["comparator"], row["value2"]))
 
         return prompt
 
@@ -1335,7 +1386,7 @@ class TestTree():
             self.to_csv(self._tests_location)
             self._last_saved_tests = self._tests.copy()
 
-    def __call__(self, scorer=None, starting_topic="", max_suggestions=50, max_suggestions_display=20, prompt_size=7, prompt_threads=10,
+    def __call__(self, scorer=None, starting_topic="", max_suggestions=100, max_suggestions_display=20, prompt_size=7, prompt_threads=10,
                  complete_diversity=False, prompt_diversity=True, use_focus=False, focus_decay=0.8, slot_randomization=0.25,
                  score_randomization=1.0, skip_randomization=0.25, temperature=0.95, subtopic_diversity=True, score_filter="auto",
                  experiment=None, embedding_model=None, user="anonymous", prompt_seperator=">", recompute_scores=False,
