@@ -2,7 +2,6 @@
 """
 import asyncio
 import aiohttp
-import shap
 import transformers
 import openai
 
@@ -101,7 +100,7 @@ class Backend():
            
 class Transformers(Backend):
     def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\""):
-        super().__init__(model=model, sep=sep, subsep=subsep, quote=quote)
+        super().__init__(models=model, sep=sep, subsep=subsep, quote=quote)
         self.tokenizer = tokenizer
         self.device = self.model.device
 
