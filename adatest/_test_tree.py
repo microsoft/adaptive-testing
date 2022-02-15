@@ -23,7 +23,7 @@ from threading import Timer
 from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer
 import adatest
 
-# from ttps://gist.github.com/walkermatt/2871026
+# from https://gist.github.com/walkermatt/2871026
 def throttle(interval):
     """ Decorator that will postpone a functions
         execution so it does not run more than once per
@@ -559,8 +559,8 @@ class TestTreeBrowser():
             "read_only": self.scorer is None,
             "score_columns": self.score_columns,
             "suggestions_error": self.suggestions_error,
-            "model_options": self.backend.models,
-            "model": self.backend.model
+            "model_options": [x if isinstance(x, str) else x.__class__.__name__ for x in self.backend.models],
+            "model": self.backend.model if isinstance(self.backend.model, str) else self.backend.model.__class__.__name__
         }
         for k, test in self.suggestions.iterrows():
             data[k] = {
