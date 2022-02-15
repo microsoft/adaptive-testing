@@ -1,14 +1,14 @@
 # AdaTest (alpha preview release)
-AdaTest uses language models against themselves to build suites of unit tests. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests with fine-tuning then leads to an iterative debugging process similar to traditional software develeopment.
+AdaTest uses language models against themselves to build suites of unit tests. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests with fine-tuning then leads to an iterative debugging process similar to traditional software development.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/microsoft/adatest/master/docs/artwork/main_loops.png" width="300" alt="AdaTest loops" />
+  <img src="docs/images/main_loops.png" width="300" alt="AdaTest loops" />
 </p>
 
 ## Install
 
 ```
-> pip install adatest
+pip install adatest
 ```
 
 ## Sentiment analysis example
@@ -36,7 +36,7 @@ tests(classifier) # wrap with adatest.serve to launch a standalone server
 
 Once we have opened a test tree browser, we can navigate to specific topics of interest and then add new tests specifically targeted at our current model. Clicking 'Suggest tests` in a topic proposes a large number of new tests targeted at the current model that we can add to the test tree if we like.
 
-**Image showing many suggetions in a topic where the current model does not fail.**
+**Image showing many suggestions in a topic where the current model does not fail.**
 
 After multiple rounds of test suggestions AdaTest learns to find failures of the target model within the current topic.
 
