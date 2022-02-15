@@ -581,7 +581,7 @@ class Row extends React.Component {
       }
       this.dataLoadActions = [];
     }
-    console.log("state.topic_name", state.topic_name)
+    // console.log("state.topic_name", state.topic_name)
     // we automatically start editing topics that are selected and have an imputed name
     if (state.topic_name && (state.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
       state["editing"] = true;
@@ -749,8 +749,8 @@ class Row extends React.Component {
         overall_score[k] = NaN;
       }
     }
-
-    if (this.props.scoreFilter && overall_score[main_score] < this.props.scoreFilter) {
+    // console.log("overall_score[main_score]", overall_score[main_score], this.props.score_filter)
+    if (this.props.scoreFilter && overall_score[main_score] < this.props.scoreFilter && this.props.scoreFiler > -1000) {
       //console.log("score filter ", this.state.value1, score, this.props.scoreFilter)
       return null;
     }
@@ -780,14 +780,14 @@ class Row extends React.Component {
           <FontAwesomeIcon icon={faEyeSlash} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
         </div>
       } */}
-      {this.state.topic_name !== null &&
+      {this.state.topic_name !== null && !this.props.isSuggestion &&
         <div onClick={this.onOpen} class="gadfly-row-add-button" style={{marginLeft: "6px", lineHeight: "14px", opacity: "1", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
           <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", color: "rgb(84, 174, 255)", display: "inline-block"}} />
         </div>
       }
       {this.props.isSuggestion &&
         <div onClick={this.addToCurrentTopic} className="gadfly-row-add-button gadfly-hover-opacity" style={{cursor: "pointer"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
-          <FontAwesomeIcon icon={faPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
+          <FontAwesomeIcon icon={this.state.topic_name === null ? faPlus : faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
       <div style={{padding: "5px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
@@ -1088,10 +1088,13 @@ class Row extends React.Component {
 
   inputValue2(text) {
     console.log("inputValue2", text)
-    if (this.props.value2Edited) {
-      this.props.value2Edited(this.props.id, this.state.value2, text);
-    }
-    this.setValue2(text);
+    this.setState({value2: text, scores: null});
+    this.props.comm.debouncedSend500(this.props.id, {value2: text});
+
+    // if (this.props.value2Edited) {
+    //   this.props.value2Edited(this.props.id, this.state.value2, text);
+    // }
+    // this.setValue2(text);
   }
 
   setValue2(text) {
