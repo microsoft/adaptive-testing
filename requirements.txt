@@ -1,0 +1,11 @@
+nest_asyncio
+aiohttp
+aiohttp_session
+aiohttp_security
+numpy
+pandas
+sklearn
+openai
+sentence_transformers
+checklist
+shap
