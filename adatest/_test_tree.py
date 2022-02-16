@@ -787,7 +787,7 @@ class TestTreeBrowser():
                 s = {
                     "type": "topic_data" if suggest_topics else "test",
                     "prefix": prefix,
-                    "topic": "suggestion", # will get replaced with imputed version
+                    "topic": topic,
                     "value1": value1,
                     "comparator": comparator,
                     "value2": value2,
