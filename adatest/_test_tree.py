@@ -276,7 +276,7 @@ class TestTreeBrowser():
                     new_id = uuid.uuid4().hex
                     self.test_tree.loc[new_id, "prefix"] = self.test_tree.iloc[0].prefix if len(self.test_tree) > 0 else "The model output for"
                     self.test_tree.loc[new_id, "topic"] = self.current_topic + "/New topic"
-                    self.test_tree.loc[new_id, "comparator"] = "topic_placeholder"
+                    self.test_tree.loc[new_id, "type"] = "topic_data"
                     self._update_interface()
                 elif msg[k]["action"] == "add_new_test":
                     log.debug("add_new_test")
@@ -285,7 +285,7 @@ class TestTreeBrowser():
                     outputs = []
                     comparators = []
                     for k, test in self.test_tree.iterrows():
-                        if is_subtopic(self.current_topic, test.topic) and test.comparator != "topic_placeholder":
+                        if is_subtopic(self.current_topic, test.topic) and test.type != "topic_data":
                             outputs.append(test.value2)
                             comparators.append(test.comparator)
                     outputs = set(outputs)
@@ -297,6 +297,7 @@ class TestTreeBrowser():
 
                     # if not we append one
                     row = {
+                        "type": "test",
                         "topic": self.current_topic, # will get replaced with imputed version
                         "prefix": self.test_tree.iloc[0].prefix if len(self.test_tree) > 0 else "The model output for",
                         "value1": "New test",
@@ -505,21 +506,25 @@ class TestTreeBrowser():
         def create_children(data, tests):
             children = []
             for k, test in tests.iterrows():
-                data[k] = {
-                    "prefix": test.prefix,
-                    "value1": test.value1,
-                    "value1_outputs": {c: [[k, safe_json_load(test.get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
-                    "comparator": test.comparator,
-                    "value2": test.value2,
-                    "value2_outputs": {c: [[k, safe_json_load(test.get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
-                    "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
-                    "topic_name": None,
-                    "is_topic": False,
-                    "hidden": self._hidden_topics.get(k, False),
-                    "editing": test.value1 == "New test"
-                }
-                if test.value1 == "New test":
-                    data[k]["editing"] = True
+
+                if test.type == "test":
+                    data[k] = {
+                        "type": "test",
+                        "prefix": test.prefix,
+                        "value1": test.value1,
+                        "value1_outputs": {c: [[k, safe_json_load(test.get(c + " value1 outputs", "{}"))]] for c in self.score_columns},
+                        "comparator": test.comparator,
+                        "description": test.description,
+                        "value2": test.value2,
+                        "value2_outputs": {c: [[k, safe_json_load(test.get(c + " value2 outputs", "{}"))]] for c in self.score_columns},
+                        "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
+                        "topic_name": None,
+                        "is_topic": False,
+                        "hidden": self._hidden_topics.get(k, False),
+                        "editing": test.value1 == "New test"
+                    }
+                    if test.value1 == "New test":
+                        data[k]["editing"] = True
 
                 if is_subtopic(self.current_topic, test.topic):
                     if test.topic != self.current_topic:
@@ -528,6 +533,7 @@ class TestTreeBrowser():
                         if key not in children:
                             # log.debug("key", key, self._hidden_topics.get(key, False))
                             data[key] = {
+                                "type": "topic",
                                 "topic_name": child_topic,
                                 "prefix": test.prefix,
                                 "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
@@ -536,15 +542,26 @@ class TestTreeBrowser():
                                 "comparator": "should not be",
                                 "value2": None,
                                 "is_topic": True,
-                                "hidden": self._hidden_topics.get(key, False)
+                                "hidden": self._hidden_topics.get(key, False),
+                                "description": ""
                             }
+                            if test.type == "topic_data":
+                                data[key]["description"] = test.description
                             if child_topic == "New topic": # we start editing new topics by default
                                 data[key]["editing"] = True
                             children.append(key)
                         else:
-                            for c in self.score_columns:
-                                data[key]["scores"][c].extend([[k, v] for v in score_parts(test[c])])
-                    elif test.comparator != "topic_placeholder":
+                            if test.type == "topic_data":
+                                data[key]["description"] = test.description
+                            else:
+                                for c in self.score_columns:
+                                    data[key]["scores"][c].extend([[k, v] for v in score_parts(test[c])])
+                    elif test.type == "topic_data":
+                        data[self.current_topic] = {
+                            "description": test.description,
+                            "topic_data_id": k
+                        }
+                    else:
                         children.append(k)
 
             # sort by score and always put new topics first
@@ -572,6 +589,8 @@ class TestTreeBrowser():
             "suggestions": suggestions_children,
             "tests": children,
             "topic": self.current_topic,
+            "topic_description": data[self.current_topic]["description"],
+            "topic_data_id": data[self.current_topic]["topic_data_id"],
             "score_filter": autofilter if self.score_filter == "auto" else self.score_filter,
             "disable_suggestions": False if self.experiment is None else self.experiment.get("disable_suggestions", False),
             #"test_prefix": self.test_tree.test_prefix,
@@ -678,7 +697,7 @@ class TestTreeBrowser():
 
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            if test.comparator == "topic_placeholder":
+            if test.type == "topic_data":
                 str_val = test.topic.rsplit("/", 1)[-1].lower()
             else:
                 str_val =   test.value1.lower() + " " +  test.comparator + " " +  test.value2.lower()
@@ -692,7 +711,7 @@ class TestTreeBrowser():
         # see if we have only topics are direct children, if so, we suggest topics
         has_direct_tests = False
         for k, test in self.test_tree.iterrows():
-            if test["topic"] == topic and test["comparator"] != "topic_placeholder":
+            if test["topic"] == topic and test["type"] != "topic_data":
                 has_direct_tests = True
                 break
         suggest_topics = not has_direct_tests
@@ -705,7 +724,7 @@ class TestTreeBrowser():
             include_value2 = None
             subtopic_count = 0
             for k, test in self.test_tree.iterrows():
-                if is_subtopic(topic, test["topic"]) and test["comparator"] != "topic_placeholder":
+                if is_subtopic(topic, test["topic"]) and test["type"] != "topic_data":
                     subtopic_count += 1
                     if last_subtopic_output is None:
                         last_subtopic_output = test["value2"]
@@ -752,7 +771,7 @@ class TestTreeBrowser():
         # hacky way to get the prefix for the current topic
         prefix = "The model output for"
         for k, test in self.test_tree.iterrows():
-            if is_subtopic(topic, test["topic"]) and test["comparator"] != "topic_placeholder":
+            if is_subtopic(topic, test["topic"]) and test["type"] != "topic_data":
                 prefix = test["prefix"]
                 break
 
@@ -766,12 +785,14 @@ class TestTreeBrowser():
                 str_val = value1.lower() + " " + comparator + " " + value2.lower()
             if str_val not in test_map_tmp:
                 s = {
+                    "type": "topic_data" if suggest_topics else "test",
                     "prefix": prefix,
                     "topic": topic,
                     "value1": value1,
                     "comparator": comparator,
                     "value2": value2,
-                    "labeler": "imputed"
+                    "labeler": "imputed",
+                    "description": ""
                 }
                 for c in self.score_columns:
                     s[c] = np.nan
@@ -791,7 +812,7 @@ class TestTreeBrowser():
         # When we have outputs filled in by the scorer we might have more duplicates we need to remove
         duplicates = []
         for k,row in suggestions.iterrows():
-            if row.comparator == "topic_placeholder":
+            if row.type == "topic_data":
                 str_val = row.topic.rsplit("/", 1)[-1].lower()
             else:
                 str_val = row.value1.lower() + " " +  row.comparator + " " +  row.value2.lower()
@@ -880,7 +901,7 @@ class TestTreeBrowser():
         # topic_scaling_orig = np.array([1.0 if self.test_tree.loc[k, "topic"].startswith(topic) else 0 for k in ids])
         topic_scaling_orig = []
         for k in ids:
-            if self.test_tree.loc[k, "comparator"] == "topic_placeholder":
+            if self.test_tree.loc[k, "type"] == "topic_data":
                 topic_scaling_orig.append(0.0)
             elif is_subtopic(topic, self.test_tree.loc[k, "topic"]):
                 if topic == self.test_tree.loc[k, "topic"]:
@@ -894,7 +915,7 @@ class TestTreeBrowser():
         if suggest_topics:
             topic_scaling_orig = []
             for k in ids:
-                if self.test_tree.loc[k, "comparator"] == "topic_placeholder" and self.test_tree.loc[k, "topic"].rsplit('/', 1)[0] == topic:
+                if self.test_tree.loc[k, "type"] == "topic_data" and self.test_tree.loc[k, "topic"].rsplit('/', 1)[0] == topic:
                     topic_scaling_orig.append(1.0)
                 else:
                     topic_scaling_orig.append(0.0)
@@ -1017,7 +1038,7 @@ class TestTreeBrowser():
         for k in reversed(prompt_ids):
             row = self.test_tree.loc[k]
             if suggest_topics:
-                prompt.append((row["topic"].rsplit("/", 1)[-1], "topic_placeholder", "")) # we are suggesting topis, not tests
+                prompt.append((row["topic"].rsplit("/", 1)[-1], "", "")) # we are suggesting topis, not tests
             else:
                 prompt.append((row["value1"], row["comparator"], row["value2"]))
 
@@ -1230,29 +1251,30 @@ class TestTree():
 
         log.debug(f"_load_tests(tests={tests})")
 
-        column_names = ['topic', 'prefix', 'value1', 'comparator', 'value2', 'labeler']
+        column_names = ['type', 'topic', 'prefix', 'value1', 'comparator', 'value2', 'labeler', 'description']
         if tests is None or (isinstance(tests, str) and not os.path.isfile(tests) and self.auto_save):
             return pd.DataFrame([], columns=column_names)
 
         # load the IO pairs from a csv file if it is given
         if isinstance(tests, str) or isinstance(tests, io.TextIOBase):
             if isinstance(tests, io.TextIOBase) or os.path.isfile(tests):
-                tests = pd.read_csv(tests, index_col=0)
-                tests["topic"] = tests["topic"].astype(str)
-                if "prefix" in tests.columns:
-                    tests["prefix"] = tests["prefix"].astype(str)
-                tests["value1"] = tests["value1"].astype(str)
-                tests["comparator"] = tests["comparator"].astype(str)
-                tests["value2"] = tests["value2"].astype(str)
-                tests["labeler"] = tests["labeler"].astype(str)
+                tests = pd.read_csv(tests, index_col=0, dtype={"topic": str, "type": str, "prefix": str, "value1": str, "comparator": str, "value2": str, "labeler": str, "description": str}, keep_default_na=False)
+                # tests["topic"] = tests["topic"].astype(str)
+                # tests["type"] = tests["type"].astype(str)
+                # if "prefix" in tests.columns:
+                #     tests["prefix"] = tests["prefix"].astype(str)
+                # tests["value1"] = tests["value1"].astype(str)
+                # tests["comparator"] = tests["comparator"].astype(str)
+                # tests["value2"] = tests["value2"].astype(str)
+                # tests["labeler"] = tests["labeler"].astype(str)
 
                 # for c in tests.columns:
                     # if c.endswith("score"):
                     #     tests[c] = tests[c].astype(float)
 
-                for k, test in tests.iterrows():
-                    if test.topic == "nan":
-                        tests.loc[k, "topic"] = ""
+                # for k, test in tests.iterrows():
+                #     if test.topic == "nan":
+                #         tests.loc[k, "topic"] = ""
             else:
                 raise Exception(f"The provided tests file does not exist: {tests}. If you wish to create a new file use `auto_save=True`")
 
@@ -1268,6 +1290,9 @@ class TestTree():
                 raise Exception("When passing list of tuples they need to be of the form (value1, comparator, value2) or (prefix, value1, comparator, value2)  or (topic, prefix, value1, comparator, value2)!")
 
         assert isinstance(tests, pd.DataFrame), "The passed tests were not in a recognized format!"
+
+        if "type" not in tests.columns:
+            tests["type"] = ["test" for _ in range(tests.shape[0])]
 
         if "topic" not in tests.columns:
             tests["topic"] = ["" for _ in range(tests.shape[0])]
