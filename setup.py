@@ -19,5 +19,6 @@ setup(
         'openai',
         'sentence_transformers',
         'checklist',
+        'shap',
     ],
 )
