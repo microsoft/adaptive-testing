@@ -562,7 +562,9 @@ class TestTreeBrowser():
         if len(children_scores) < 10:
             autofilter = -1e12
         else:
-            autofilter = min(children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2, np.nanmax(suggestions_children_scores)-1e-2)
+            autofilter = children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2
+            if len(suggestions_children_scores) > 0:
+                autofilter = min(autofilter, np.nanmax(suggestions_children_scores) - 1e-2)
 
         # log.debug("AUTOFILTER %f" % autofilter)
         # log.debug("in _update_interface2", self.current_topic)
@@ -666,10 +668,21 @@ class TestTreeBrowser():
             suggestions = self._ensure_add_item_row(suggestions)
             return suggestions
 
+        # def make_key(topic, value1, comparator, value2):
+        #     """ Create a string that uniquely identifies a test's contents.
+        #     """
+        #     if comparator == "topic_placeholder":
+        #         return "TOPIC_" + str(topic).rsplit("/", 1)[-1].lower()
+        #     else:
+        #         return str(value1).lower() + " " + str(comparator).lower() + " " + str(value2).lower()
 
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            test_map[test["value1"].lower() + " " + test["comparator"].lower() + " " + test["value2"].lower()] = True
+            if test.comparator == "topic_placeholder":
+                str_val = test.topic.rsplit("/", 1)[-1].lower()
+            else:
+                str_val =   test.value1.lower() + " " +  test.comparator + " " +  test.value2.lower()
+            test_map[str_val] = True
 
         # see if we have a finite set of valid outputs
         valid_outputs = getattr(self.scorer, "output_names", None)
@@ -692,7 +705,7 @@ class TestTreeBrowser():
             include_value2 = None
             subtopic_count = 0
             for k, test in self.test_tree.iterrows():
-                if is_subtopic(topic, test["topic"]):
+                if is_subtopic(topic, test["topic"]) and test["comparator"] != "topic_placeholder":
                     subtopic_count += 1
                     if last_subtopic_output is None:
                         last_subtopic_output = test["value2"]
@@ -747,7 +760,9 @@ class TestTreeBrowser():
         test_map_tmp = copy.copy(test_map)
         for value1, comparator, value2 in proposals:
             str_val = None
-            if value2 is not None:
+            if suggest_topics:
+                str_val = value1.lower() # for topics, value1 is the topic name
+            elif value2 is not None:
                 str_val = value1.lower() + " " + comparator + " " + value2.lower()
             if str_val not in test_map_tmp:
                 s = {
@@ -776,7 +791,10 @@ class TestTreeBrowser():
         # When we have outputs filled in by the scorer we might have more duplicates we need to remove
         duplicates = []
         for k,row in suggestions.iterrows():
-            str_val = row.topic.lower() + " " + row.value1.lower() + " " + row.comparator + " " + row.value2.lower()
+            if row.comparator == "topic_placeholder":
+                str_val = row.topic.rsplit("/", 1)[-1].lower()
+            else:
+                str_val = row.value1.lower() + " " +  row.comparator + " " +  row.value2.lower()
             if str_val in test_map:
                 duplicates.append(k)
             test_map[str_val] = True

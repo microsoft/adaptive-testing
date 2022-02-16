@@ -1240,7 +1240,11 @@ class Row extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     console.log("addToCurrentTopic");
-    this.props.comm.send(this.props.id, {topic: this.props.topic});
+    if (this.state.topic_name !== null) {
+      this.props.comm.send(this.props.id, {topic: this.props.topic + "/" + this.state.topic_name});
+    } else {
+      this.props.comm.send(this.props.id, {topic: this.props.topic});
+    }
   }
 }
 
