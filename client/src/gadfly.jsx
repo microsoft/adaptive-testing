@@ -1500,7 +1500,7 @@ class IOPairChart extends React.Component {
       
 
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
-        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "5px"}}>
+        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
           {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
@@ -1543,6 +1543,9 @@ class IOPairChart extends React.Component {
           </span>
           <div style={{clear: "both"}}></div>
           <div></div>
+        </div>
+        <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px"}}>
+          <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
         <div clear="all"></div>
 
@@ -2004,6 +2007,21 @@ class IOPairChart extends React.Component {
     this.comm.send(this.id, {action: "add_new_test"});
   }
 
+  inputTopicDescription(text) {
+    this.setState({topic_description: text});
+  }
+
+  finishTopicDescription(text) {
+    console.log("finishTopicDescriptione", text)
+    
+    this.setState({topic_description: text});
+    this.comm.send(this.state.topic_data_id, {description: text});
+  }
+
+  updateTopicDescription(text) {
+    this.comm.send(this.id, {topic_description: text});
+  }
+
   inputValue2Filter(text) {
     this.setState({value2Filter: text});
   }
@@ -2023,6 +2041,8 @@ class IOPairChart extends React.Component {
   inputTopicFilter(text) {
     this.setState({topicFilter: text});
   }
+
+
 
   refreshSuggestions(e) {
     e.preventDefault();
