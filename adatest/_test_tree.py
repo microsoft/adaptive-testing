@@ -767,7 +767,7 @@ class TestTreeBrowser():
             if str_val not in test_map_tmp:
                 s = {
                     "prefix": prefix,
-                    "topic": "suggestion", # will get replaced with imputed version
+                    "topic": topic,
                     "value1": value1,
                     "comparator": comparator,
                     "value2": value2,
