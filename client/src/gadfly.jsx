@@ -1544,7 +1544,7 @@ class IOPairChart extends React.Component {
           <div style={{clear: "both"}}></div>
           <div></div>
         </div>
-        <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px"}}>
+        <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
           <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
         <div clear="all"></div>

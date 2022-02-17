@@ -648,56 +648,9 @@ class TestTreeBrowser():
         if generate_outputs is None:
             generate_outputs = self.generate_outputs
 
-        if checklist_mode:
-            if suggestions_template_value1 is None:
-                suggestions_template_value1 = ""
-            # TODO: fixed comparator here
-            self._update_lexicons()
-            if self._is_fillin(topic):
-                comparator = ''
-                value2 = ''
-                template = suggestions_template_value1
-                if self.experiment is not None and self.experiment.get('model', None) == 'gpt':
-                    template = '%s %s' % (suggestions_template_value1, suggestions_template_value2)
-                d = [(x, value2) for x in self._checklist_tester.suggest(template, nsamples=max_suggestions)]
-            else:
-                comparator = 'should not be' if suggestions_template_comparator is None else suggestions_template_comparator
-                if self.experiment is not None and self.experiment.get('model', None) == 'gpt':
-                    template = '%s %s' % (suggestions_template_value1, suggestions_template_value2)
-                    d = [(' '.join(x.split()[:-1]), x.split()[-1]) for x in set(list(self._checklist_tester.template(template, nsamples=max_suggestions, remove_duplicates=True).data))]
-                # todo: if gpt, add
-                else:
-                    d = [(x, suggestions_template_value2) for x in set(list(self._checklist_tester.template(suggestions_template_value1, nsamples=max_suggestions, remove_duplicates=True).data))]
-            suggestions = []
-            for value1, value2 in d:
-                suggestions.append({
-                    "topic": "suggestion", # will get replaced with imputed version
-                    "prefix": self.test_tree.iloc[0].prefix if len(self.test_tree) > 0 else "The model output for",
-                    "value1": value1,
-                    "comparator": comparator,
-                    "value2": value2,
-                    "labeler": "imputed",
-                    "focus": 0,
-                    'score': np.nan
-                    })
-            suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))])
-            if not self._is_fillin(topic):
-                self._compute_embeddings_and_scores(suggestions)
-                suggestions = suggestions.dropna(subset=[self.score_columns[0]])
-            suggestions = self._ensure_add_item_row(suggestions)
-            return suggestions
-
-        # def make_key(topic, value1, comparator, value2):
-        #     """ Create a string that uniquely identifies a test's contents.
-        #     """
-        #     if comparator == "topic_placeholder":
-        #         return "TOPIC_" + str(topic).rsplit("/", 1)[-1].lower()
-        #     else:
-        #         return str(value1).lower() + " " + str(comparator).lower() + " " + str(value2).lower()
-
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            if test.type == "topic_data":
+            if test.type == "topic_data" and test.topic.rsplit("/", 1)[0] == topic:
                 str_val = test.topic.rsplit("/", 1)[-1].lower()
             else:
                 str_val =   test.value1.lower() + " " +  test.comparator + " " +  test.value2.lower()
@@ -738,7 +691,7 @@ class TestTreeBrowser():
                     valid_outputs = [last_subtopic_output]
         log.debug(f"include_value2 = {include_value2}, valid_outputs = {valid_outputs}")
         # we call the model with several prompts to get different threads of ideas
-        suggestions = []
+        
         prompts = [self._make_prompt(
                 topic,
                 slot_randomization=slot_randomization,
@@ -760,14 +713,6 @@ class TestTreeBrowser():
 
         log.debug(f"proposals = {proposals}")
 
-        # try both orderings of all perturbation pairs
-        # extended_proposals = []
-        # for value1, value2 in proposals:
-        #     parts = value1.split(">>>")
-        #     if len(parts) == 2:
-        #         extended_proposals.append((parts[1]+">>>"+parts[0], value2))
-        #     extended_proposals.append((value1, value2))
-
         # hacky way to get the prefix for the current topic
         prefix = "The model output for"
         for k, test in self.test_tree.iterrows():
@@ -776,6 +721,7 @@ class TestTreeBrowser():
                 break
 
         # filter out suggestions that are duplicates before we score them
+        suggestions = []
         test_map_tmp = copy.copy(test_map)
         for value1, comparator, value2 in proposals:
             str_val = None
