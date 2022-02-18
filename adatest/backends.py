@@ -4,6 +4,7 @@ import asyncio
 import aiohttp
 import transformers
 import openai
+import numpy as np
 
 class Backend():
     """ Abstract class for language model backends.
@@ -45,20 +46,26 @@ class Backend():
             prompts = [prompts]
         return prompts
     
-    def _create_prompt_strings(self, prompts):
+    def _create_prompt_strings(self, prompts, topic):
         """ Convert prompts that are lists of tuples into strings for the LM to complete.
         """
         prompt_strings = []
         self._gen_value1s = []
+        self._show_topics = []
         self._gen_comparators = []
         self._gen_value2s = []
         for prompt in prompts:
-            value1s, comparators, value2s = zip(*prompt)
+            topics, value1s, comparators, value2s = zip(*prompt)
+            self._show_topics.append(len(set(list(topics) + [topic])) > 1)
             self._gen_value1s.append(len(set(value1s)) > 1)
             self._gen_comparators.append(len(set(comparators)) > 1)
             self._gen_value2s.append(len(set(value2s)) > 1)
-            prompt_string = "\""
-            for value1, comparator, value2 in prompt:
+            prompt_string = ""
+            for p_topic, value1, comparator, value2 in prompt:
+                if self._show_topics[-1]:
+                    prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
+                else:
+                    prompt_string += self.quote
                 if self._gen_value1s[-1]:
                     prompt_string += value1 + self.quote
                 if self._gen_value1s[-1] and (self._gen_comparators[-1] or self._gen_value2s[-1]):
@@ -69,8 +76,11 @@ class Backend():
                     prompt_string += self.subsep + self.quote
                 if self._gen_value2s[-1]:
                     prompt_string += value2 + self.quote
-                prompt_string += self.sep + self.quote
-            prompt_strings.append(prompt_string)
+                prompt_string += self.sep
+            if self._show_topics[-1]:
+                prompt_strings.append(prompt_string + self.sep + topic + ":" + self.sep + self.quote)
+            else:
+                prompt_strings.append(prompt_string + self.quote)
         return prompt_strings
     
     def _parse_suggestion_texts(self, suggestion_texts, prompts):
@@ -89,9 +99,9 @@ class Backend():
             if not self._gen_value1s[prompt_ind]:
                 suggestion = [prompt[0][0]] + suggestion
             if not self._gen_comparators[prompt_ind]:
-                suggestion = suggestion[:1] + [prompt[0][1]] + suggestion[1:]
+                suggestion = suggestion[:1] + [prompt[0][2]] + suggestion[1:]
             if not self._gen_value2s[prompt_ind]:
-                suggestion = suggestion[:2] + [prompt[0][2]]
+                suggestion = suggestion[:2] + [prompt[0][3]]
 
             if len(suggestion) == 3:
                 samples.append(tuple(suggestion))
@@ -121,10 +131,10 @@ class Transformers(Backend):
 
         self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
     
-    def __call__(self, prompts, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, num_samples=1, max_length=100):
         
         prompts = self._validate_prompts(prompts)
-        prompt_strings = self._create_prompt_strings(prompts)
+        prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # monkey-patch a method that prevents the use of past_key_values
         saved_func = self.model.prepare_inputs_for_generation
@@ -175,14 +185,20 @@ class OpenAI(Backend):
         if api_key is not None:
             openai.api_key = api_key
     
-    def __call__(self, prompts, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, num_samples=1, max_length=100):
         prompts = self._validate_prompts(prompts)
-        prompt_strings = self._create_prompt_strings(prompts)
+        prompt_strings = self._create_prompt_strings(prompts, topic)
+
+        # see if we can stop at the first quote or need to wait for the seperator
+        if int(np.any(self._gen_comparators)) + int(np.any(self._gen_value1s)) + int(np.any(self._gen_value2s)) == 1:
+            stop_string = self.quote
+        else:
+            stop_string = self.quote+self.sep
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
             engine=self.model, prompt=prompt_strings, max_tokens=max_length,
-            temperature=self.temperature, n=num_samples, stop=self.quote+self.sep
+            temperature=self.temperature, n=num_samples, stop=stop_string
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
         
@@ -199,9 +215,9 @@ class AI21(Backend):
         self.temperature = temperature
         self.event_loop = asyncio.get_event_loop()
     
-    def __call__(self, prompts, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, num_samples=1, max_length=100):
         prompts = self._validate_prompts(prompts)
-        prompt_strings = self._create_prompt_strings(prompts)
+        prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # define an async call to the API
         async def http_call(prompt_string):

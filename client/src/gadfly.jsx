@@ -1657,7 +1657,7 @@ class IOPairChart extends React.Component {
               </div>
             }
             {!this.state.disable_suggestions && 
-              <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length > 0 ? "0.6" : "0.2", cursor: this.state.tests.length > 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+              <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length >= 0 ? "0.6" : "0.2", cursor: this.state.tests.length >= 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
                 <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
                 {this.state.model_options && this.state.model_options.length > 1 &&
@@ -1673,11 +1673,11 @@ class IOPairChart extends React.Component {
                 The suggestion server had an error and no suggestions were returned, you might try again.
               </div>
             }
-            {this.state.loading_suggestions && this.state.tests.length < 5 &&
+            {/* {this.state.loading_suggestions && this.state.tests.length < 5 &&
               <div style={{cursor: "pointer", color: "#995500", display: "block", fontWeight: "normal", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
                 Warning: Auto-suggestions may perform poorly with less than five tests in the current topic!
               </div>
-            }
+            } */}
           </div>
         </div>}
 
@@ -2048,7 +2048,7 @@ class IOPairChart extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
-    if (this.state.loading_suggestions || this.state.tests.length === 0) return;
+    if (this.state.loading_suggestions) return;
     for (let k in Object.keys(this.state.selections)) {
       if (this.state.suggestions.includes(k)) {
         delete this.state.selections[k];

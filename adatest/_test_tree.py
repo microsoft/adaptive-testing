@@ -277,6 +277,7 @@ class TestTreeBrowser():
                     self.test_tree.loc[new_id, "prefix"] = self.test_tree.iloc[0].prefix if len(self.test_tree) > 0 else "The model output for"
                     self.test_tree.loc[new_id, "topic"] = self.current_topic + "/New topic"
                     self.test_tree.loc[new_id, "type"] = "topic_data"
+                    self.test_tree.loc[new_id, "description"] = ""
                     self._update_interface()
                 elif msg[k]["action"] == "add_new_test":
                     log.debug("add_new_test")
@@ -589,8 +590,8 @@ class TestTreeBrowser():
             "suggestions": suggestions_children,
             "tests": children,
             "topic": self.current_topic,
-            "topic_description": data[self.current_topic]["description"],
-            "topic_data_id": data[self.current_topic]["topic_data_id"],
+            "topic_description": data[self.current_topic]["description"] if self.current_topic in data else "",
+            "topic_data_id": data[self.current_topic]["topic_data_id"] if self.current_topic in data else uuid.uuid4().hex,
             "score_filter": autofilter if self.score_filter == "auto" else self.score_filter,
             "disable_suggestions": False if self.experiment is None else self.experiment.get("disable_suggestions", False),
             #"test_prefix": self.test_tree.test_prefix,
@@ -650,7 +651,9 @@ class TestTreeBrowser():
 
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            if test.type == "topic_data" and test.topic.rsplit("/", 1)[0] == topic:
+            if test.type == "topic_data":
+                if test.topic.rsplit("/", 1)[0] != topic:
+                    break
                 str_val = test.topic.rsplit("/", 1)[-1].lower()
             else:
                 str_val =   test.value1.lower() + " " +  test.comparator + " " +  test.value2.lower()
@@ -663,11 +666,15 @@ class TestTreeBrowser():
 
         # see if we have only topics are direct children, if so, we suggest topics
         has_direct_tests = False
+        has_known_subtopics = False
         for k, test in self.test_tree.iterrows():
-            if test["topic"] == topic and test["type"] != "topic_data":
-                has_direct_tests = True
-                break
-        suggest_topics = not has_direct_tests
+            if test["topic"] == topic:
+                if test["type"] == "test":
+                    has_direct_tests = True
+            elif is_subtopic(topic, test["topic"]):
+                has_known_subtopics = True
+        suggest_topics = not has_direct_tests and has_known_subtopics
+        # zero_shot_tests = not has_direct_tests and not has_known_subtopics
 
         # see if all our outputs seem to be the same
         if valid_outputs is not None and len(valid_outputs) == 1:
@@ -708,7 +715,7 @@ class TestTreeBrowser():
                 ) for _ in range(prompt_threads)]
         #log.debug("prompt", prompts)
         self.backend.temperature = temperature
-        proposals = self.backend(prompts, num_samples=max_suggestions // len(prompts))
+        proposals = self.backend(prompts, topic, num_samples=max_suggestions // len(prompts))
         # proposals = self._complete_prompt(prompts, n=max_suggestions // prompt_threads, temperature=temperature, valid_outputs=valid_outputs, implicit_output=not include_value2)
 
         log.debug(f"proposals = {proposals}")
@@ -843,19 +850,22 @@ class TestTreeBrowser():
 
         log.debug(f"c ind = {np.where(ids == '25da4ec3a40e419abfb5b7755169c317')}")
 
+        
+        # inds = np.argsort(-scores + np.random.rand(len(scores))*1e-6)
+
         # topic scaling shrinks the priority of IO pairs based on their topic
         # topic_scaling_orig = np.array([1.0 if self.test_tree.loc[k, "topic"].startswith(topic) else 0 for k in ids])
-        topic_scaling_orig = []
-        for k in ids:
-            if self.test_tree.loc[k, "type"] == "topic_data":
-                topic_scaling_orig.append(0.0)
-            elif is_subtopic(topic, self.test_tree.loc[k, "topic"]):
-                if topic == self.test_tree.loc[k, "topic"]:
-                    topic_scaling_orig.append(1.0) # direct children get first priority
-                else:
-                    topic_scaling_orig.append(0.01)
-            else:
-                topic_scaling_orig.append(0.0)
+        # topic_scaling_orig = []
+        # for k in ids:
+        #     if self.test_tree.loc[k, "type"] == "topic_data":
+        #         topic_scaling_orig.append(0.0)
+        #     elif is_subtopic(topic, self.test_tree.loc[k, "topic"]):
+        #         if topic == self.test_tree.loc[k, "topic"]:
+        #             topic_scaling_orig.append(1.0) # direct children get first priority
+        #         else:
+        #             topic_scaling_orig.append(0.01)
+        #     else:
+        #         topic_scaling_orig.append(0.0)
         
         # if we don't have tests in the topic, we should suggest new direct child topics, not new tests
         if suggest_topics:
@@ -865,12 +875,21 @@ class TestTreeBrowser():
                     topic_scaling_orig.append(1.0)
                 else:
                     topic_scaling_orig.append(0.0)
+            topic_scaling_orig = np.array(topic_scaling_orig)
             # we turn off options that are unsupported for topic suggestions
             complete_diversity = False
             use_focus = False
             prompt_diversity = False
+        else:
+            # compute distance from current topic
+            parts = topic.split("/")
+            topic_scaling_orig = np.ones(self.test_tree.shape[0])
+            for i in range(len(parts)):
+                prefix = "/".join(parts[:i+1])
+                topic_scaling_orig *= (1 + 99 * np.array([v.startswith(prefix) for v in self.test_tree["topic"]]))
+            topic_scaling_orig *= np.array(self.test_tree["type"] == "test")
+            topic_scaling_orig /= np.max(topic_scaling_orig)
         
-        topic_scaling_orig = np.array(topic_scaling_orig)
         # topic_scaling_orig = np.array([1.0 if is_subtopic(topic, self.test_tree.loc[k, "topic"]) else 0 for k in ids])
         topic_scaling = topic_scaling_orig.copy()
 
@@ -894,7 +913,11 @@ class TestTreeBrowser():
         scores = np.nan_to_num(scores)
 
         # randomize the scores a bit to allow for diversity in our prompts
-        std_dev = np.sqrt(np.cov(scores, aweights=topic_scaling_orig)) + 1e-6
+        score_weights = topic_scaling_orig * (scores > 1)
+        if np.sum(score_weights) > 0:
+            std_dev = np.sqrt(np.cov(scores, aweights=score_weights)) + 1e-6
+        else:
+            std_dev = 1e-6
         # log.debug(f"score_randomization std = {std_dev}")
         if not np.isnan(std_dev):
             scores += score_randomization * std_dev * np.random.rand(len(ids))
@@ -920,6 +943,8 @@ class TestTreeBrowser():
         num_greedy = max(0, min(prompt_size - num_random, len(ids) - num_random))
         # log.debug(f"num_random = {num_random}, num_greedy = {num_greedy}")
         prompt_ids = []
+        # outside_topics_used = []
+        outside_topics_used = np.ones(len(ids))
         while len(prompt_ids) < num_greedy + num_random:
 
             # once we get to the random part of the process we forget what topics we have visited and scramble the scores
@@ -929,21 +954,47 @@ class TestTreeBrowser():
             # find the next bext index
             if sim_avoidance is not None:
                 diversity = 1 - (similarities * sim_avoidance).max(1)
-            rank_vals = scores * topic_scaling * diversity * (1 - hard_avoidance) * hidden_scaling
+            rank_vals = scores * topic_scaling * diversity * (1 - hard_avoidance) * hidden_scaling * outside_topics_used
             # log.debug(f"np.nanmax(rank_vals) {np.nanmax(rank_vals)}")
 
             if np.nanmax(rank_vals) <= 0 and len(prompt_ids) > 0: # stop if we have run out of the current subtree
                 break
 
             new_ind = np.nanargmax(rank_vals)
+            skip_rand = np.random.rand()
+
+            # make it unlikely we will choose the same outside topic twice
+            new_ind_topic = self.test_tree.loc[ids[new_ind], "topic"]
+            if not is_subtopic(topic, new_ind_topic):
+                outside_topics_used *= 1 - 0.9 * (self.test_tree["topic"].values == new_ind_topic)
+
+                # if new_ind_topic in outside_topics_used:
+
+                #     # if we have already used this outside topic, we keep going to quickly find the next best topic
+                #     new_inds = np.argsort(-rank_vals)
+                #     for i, ind in enumerate(new_inds):
+                #         ind_topic = self.test_tree.loc[ids[ind], "topic"]
+                #         if not is_subtopic(topic, ind_topic):
+                #             if ind_topic in outside_topics_used:
+                #                 hard_avoidance[ind] = 1 - 0.001
+                #             else:
+                #                 outside_topics_used.append(ind_topic)
+                #                 new_ind_topic = ind
+                #                 break
+                #         else:
+                #             new_ind_topic = ind
+                #             break
+                #     # skip_rand = 0.0
+                # else:
+                #     outside_topics_used.append(new_ind_topic)
+
             # log.debug(f"new_ind {new_ind} {self.test_tree.iloc[new_ind]['value1']}")
-            if np.random.rand() < skip_randomization:
+            if skip_rand < skip_randomization:
                 # log.debug(f"skip {new_ind}")
-                avoidance_level = 1 - 0.0001
+                avoidance_level = 1 - 0.1
             else:
                 prompt_ids.append(ids[new_ind])
                 avoidance_level = 1
-
 
             # avoid this IO pair as we select the next pairs
             hard_avoidance[new_ind] = avoidance_level
@@ -984,9 +1035,10 @@ class TestTreeBrowser():
         for k in reversed(prompt_ids):
             row = self.test_tree.loc[k]
             if suggest_topics:
-                prompt.append((row["topic"].rsplit("/", 1)[-1], "", "")) # we are suggesting topis, not tests
+                parent_topic,current_topic = row["topic"].rsplit("/", 1)
+                prompt.append((parent_topic, current_topic, "", "")) # we are suggesting topis, not tests
             else:
-                prompt.append((row["value1"], row["comparator"], row["value2"]))
+                prompt.append((row["topic"], row["value1"], row["comparator"], row["value2"]))
 
         return prompt
 
@@ -1252,17 +1304,34 @@ class TestTree():
         if "labeler" not in tests.columns:
             tests["labeler"] = ["anonymous" for _ in range(tests.shape[0])]
 
+        # ensure that all topics have a topic_data entry
+        topics_with_data = set(tests.loc[tests["type"] == "topic_data"]["topic"])
+        for topic in set(tests["topic"]):
+            if topic not in topics_with_data:
+                new_id = uuid.uuid4().hex
+                tests.loc[new_id, "type"] = "topic_data"
+                tests.loc[new_id, "topic"] = topic
+                tests.loc[new_id, "description"] = ""
+
         # if "score" in tests.columns:
         #     tests.rename({"score": "score"}, axis=1, inplace=True)
 
         # if "focus" not in tests.columns:
         #     tests["focus"] = [0 for _ in range(tests.shape[0])]
 
+        # drop any duplicate index values
+        tests = tests.groupby(level=0).first()
+
+        # drop any duplicate rows
+        tests.drop_duplicates(["type", "topic", "value1", "comparator", "value2"], inplace=True)
+
         # put the columns in a consistent order
         tests = tests[column_names + [c for c in tests.columns if c not in column_names]]
 
-        if len(set(tests.index)) != len(tests.index):
-            raise Exception("The provided tests have duplicate indices!")
+
+
+        # if len(set(tests.index)) != len(tests.index):
+        #     raise Exception("The provided tests have duplicate indices!")
 
         # we ensure all the tests have a score
         # self.compute_scores(tests, recompute=recompute_scores)
@@ -1420,11 +1489,11 @@ class TestTree():
 
 def score_max(s):
     if s == "":
-        return -10e8
+        return -1e3
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])
     elif np.isnan(s):
-        return -10e8
+        return -1e3
     else:
         return np.max(s)
 
