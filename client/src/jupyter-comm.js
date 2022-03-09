@@ -1,6 +1,75 @@
-
+import JSON5 from 'json5';
+import autoBind from 'auto-bind';
+import { defer, debounce } from 'lodash';
 
 export default class JupyterComm {
+  constructor(interfaceId, onopen) {
+    autoBind(this);
+    this.interfaceId = interfaceId;
+    this.callbackMap = {};
+    this.data = {};
+    this.pendingData = {};
+    this.jcomm = new InnerJupyterComm('adatest_interface_target_'+this.interfaceId, this.updateData);
+
+    this.debouncedSendPendingData500 = debounce(this.sendPendingData, 500);
+    this.debouncedSendPendingData1000 = debounce(this.sendPendingData, 1000);
+    if (onopen) {
+      defer(onopen);
+    }
+  }
+
+  send(keys, data) {
+    this.addPendingData(keys, data);
+    this.sendPendingData();
+  }
+
+  debouncedSend500(keys, data) {
+    this.addPendingData(keys, data);
+    this.debouncedSendPendingData500();
+  }
+
+  debouncedSend500(keys, data) {
+    this.addPendingData(keys, data);
+    this.debouncedSendPendingData1000();
+  }
+
+  addPendingData(keys, data) {
+
+    // console.log("addPendingData", keys, data);
+    if (!Array.isArray(keys)) keys = [keys];
+    for (const i in keys) this.pendingData[keys[i]] = data;
+  }
+
+  updateData(data) {
+    data = JSON5.parse(data["data"]) // data from Jupyter is wrapped so we get to do our own JSON encoding
+    console.log("updateData", data)
+
+    // save the data locally
+    for (const k in data) {
+      this.data[k] = data[k];
+    }
+
+    // call all the registered callbacks
+    for (const k in data) {
+      if (k in this.callbackMap) {
+        this.callbackMap[k](this.data[k]);
+      }
+    }
+  }
+
+  subscribe(key, callback) {
+    this.callbackMap[key] = callback;
+    defer(_ => this.callbackMap[key](this.data[key]));
+  }
+
+  sendPendingData() {
+    console.log("sending", this.pendingData);
+    this.jcomm.send_data(this.pendingData);
+    this.pendingData = {};
+  }
+}
+
+class InnerJupyterComm {
   constructor(target_name, callback, mode="open") {
     this._fire_callback = this._fire_callback.bind(this);
     this._register = this._register.bind(this)

@@ -67,6 +67,25 @@ class ClassifierScorer(Scorer):
             be -1 or +1).
         """
 
+        self.supported_test_types = [
+            "{} should output {}",
+            "{} should not output {}",
+            "{} should have the same output as {}",
+            "{} should not be more {} than {}",
+            #"{} should be invertable. [] is the output.",
+            #"{} should not output text containing {}",
+            #"{} should output toxic text. [] is the output.",
+            #"{} should not output toxic text. [] is the output."
+        ]
+        # {} should output {}
+        # {} should not output {}
+        # {} should have the same output as {}
+        # {} should not be more {} than {}
+        # {} should be invertable. [] is the output.
+        # {} should not output text containing {}
+        # {} should output toxic text. [] is the output.
+        # {} should not output toxic text. [] is the output.
+
         self._id = uuid.uuid4().hex
         self.model = model
 
@@ -87,13 +106,16 @@ class ClassifierScorer(Scorer):
         self.method = method
         self.dirichlet_concentration = dirichlet_concentration
 
-    def __call__(self, tests):
+    def __call__(self, tests, output_bias=0.5):
         """ Score a set of tests.
 
         Parameters
         ----------
         tests : pandas.DataFrame
             A dataframe of tests.
+
+        output_bias : float
+            How much to bias the output entries in a test towards the actual output from the model.
         """
         if self.output_type == "classification":
             eval_inputs = []
@@ -101,14 +123,14 @@ class ClassifierScorer(Scorer):
             variations1 = []
             variations2 = []
             for i, (k, test) in enumerate(tests.iterrows()):
-                if test.comparator == "should not be" or test.comparator == "should be":
+                if test.type == "{} should not output {}" or test.type == "{} should output {}":
                     v1 = expand_template(test.value1)
                     for s1 in v1:
                         eval_inputs.append(s1)
                         eval_inds.append(i)
                     variations1.append(v1)
                     variations2.append(None)
-                elif test.comparator == "should be the same as for":
+                elif test.type == "{} should have the same output as {}":
                     # eval_inputs.append(test.value1)
                     # eval_inputs.append(test.value2)
                     v1 = expand_template(test.value1)
@@ -138,8 +160,8 @@ class ClassifierScorer(Scorer):
             while i < len(model_out):
                 out_pos = eval_inds[i]
 
-                comparator = tests.iloc[out_pos]["comparator"]
-                if comparator == "should not be" or comparator == "should be":
+                test_type = tests.iloc[out_pos]["type"]
+                if test_type == "{} should not output {}" or test_type == "{} should output {}":
 
                     # save the top model outputs
                     inds = np.argsort(-model_out[i])
@@ -148,6 +170,9 @@ class ClassifierScorer(Scorer):
                         shown_tmp[self.model.output_names[j]] = float(model_out[i][j])
                     value1_outputs[out_pos] = shown_tmp
 
+                    # TODO: here we need to not assume the LM genreates the output, but that it just generates the inputs
+                    # then we can embed the tests for each of the top 10? 100? outputs and rank them by how well their
+                    # embeddings match the test embeddings for the prompt
                     token_to_check = tests.iloc[out_pos]['value2']
 
                     # TODO: This is a hack where we're looking for different capitalizations of the output if the original one doesn't exist
@@ -176,7 +201,7 @@ class ClassifierScorer(Scorer):
                                     domination_threshold=model_out[i][topk] / 10 
                                 )
 
-                                if comparator == "should be":
+                                if test_type == "{} should output {}":
                                     score = raw_score
                                 else:
                                     score = -raw_score
@@ -198,13 +223,13 @@ class ClassifierScorer(Scorer):
                                 else:
                                     mask = (model_out[i] <= model_out[i][topk]) & (model_out[i] > model_out[i][ind])
                                     score = (model_out[i][ind] - model_out[i][mask]).sum()
-                            if comparator == "should be":
+                            if test_type == "{} should output {}":
                                 score *= -1
                             # out_val = max(score, out_val)
                             out[out_pos].append(score)
                     # out[out_pos] = max(out[out_pos], out_val)
                     i += 1
-                elif comparator == "should be the same as for":
+                elif test_type == "{} should have the same output as {}":
 
                     # save the top model outputs
                     inds = np.argsort(-model_out[i])
@@ -231,7 +256,7 @@ class ClassifierScorer(Scorer):
                     out[out_pos].append(score)
                     i += 2
                 else:
-                    raise Exception(f"Comparator type '{comparator}' not yet supported!")
+                    raise Exception(f"Test type '{test_type}' not yet supported!")
 
                 # out_pos += 1
             return {
@@ -343,15 +368,65 @@ TextScorer = ClassifierScorer
 
 
 class GeneratorScorer(Scorer):
-    """ Wraps a model and defines a callable scorer that returns a score value for any input/output pair.
+    """ Wraps a text generation model in a scorer that can score the target model against tests.
     """
 
-    def __init__(self, model, reverse_model=None, embedding_model=None, similarity_threshold=0.9):
+    def __init__(self, model, reverse_model=None, embedding_model=None, classifers={}, similarity_threshold=0.9):
+        """ Initializes a new scorer for a given target model.
+
+        Parameters
+        ----------
+        model : callable
+            The model we are scoring against the tests. It is expected to be a function that takes a list of strings as
+            input and returns a list of strings as output.
+
+        reverse_model : callable
+            The inverse of model, such that x = reverse_model(model(x)). Note that this is optional and only required
+            to use the 'should be invertable' test type. If for example model is an EN to ES translation model, then
+            reverse_model should be an ES to EN translation model. Just like model, reverse_model is expected to take a
+            list of strings as input and return a list of strings as output.
+
+        embedding_model : callable
+            Used to embed the tests for comparison purposes. TODO: shouldn't this be shared with the main adatest backend?
+
+        classifers : dict
+            A dictionary of classifiers that can be used to score the generated output. The keys are the names of the
+            classifier label that is predicted and the values are the classifiers themselves. Each classifer is expected
+            to take a list of strings as input and return a list of floats between 0 and 1.
+
+        similarity_threshold : float
+            The threshold for the similarity between the generated output and the expected output. If set to 1.0, then
+            exact string matching is performed. If < 1.0 then this is the threshold on the sementantic similarity (a cos
+            similarity score between 0 and 1).
+            TODO: this was just used for the 'should be invertable' test type. Should we use it for other test types as well?
+        """
+
         self._id = uuid.uuid4().hex
         self.model = model
         self.reverse_model = reverse_model
         self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
+        self.classifers = classifers
+
+        self.supported_test_types = [
+            "{} should output {}",
+            "{} should not output {}", # TODO: should this use semantic similarity instead of exact string match?
+            # "{} should have the same output as {}",
+            "{} should not output text containing {}"
+        ]
+
+        # see if we can support the inversion test
+        if self.reverse_model is not None and self.embedding_model is not None: # TODO: do we need an embeddig model or just use the backend?
+            self.supported_test_types.append("{} should be invertable. [] is the output.") # Note that {} means user-editable, [] means read-only
+
+        # see if we have user-provided classifier tests
+        for k in self.classifers:
+            self.supported_test_types.extend([
+                "{} should output "+k+" text. [] is the output.",
+                "{} should not output "+k+" text. [] is the output."
+            ])
+
+        
 
     def __call__(self, tests):
 

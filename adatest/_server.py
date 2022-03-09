@@ -44,7 +44,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
 
     loop = asyncio.get_event_loop()
 
-    if not hasattr(test_tree_browsers, "update") and callable(test_tree_browsers):
+    if not hasattr(test_tree_browsers, "interface_event") and callable(test_tree_browsers):
         test_tree_browsers = functools.lru_cache(maxsize=None)(test_tree_browsers)
 
     id = uuid.uuid4().hex
@@ -66,7 +66,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
                 raise web.HTTPFound(f'/_login?user={user}&sendback={str(request.rel_url)}')
         else:
             user = await aiohttp_security.authorized_userid(request)
-            if hasattr(test_tree_browsers, "update"):
+            if hasattr(test_tree_browsers, "interface_event"):
                 prefix = ""
                 test_tree_browser = test_tree_browsers
                 test_tree_name = 'fake'
@@ -79,7 +79,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
                     test_tree_browser = test_tree_browsers.get(test_tree_name, None)
 
                 # make sure we found the given test
-                if not hasattr(test_tree_browser, "update"):
+                if not hasattr(test_tree_browser, "interface_event"):
                     log.debug(f"The test tree we found was not valid: {test_tree_browsers}")
                     raise web.HTTPNotFound()
             test_tree_browser.user = user
@@ -91,7 +91,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
     <title>AdaTest</title>
   </head>
   <body style="font-family: Helvetica Neue, Helvetica, Arial, sans-serif; margin-right: 20px; font-size: 14px;">
-    {test_tree_browser._repr_html_(prefix=prefix, comm=None, environment="web", websocket_server=prefix+"/_ws")}
+    {test_tree_browser._repr_html_(prefix=prefix, environment="web", websocket_server=prefix+"/_ws")}
   </body>
 </html>
 """
@@ -290,7 +290,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
                 else:
                     data = json.loads(msg.data)
                     log.info(f"WebSocket message from user '{getattr(test_tree_browser, 'user', None)}' for test tree '{getattr(test_tree_browser, 'name', None)}' is {data}")
-                    test_tree_browser.update(data)
+                    test_tree_browser.interface_event(data)
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 print('WebSocket connection closed with exception %s' % ws.exception())
 

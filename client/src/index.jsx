@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './jupyter-comm'
-import Gadfly from './gadfly'
+import AdaTest from './adatest'
 
  
 ReactDOM.render(
-  <Gadfly />,
-  document.getElementById('gadfly_container_1')
+  <AdaTest />,
+  document.getElementById('adatest_container_1')
 );

@@ -1,7 +1,7 @@
 const path = require('path');
  
 module.exports = {
-  entry: path.resolve(__dirname, './src/gadfly.jsx'),
+  entry: path.resolve(__dirname, './src/adatest.jsx'),
   module: {
     rules: [
       {
