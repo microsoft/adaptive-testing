@@ -252,20 +252,35 @@ class TestTreeBrowser():
                 
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
-                    try:
-                        self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                        self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                        self._suggestions_error = False
-                    except Exception as e:
-                        log.debug(e)
-                        self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-                        self._suggestions_error = True
+                    # try:
+                    self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
+                    self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                    self._suggestions_error = False
+                    # except Exception as e:
+                    #     log.debug(e)
+                    #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                    #     self._suggestions_error = True
                     self._refresh_interface()
                 
                 # change the current topic
                 elif action == "change_topic":
                     self.current_topic = msg[k]["topic"]
                     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+
+                    # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
+                    has_direct_tests = False
+                    has_known_subtopics = False
+                    for k, test in self.test_tree.iterrows():
+                        if test["topic"] == self.current_topic:
+                            if test["type"] == "test":
+                                has_direct_tests = True
+                        elif is_subtopic(self.current_topic, test["topic"]):
+                            has_known_subtopics = True
+                    if not has_direct_tests and has_known_subtopics:
+                        self.mode = "topics"
+                    else:
+                        self.mode = "tests"
+
                     self._refresh_interface()
                 
                 # clear the current set of suggestions
@@ -482,7 +497,19 @@ class TestTreeBrowser():
                         scores[c].extend([[k, v] for v in score_parts(test[c])])
 
             # sort by score and always put new topics first
-            sorted_children = sorted(children, key=lambda id: -max([score_max(s[1]) for s in data[id]["scores"][self.score_columns[0]]]))
+            def sort_key(id):
+                total = 0
+                count = 0
+                for s in data[id]["scores"][self.score_columns[0]]:
+                    val = score_max(s[1], nan_val=np.nan)
+                    if not np.isnan(val):
+                        total += val
+                        count += 1
+                if count == 0:
+                    return 1e3
+                else:
+                    return -total / count
+            sorted_children = sorted(children, key=sort_key)
             sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id].get("value1", "") == "New test" else 1)
 
             return sorted_children
@@ -607,12 +634,15 @@ class TestTreeBrowser():
         suggestions = []
         test_map_tmp = copy.copy(test_map)
         for value1, value2, value3 in proposals:
+            if self.mode == "topics" and ("/" in value1 or "\n" in value1):
+                value1 = value1.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
+                value1 = value1.replace("  ", " ").strip() # kill any double spaces we may have introduced
             str_val = test_type + " " + value1 + " " + value2 + " " + value3
             if str_val not in test_map_tmp:
                 s = {
                     "type": test_type,
-                    "topic": self.current_topic,
-                    "value1": value1,
+                    "topic": self.current_topic + ("/"+value1 if self.mode == "topics" else ""),
+                    "value1": "" if self.mode == "topics" else value1,
                     "value2": value2,
                     "value3": value3,
                     "author": self._active_backend_obj.__class__.__name__ + " backend",
@@ -628,18 +658,11 @@ class TestTreeBrowser():
         self._compute_embeddings_and_scores(suggestions)
         if self.mode != "topics":
             suggestions = suggestions.dropna(subset=[self.score_columns[0]])
-        else:
-            for k, test in suggestions.iterrows():
-                suggestions.loc[k, "topic"] = self.current_topic + "/" + test["value1"]
-                suggestions.loc[k, "value1"] = ""
 
         # When we have outputs filled in by the scorer we might have more duplicates we need to remove
         duplicates = []
         for k,row in suggestions.iterrows():
-            if row.type == "topic_marker":
-                str_val = row.topic.rsplit("/", 1)[-1].lower()
-            else:
-                str_val = test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
+            str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
             if str_val in test_map:
                 duplicates.append(k)
             test_map[str_val] = True
@@ -688,10 +711,24 @@ class TestTreeBrowser():
         if self.embedding_model is not None:
             new_embedding_ids = [k for k in tests.index if k not in self._embeddings]
             if len(new_embedding_ids) > 0:
-                new_value1_embeddings = self.embedding_model.encode([str(tests.loc[k, "value1"]) for k in tests.index if k not in self._embeddings], convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value2_embeddings = self.embedding_model.encode([str(tests.loc[k, "value2"]) for k in tests.index if k not in self._embeddings], convert_to_tensor=True, show_progress_bar=False).cpu()
+                value1s = []
+                value2s = []
+                value3s = []
+                for k in new_embedding_ids:
+                    if tests.loc[k, "type"] == "topic_marker":
+                        parts = tests.loc[k, "topic"].rsplit("/", 1)
+                        value1s.append(parts[1] if len(parts) == 2 else "")
+                        value2s.append("")
+                        value3s.append("")
+                    else:
+                        value1s.append(str(tests.loc[k, "value1"]))
+                        value2s.append(str(tests.loc[k, "value2"]))
+                        value3s.append(str(tests.loc[k, "value3"]))
+                new_value1_embeddings = self.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value2_embeddings = self.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value3_embeddings = self.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
                 for i,k in enumerate(new_embedding_ids):
-                    self._embeddings[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i]])
+                    self._embeddings[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
 
     def _compute_scores(self, tests, recompute):
         """ Use the scorer(s) to fill in scores in the passed TestTree.
@@ -1031,13 +1068,13 @@ class TestTree():
     def _repr_html_(self):
         return self._tests._repr_html_()
 
-def score_max(s):
+def score_max(s, nan_val=-1e3):
     if s == "":
-        return -1e3
+        return nan_val
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])
     elif np.isnan(s):
-        return -1e3
+        return nan_val
     else:
         return np.max(s)
 

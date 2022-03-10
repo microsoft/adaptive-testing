@@ -168,7 +168,8 @@ export default class Row extends React.Component {
     let overall_score = {};
     if (this.state.scores) {
       for (let k in this.state.scores) {
-        overall_score[k] = Math.max(...this.state.scores[k].filter(x => Number.isFinite(x[1])).map(x => x[1]));
+        const arr = this.state.scores[k].filter(x => Number.isFinite(x[1])).map(x => x[1])
+        overall_score[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
       }
     } else {
       for (let k in this.state.scores) {

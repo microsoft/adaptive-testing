@@ -100,22 +100,32 @@ class PromptBuilder():
         ids = np.array(test_tree.index)
         
         # if suggesting topics mark only direct subtopics as "in topic"
-        if suggest_topics:
-            topic_scaling = np.zeros(len(ids))
-            for i, k in enumerate(ids):
-                if test_tree.loc[k, "type"] == "topic_marker" and test_tree.loc[k, "topic"].rsplit('/', 1)[0] == topic:
-                    topic_scaling[i] = 1.0
+        # if suggest_topics:
+        #     topic_scaling = np.zeros(len(ids))
+        #     for i, k in enumerate(ids):
+        #         if test_tree.loc[k, "type"] == "topic_marker" and test_tree.loc[k, "topic"].rsplit('/', 1)[0] == topic:
+        #             topic_scaling[i] = 1.0
         
-        # if suggesting tests we compute each test's distance from current topic, where distance
-        # is measured by the length of the topic prefix shared between the test and the current topic
+        # # if suggesting tests we compute each test's distance from current topic, where distance
+        # # is measured by the length of the topic prefix shared between the test and the current topic
+        # else:
+        parts = topic.split("/")
+        topic_scaling = np.ones(test_tree.shape[0])
+        for i in range(1, len(parts)):
+            prefix = "/".join(parts[:i+1])
+            if suggest_topics:
+                prefix += "/"
+            topic_scaling *= 1 + 99 * np.array([v.startswith(prefix) for v in test_tree["topic"]])
+        
+        # promote direct children over subtopic descendants and filter for topics vs tests
+        if suggest_topics:
+            topic_scaling *= 1 + 99 * np.array([v.rsplit('/', 1)[0] == topic for v in test_tree["topic"]])
+            topic_scaling *= np.array(test_tree["type"] == "topic_marker")
         else:
-            parts = topic.split("/")
-            topic_scaling = np.ones(test_tree.shape[0])
-            for i in range(len(parts)):
-                prefix = "/".join(parts[:i+1])
-                topic_scaling *= (1 + 99 * np.array([v.startswith(prefix) for v in test_tree["topic"]]))
+            topic_scaling *= 1 + 99 * np.array([v == topic for v in test_tree["topic"]])
             topic_scaling *= np.array(test_tree["type"] != "topic_marker")
-            topic_scaling /= np.max(topic_scaling)
+
+        topic_scaling /= np.max(topic_scaling)
 
         # hide rows that don't match the filter
         hidden_scaling = np.ones(len(ids))
@@ -210,7 +220,7 @@ class PromptBuilder():
                 # make it unlikely we will choose the same outside topic twice
                 new_ind_topic = test_tree.loc[ids[new_ind], "topic"]
                 if not is_subtopic(topic, new_ind_topic):
-                    outside_topics_used *= 1 - 0.9 * (test_tree["topic"].values == new_ind_topic)
+                    outside_topics_used *= 1 - 0.9 * np.array([test_tree.loc[id, "topic"] == new_ind_topic for id in ids])
 
                 # add or skip this item
                 if skip_rand >= self.skip_randomization:
@@ -241,7 +251,11 @@ class PromptBuilder():
             prompt = []
             for k in reversed(prompt_ids):
                 row = test_tree.loc[k]
-                prompt.append((row["topic"], row["value1"], row["value2"], row["value3"]))
+                if suggest_topics:
+                    parents,child = row["topic"].rsplit("/", 1)
+                    prompt.append((parents, child, "", ""))
+                else:
+                    prompt.append((row["topic"], row["value1"], row["value2"], row["value3"]))
             prompts.append(prompt)
         
         return test_type, prompts
