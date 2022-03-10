@@ -57,7 +57,7 @@ export default class Browser extends React.Component {
   }
 
   debouncedForceUpdate() {
-    console.log("debouncedForceUpdate");
+    // console.log("debouncedForceUpdate");
     this.forceUpdate();
   }
 
@@ -102,12 +102,12 @@ export default class Browser extends React.Component {
 
 
   render() {
-    console.log("render IO pair chart", )
+    console.log("render AdaTest browser", )
     // compute the width of the largest type selection option (used to size the type column)
     let selectWidths = {};
     for (const i in this.state.test_types) {
       const type = this.state.test_types[i];
-      console.log("type", type, this.state.test_type_parts[type])
+      // console.log("type", type, this.state.test_type_parts[type])
       // text2 is the part of the test shown in the select, +7 is for spaces on either side
       selectWidths[type] = this.calculateTextWidth(this.state.test_type_parts[type].text2); 
     }
@@ -115,7 +115,7 @@ export default class Browser extends React.Component {
       ...this.state.suggestions.map(id => this.comm.data[id] ? get(selectWidths, this.comm.data[id].type, 40) : 40),
       ...this.state.tests.map(id => this.comm.data[id] ? get(selectWidths, this.comm.data[id].type, 40) : 40)
     );
-    console.log("maxSelectWidth", maxSelectWidth)
+    // console.log("maxSelectWidth", maxSelectWidth)
 
     const inFillin = this.state.topic.startsWith("/Fill-ins");
 
@@ -129,32 +129,7 @@ export default class Browser extends React.Component {
     let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
     let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
-    return (<div onKeyDown={this.keyDownHandler} tabindex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
-      {this.state.timerExpired && <div style={{fontSize: "20px", paddingTop: "100px", color: "#ffffff", background: "#880000", position: "absolute", top: "0px", left: "0px", width: "100%", height: "100%", zIndex: "1000", opacity: 0.9, textAlign: "center", verticalAlign: "middle"}}>
-        This task's time period is done. Now transitioning to the next tesk...
-      </div>}
-      {this.state.experiment && <div>
-        <Clock duration={this.state.experiment_locations[this.state.experiment_pos].duration} onFinish={this.clockFinished} />
-      </div>}
-      {this.props.checklistMode && <div style={{textAlign: "right"}}>
-        <div onClick={this.openTests} style={{
-              cursor: "pointer", boxSizing: "border-box", display: "inline-block",
-              color: !inFillin ? "#ffffff" : "#999999",
-              borderRadius: "7px 0px 0px 7px", marginRight: "auto", marginLeft: "auto",
-              marginBottom: "0px", background: !inFillin ? "#666666" : "#f5f5f5",
-              padding: "8px", paddingTop: "2px", paddingBottom: "2px"}}>
-          <span>Tests</span>
-        </div>
-        <div onClick={this.openFillins} style={{
-              cursor: "pointer", boxSizing: "border-box", display: "inline-block",
-              color: inFillin ? "#ffffff" : "#999999",
-              borderRadius: "0px 7px 7px 0px", marginRight: "auto", marginLeft: "auto", marginBottom: "0px",
-              background: inFillin ? "#666666" : "#f5f5f5",
-              padding: "8px", paddingTop: "2px", paddingBottom: "2px"}}>
-          <span>Fill-ins</span>
-        </div>
-      </div>}
-
+    return (<div onKeyDown={this.keyDownHandler} tabIndex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
       <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
         <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
         {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
@@ -174,37 +149,14 @@ export default class Browser extends React.Component {
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
         <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
           {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
-            return <div style={{float: "right", width: "110px", textAlign: "center"}}>
+            return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
-              {/* <div style={{float: "right", width: "52px", color: red_blue_100[99], textAlign: "left", boxSizing: "border-box", paddingLeft: "3px"}}>
-                Fail
-              </div>
-              <div style={{float: "right", width: "5px", height: "20px", color: red_blue_100[99], textAlign: "center"}}>
-                <svg height="20" width="1">
-                  <line x1={0} y1="0"
-                        x2={0} y2="20" stroke-dasharray="2"
-                        style={{stroke: "#aaaaaa", strokeWidth: "1"}}
-                  ></line>
-                </svg>
-              </div>
-              <div style={{float: "right", width: "48px", color: red_blue_100[0], textAlign: "right", paddingRight: "4px"}}>
-                Pass
-              </div> */}
             </div>
           })}
-          {/* <div style={{float: "right", width: "205px", color: "#999999", textAlign: "left"}}>
-            Output
-          </div>
-          <div style={{float: "right", width: "30px"}}>
-            &nbsp;
-          </div>
-          <div style={{float: "right", color: "#999999", textAlign: "right"}}>
-            Input
-          </div> */}
           <span style={{fontSize: "16px"}}>
           {breadCrumbParts.map((name, index) => {
             //console.log("bread crum", name, index);
-            const out = <span style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
+            const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
               {index > 0 && <span style={{color: "black"}}> / </span>}
               <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
             </span>
@@ -221,45 +173,9 @@ export default class Browser extends React.Component {
         </div>
         <div clear="all"></div>
 
-        {/* <div style={{marginTop: "5px", opacity: 0.6}}>
-          <div className="adatest-row-child">
-            <div style={{paddingRight: "5px", flex: 1}}>  
-              <div className="adatest-row">
-                <div style={{flex: "0 0 150px", textAlign: "left", fontStyle: "italic"}}>
-                  <ContentEditable defaultText="filter topics" text={this.state.topicFilter} onInput={this.inputTopicFilter} />
-                </div>
-                <div className="adatest-row-input" style={{fontStyle: "italic"}}>
-                  <ContentEditable defaultText="left value" text={this.state.value1Filter} onInput={this.inputValue1Filter} />
-                </div>
-                {!inFillin && <div style={{flex: "0 0 "+maxSelectWidth+"px", textAlign: "center", fontStyle: "italic"}}>
-                  <ContentEditable defaultText="comp." ref={el => this.comparatorFilterEditable = el} text={this.state.comparatorFilter} onClick={this.clickComparatorFilter} onInput={this.inputComparatorFilter} />
-                </div>}
-                {!inFillin && <div style={{flex: "0 0 150px", textAlign: "left", fontStyle: "italic"}}>
-                  <ContentEditable defaultText="right value" text={this.state.value2Filter} onInput={this.inputValue2Filter} />
-                </div>}
-              </div>
-
-              
-
-            </div>
-            <div className="adatest-row-score-text-box">
-              
-            </div>
-            <div className="adatest-row-score-plot-box">
-              <svg height="20" width="100">
-                
-              </svg>
-            </div>
-          </div>
-        </div> */}
-        
-        {/* {this.props.checklistMode && <div style={{boxSizing: "border-box", borderBottom: "0px solid #999999", height: "30px", borderRadius: "10px 10px 10px 10px", width: "600px", marginRight: "auto", marginLeft: "auto", marginBottom: "12px", background: "#f5f5f5", padding: "8px"}}>
-          <ContentEditable defaultText="template string" text={this.state.suggestionsTemplate} onInput={this.inputSuggestionsTemplate} />
-        </div>} */}
-
         {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
-          <div class="adatest-scroll-wrap" style={{maxHeight: 31*this.state.max_suggestions, overflowY: "auto"}} ref={(el) => this.suggestionsScrollWrapRef = el}>
+          <div className="adatest-scroll-wrap" style={{maxHeight: 31*this.state.max_suggestions, overflowY: "auto"}} ref={(el) => this.suggestionsScrollWrapRef = el}>
             {this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
                 // .filter(id => {
@@ -323,7 +239,7 @@ export default class Browser extends React.Component {
                 </select>}
                 <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
                   {(this.state.mode_options || []).map((mode_option) => {
-                    return <option>{mode_option}</option>
+                    return <option key={mode_option}>{mode_option}</option>
                   })}
                 </select>
               </div>
@@ -340,15 +256,6 @@ export default class Browser extends React.Component {
             } */}
           </div>
         </div>}
-
-        {/* <div style={{textAlign: "left"}}>
-          <div onClick={this.onOpen} class="adatest-top-add-button" style={{marginLeft: "12px", lineHeight: "14px", opacity: "0.2", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
-            <FontAwesomeIcon icon={faPlus} style={{fontSize: "14px", color: "rgb(10, 10, 10)", display: "inline-block"}} />
-          </div>
-          <div onClick={this.onOpen} class="adatest-top-add-button" style={{marginLeft: "10px", lineHeight: "14px", opacity: "0.2", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
-            <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "rgb(10, 10, 10)", display: "inline-block"}} />
-          </div>
-        </div> */}
         
         <div className="adatest-children-frame">
           {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
@@ -390,26 +297,18 @@ export default class Browser extends React.Component {
           })}
         </div>
       </div>
-      {this.state.experiment1 && <div style={{textAlign: "center", marginTop: "30px"}}>
-        <a href="https://go.microsoft.com/?linkid=2028325">Contact Us</a> | <a href="https://go.microsoft.com/fwlink/?LinkId=521839">Privacy &amp; Cookies</a
-        > | <a href="https://www.microsoft.com/en-us/legal/intellectualproperty/copyright/default.aspx">Terms of Use</a> | 
-        <a href="https://go.microsoft.com/fwlink/?LinkId=506942">Trademarks</a> | © 2021 Microsoft
-      </div>}
-      {/* <div style={{borderRadius: "8px", background: "#77f", padding: "20px", position: "relative", zIndex: 1000}}>
-          This is test documentation.
-      </div> */}
 
-        <div style={{textAlign: "right"}}>
-          <div onClick={this.onOpen} class="adatest-top-add-button" style={{marginRight: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
-            <FontAwesomeIcon icon={faCheck} style={{fontSize: "14px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
-            <span style={{lineHeight: "20px"}}>{totalPasses}</span>
-            {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
-          </div>
-          <div onClick={this.onOpen} class="adatest-top-add-button" style={{marginRight: "12px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
-            <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
-            <span style={{lineHeight: "20px"}}>{totalFailures}</span>
-          </div>
+      <div style={{textAlign: "right"}}>
+        <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
+          <FontAwesomeIcon icon={faCheck} style={{fontSize: "14px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
+          <span style={{lineHeight: "20px"}}>{totalPasses}</span>
+          {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
         </div>
+        <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "12px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
+          <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
+          <span style={{lineHeight: "20px"}}>{totalFailures}</span>
+        </div>
+      </div>
     </div>);
   }
 

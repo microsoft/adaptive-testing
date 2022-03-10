@@ -54,11 +54,11 @@ export default class WebSocketComm {
   }
 
   updateData(e) {
-    console.log("updateData", e)
+    // console.log("updateData", e)
     let data = JSON5.parse(e.data);
     console.log("updateData", data)
     for (const k in data) {
-      console.log("data[k]", data[k])
+      // console.log("data[k]", data[k])
       this.data[k] = Object.assign(this.data[k] || {}, data[k]);
       if (k in this.callbackMap) {
         this.callbackMap[k](data[k]);

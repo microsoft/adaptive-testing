@@ -2,9 +2,7 @@ import "./adatest.css";
 
 import React from 'react';
 import { withRouter } from 'react-router-dom';
-import {
-  BrowserRouter
-} from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { MemoryRouter } from 'react-router';
 import Browser from './browser'
 

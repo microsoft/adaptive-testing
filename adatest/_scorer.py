@@ -604,7 +604,7 @@ def compute_dirichlet_score(ind, model_output, k=1, concentration=10, empirical_
     """ Compute the probability that ind is in the top k set of probabilities.
 
     This is done by sampling from a Dirichlet distribution with concentration parameter centered around the model output
-    and assuming a concentration weight of 10 pseudo-counts.
+    (by default assuming a concentration weight of 10 pseudo-counts).
 
     Parameters
     ----------
@@ -627,10 +627,14 @@ def compute_dirichlet_score(ind, model_output, k=1, concentration=10, empirical_
     domination_threshold : float
         Below this value we assume that these output dims can be safely ignored. This is used to avoid unnessecary computation.
     """
+
+    # a small heuristic tie breaker to allow better ranking of small effects
+    # this helps when the effect sizes are so small the empirical_samples can't capture the differences
+    tie_breaker = model_output[ind]*1e-4
     
-    # if our output of interest is dominated then we just skip the work and return 0
+    # if our output of interest is dominated then we just skip the work and return essentially 0
     if model_output[ind] < domination_threshold:
-        return 0
+        return tie_breaker
     
     # shrink the number of dims we have to deal with by collapsing low probability dims
     bundles = []
@@ -662,10 +666,10 @@ def compute_dirichlet_score(ind, model_output, k=1, concentration=10, empirical_
     
     if k == 1:
         sort_inds = np.argmax(scipy.stats.dirichlet.rvs(normed_output, empirical_samples, random_state=0), 1)
-        return (sort_inds == new_ind).mean()
+        return min(1, (sort_inds == new_ind).mean() + tie_breaker)
     else:
         sort_inds = np.argsort(-scipy.stats.dirichlet.rvs(normed_output, empirical_samples, random_state=0), 1)
-        return ((sort_inds[:,:k] - new_ind) == 0).sum() / sort_inds.shape[0]
+        return min(1, ((sort_inds[:,:k] - new_ind) == 0).sum() / sort_inds.shape[0] + tie_breaker)
 
 def compute_dirichlet_equality_score(model_output1, model_output2, k=1, concentration=10, empirical_samples=1000, domination_threshold=1e-5):
     """ Compute the probability that ind is in the top k set of probabilities.

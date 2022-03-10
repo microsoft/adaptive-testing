@@ -21,8 +21,8 @@ export default class ContextMenu extends React.Component {
     return <div style={{display: this.props.open ? "inline-block" : "none"}}>
       <div style={{position: "fixed", top: 0, bottom: 0, left: 0, right: 0}} onClick={this.handleBackgroundClick}></div>
       <div style={{position: "absolute", top: this.props.top, left: this.props.left, background: "#ffffff", padding: "4px", boxShadow: "0px 2px 5px #666666"}}>
-        {this.props.rows && this.props.rows.map(row => {
-          return <div onClick={e => this.handleRowClick(row, e)} className="adatest-hover-gray">{row}</div>
+        {this.props.rows && this.props.rows.map((row, index) => {
+          return <div key={index} onClick={e => this.handleRowClick(row, e)} className="adatest-hover-gray">{row}</div>
         })}
       </div>
     </div>

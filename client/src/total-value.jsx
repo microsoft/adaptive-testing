@@ -1,11 +1,15 @@
 import React from 'react';
 import autoBind from 'auto-bind';
-import { get } from 'lodash';
+import { get, debounce } from 'lodash';
 
 export default class TotalValue extends React.Component {
     constructor(props) {
       super(props);
       autoBind(this);
+
+      this.doStateUpdateDebounced = debounce(this.doStateUpdate, 100);
+
+      this.pendingStateUpdate = {};
   
       // our starting state 
       this.state = {
@@ -14,9 +18,13 @@ export default class TotalValue extends React.Component {
     }
   
     setSubtotal(id, subtotal) {
-      let update = {};
-      update[id] = subtotal;
-      this.setState(update);
+      this.pendingStateUpdate[id] = subtotal;
+      this.doStateUpdateDebounced();
+    }
+
+    doStateUpdate() {
+      this.setState(this.pendingStateUpdate);
+      this.pendingStateUpdate = {};
     }
   
     render() {
@@ -26,8 +34,8 @@ export default class TotalValue extends React.Component {
         total += get(this.state, this.props.activeIds[i], 0);
       }
       
-      return <React.Fragment>
+      return <span>
         {total}
-      </React.Fragment>
+      </span>
     }
   }
