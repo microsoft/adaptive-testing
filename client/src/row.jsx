@@ -91,9 +91,6 @@ export default class Row extends React.Component {
     const main_score = this.props.scoreColumns ? this.props.scoreColumns[0] : undefined;
     // console.log("rendering row", this.props)
     // apply the value1/value2/topic filters
-    let value1_outputs_str = "";
-    let value2_outputs_str = "";
-    let value3_outputs_str = "";
     if (this.state.topic_name === null) {
       if (this.props.value1Filter && this.state.value1 !== "") {
         const re = RegExp(this.props.value1Filter);
@@ -117,59 +114,33 @@ export default class Row extends React.Component {
         const re = RegExp(this.props.value2Filter);
         if (!re.test(this.state.value2) && !re.test(this.state.value1) && !re.test(this.state.comparator)) return null;
       }
-      let value1_outputs_strs = [];
-      let found_values = false;
-      if (this.state.value1_outputs) {
-        for (const k in this.state.value1_outputs) {
-          // console.log(k, this.state.value1_outputs)
-          if (this.state.value1_outputs[k] && this.state.value1_outputs[k].length == 1) {
-            // console.log(this.state.value1_outputs[k])
-            const d = this.state.value1_outputs[k][0][1];
-            let str = k + " model outputs: \n";
-            for (const name in d) {
-              // console.log("d[name]", d[name])
-              if (typeof d[name] === 'string') {
-                str += name + ": " + "|".join(d[name].split("|").map(x => "" + parseFloat(x).toFixed(3)));
-              } else {
-                str += name + ": " + d[name].toFixed(3) + "\n";
-              }
-              
-              found_values = true;
-            }
-            value1_outputs_strs.push(str);
-          }
-        }
-      }
-      if (found_values) {
-        value1_outputs_str = value1_outputs_strs.join("\n");
-      }
-
-      let value2_outputs_strs = [];
-      found_values = false;
-      if (this.state.value2_outputs) {
-        for (const k in this.state.value2_outputs) {
-          // console.log(k, this.state.value2_outputs)
-          if (this.state.value2_outputs[k] && this.state.value2_outputs[k].length == 1) {
-            // console.log(this.state.value2_outputs[k])
-            const d = this.state.value2_outputs[k][0][1];
-            let str = k + " model outputs: \n";
-            for (const name in d) {
-              // console.log("d[name]", d[name])
-              str += name + ": " + d[name].toFixed(3) + "\n";
-              found_values = true;
-            }
-            value2_outputs_strs.push(str);
-          }
-        }
-      }
-      if (found_values) {
-        value2_outputs_str = value2_outputs_strs.join("\n");
-      }
-
 
     } else if (this.props.value2Filter) {
       const re = RegExp(this.props.value2Filter); // TODO: rename value2Filter to reflect it's global nature
       if (!re.test(this.state.topic_name)) return null;
+    }
+
+
+    // extract the raw model outputs as strings for tooltips
+    let model_output_strings = {};
+    for (const val of ["value1", "value2", "value3"]) {
+      model_output_strings[val] = [];
+      const val_outputs = this.state[val+"_outputs"] || [];
+      for (const k in val_outputs) {
+        if (val_outputs[k] && val_outputs[k].length == 1) {
+          const d = val_outputs[k][0][1];
+          let str = k.slice(0, -6) + " outputs for " + val + ": \n";
+          for (const name in d) {
+            if (typeof d[name] === 'string') {
+              str += name + ": " + "|".join(d[name].split("|").map(x => "" + parseFloat(x).toFixed(3)));
+            } else {
+              str += name + ": " + d[name].toFixed(3) + "\n";
+            }
+          }
+          model_output_strings[val].push(str);
+        }
+      }
+      model_output_strings[val] = model_output_strings[val].join("\n");
     }
 
     
@@ -254,7 +225,7 @@ export default class Row extends React.Component {
           <div className="adatest-row">
             <div className="adatest-row-input" onClick={this.clickRow}>
               <span style={{color: "#aaa"}}>{test_type_parts.text1}</span>
-              &nbsp;<div onClick={this.clickValue1} style={{display: "inline-block"}}><span style={{color: "#aaa"}}>"</span><span title={value1_outputs_str} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span><span style={{color: "#aaa"}}>"</span></div>
+              &nbsp;<div onClick={this.clickValue1} style={{display: "inline-block"}}><span style={{color: "#aaa"}}>"</span><span title={model_output_strings["value1"]} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span><span style={{color: "#aaa"}}>"</span></div>
             </div>
             <div style={{flex: "0 0 "+this.props.selectWidth+"px", color: "#999999", textAlign: "center", overflow: "hidden", display: "flex"}}>
               <div style={{alignSelf: "flex-end", display: "inline-block"}}>
@@ -274,7 +245,7 @@ export default class Row extends React.Component {
                 }
                 {test_type_parts.value2 === "{}" &&
                   <React.Fragment>
-                    <span style={{color: "#aaa"}}>"</span><span title={value2_outputs_str}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={this.state.value2} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span><span style={{color: "#aaa"}}>"</span>
+                    <span style={{color: "#aaa"}}>"</span><span title={model_output_strings["value2"]}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={this.state.value2} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span><span style={{color: "#aaa"}}>"</span>
                   </React.Fragment>
                 }
                 {test_type_parts.text3}
@@ -285,7 +256,7 @@ export default class Row extends React.Component {
                 }
                 {test_type_parts.value3 === "{}" &&
                   <React.Fragment>
-                    <span style={{color: "#aaa"}}>"</span><span title={value3_outputs_str}><ContentEditable ref={el => this.value3Editable = el} onClick={this.clickValue3} text={this.state.value3} onInput={this.inputValue3} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value3Default} /></span><span style={{color: "#aaa"}}>"</span>
+                    <span style={{color: "#aaa"}}>"</span><span title={model_output_strings["value3"]}><ContentEditable ref={el => this.value3Editable = el} onClick={this.clickValue3} text={this.state.value3} onInput={this.inputValue3} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value3Default} /></span><span style={{color: "#aaa"}}>"</span>
                   </React.Fragment>
                 }
                 {test_type_parts.text4}

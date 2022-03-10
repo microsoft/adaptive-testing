@@ -169,10 +169,11 @@ class TestTreeBrowser():
             self.embedding_model = embedding_model
 
         # define our current mode, and set of supported modes
-        self.mode = "validity focused"
+        self.mode = "tests"
         self.mode_options = [
-            "validity focused", # focus first on making valid in-topic tests, then secondarily on making those tests high scoring
-            "failure focused", # focus on making high scoring (failing) tests, then secondarily on making those tests valid and in-topic
+            # "validity focused", # focus first on making valid in-topic tests, then secondarily on making those tests high scoring
+            # "failure focused", # focus on making high scoring (failing) tests, then secondarily on making those tests valid and in-topic
+            "tests", # suggest new tests
             "topics" # suggest new subtopics
         ]
         if dataset is not None:
@@ -251,14 +252,14 @@ class TestTreeBrowser():
                 
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
-                    # try:
-                    self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                    self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                    self._suggestions_error = False
-                    # except str as e:
-                    #     log.debug(e)
-                    #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-                    #     self._suggestions_error = True
+                    try:
+                        self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
+                        self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                        self._suggestions_error = False
+                    except Exception as e:
+                        log.debug(e)
+                        self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                        self._suggestions_error = True
                     self._refresh_interface()
                 
                 # change the current topic
@@ -468,7 +469,7 @@ class TestTreeBrowser():
                         }
                         for value in ["value1", "value2", "value3"]:
                             data[k][value] = test[value]
-                            data[k][value+"_outputs"] = {c: [[k, safe_json_load(test.get(c + " "+value+" outputs", "{}"))]] for c in self.score_columns}
+                            data[k][value+"_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " "+value+" outputs", "{}"))]] for c in self.score_columns}
                         if test.topic == self.current_topic:
                             children.append(k)
             
@@ -546,16 +547,17 @@ class TestTreeBrowser():
         # if valid_outputs is not None and value2_filter is not None:
         #     valid_outputs = [s for s in valid_outputs if re.search(value2_filter, s) is not None]
 
-        # see if we have only topics are direct children, if so, we suggest topics
-        has_direct_tests = False
-        has_known_subtopics = False
-        for k, test in self.test_tree.iterrows():
-            if test["topic"] == self.current_topic:
-                if test["type"] == "test":
-                    has_direct_tests = True
-            elif is_subtopic(self.current_topic, test["topic"]):
-                has_known_subtopics = True
-        suggest_topics = not has_direct_tests and has_known_subtopics
+        # # see if we have only topics are direct children, if so, we suggest topics
+        # has_direct_tests = False
+        # has_known_subtopics = False
+        # for k, test in self.test_tree.iterrows():
+        #     if test["topic"] == self.current_topic:
+        #         if test["type"] == "test":
+        #             has_direct_tests = True
+        #     elif is_subtopic(self.current_topic, test["topic"]):
+        #         has_known_subtopics = True
+        # suggest_topics = not has_direct_tests and has_known_subtopics
+        # suggest_topics = self.mode == "topics"
         # zero_shot_tests = not has_direct_tests and not has_known_subtopics
         
         
@@ -592,7 +594,7 @@ class TestTreeBrowser():
             score_column=self.score_columns[0],
             repetitions=suggestion_threads,
             filter=filter,
-            suggest_topics=suggest_topics,
+            suggest_topics=self.mode == "topics",
             embeddings=self._embeddings
         )
 
@@ -605,7 +607,7 @@ class TestTreeBrowser():
         suggestions = []
         test_map_tmp = copy.copy(test_map)
         for value1, value2, value3 in proposals:
-            str_val = value1.lower() + " " + value2.lower() + " " + value3.lower()
+            str_val = test_type + " " + value1 + " " + value2 + " " + value3
             if str_val not in test_map_tmp:
                 s = {
                     "type": test_type,
@@ -624,7 +626,7 @@ class TestTreeBrowser():
 
         suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
         self._compute_embeddings_and_scores(suggestions)
-        if not suggest_topics:
+        if self.mode != "topics":
             suggestions = suggestions.dropna(subset=[self.score_columns[0]])
         else:
             for k, test in suggestions.iterrows():
@@ -637,7 +639,7 @@ class TestTreeBrowser():
             if row.type == "topic_marker":
                 str_val = row.topic.rsplit("/", 1)[-1].lower()
             else:
-                str_val = row.value1.lower() + " " +  row.value2.lower() + " " +  row.value3.lower()
+                str_val = test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
             if str_val in test_map:
                 duplicates.append(k)
             test_map[str_val] = True
@@ -709,8 +711,8 @@ class TestTreeBrowser():
         if recompute or len(self.score_columns) == 0:
             new_score_mask = np.ones(tests.shape[0], dtype=np.bool)
         else:
-            new_score_mask = np.array(tests[self.score_columns[0]].isnull())
-        new_score_mask = new_score_mask & np.array(tests["type"] != "topic_placeholder", dtype=np.bool)
+            new_score_mask = np.array(tests[self.score_columns[0]].isnull()) | np.array(tests[self.score_columns[0]] == "")
+        new_score_mask = new_score_mask & np.array(tests["type"] != "topic_marker", dtype=np.bool)
 
         if new_score_mask.sum() > 0:
             scores = {}
@@ -855,15 +857,19 @@ class TestTree():
             self._tests["author"] = ["anonymous" for _ in range(self._tests.shape[0])]
 
         # ensure that all topics have a topic_marker entry
-        marked_topics = set(self._tests.loc[self._tests["type"] == "topic_marker"]["topic"])
+        marked_topics = {t: True for t in set(self._tests.loc[self._tests["type"] == "topic_marker"]["topic"])}
         for topic in set(self._tests["topic"]):
-            if topic not in marked_topics:
-                self._tests.loc[uuid.uuid4().hex] = {
-                    "type": "topic_marker",
-                    "topic": topic,
-                    "author": "anonymous",
-                    "description": ""
-                }
+            parts = topic.split("/")
+            for i in range(1, len(parts)):
+                parent_topic = "/".join(parts[:i])
+                if parent_topic not in marked_topics:
+                    self._tests.loc[uuid.uuid4().hex] = {
+                        "type": "topic_marker",
+                        "topic": parent_topic,
+                        "author": "anonymous",
+                        "description": ""
+                    }
+                    marked_topics[parent_topic] = True
 
         # drop any duplicate index values
         self._tests = self._tests.groupby(level=0).first()
