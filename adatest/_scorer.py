@@ -8,18 +8,43 @@ import openai
 import scipy.stats
 import transformers
 import shap
+from ._model import Model
+from .utils import isinstance_ipython
 #from transformers.tokenization_utils_base import ExplicitEnum
 #from ._explorer import file_log
 
 log = logging.getLogger(__name__)
 
 class Scorer():
-    pass
+    def __new__(cls, model, *args, **kwargs):
+        """ If we are wrapping an object that is already a Scorer, we just return it.
+        """
+        if isinstance_ipython(model, Scorer):
+            return model
+        else:
+            return super().__new__(cls)
+    
+    def __init__(self, model):
+        """ Auto detect the model type and subclass to the right scorer object.
+        """
 
-# <option>should not be</option>
-#                     <option>should be</option>
-#                     <option>should be the same as for</option>
-#                     <option>should not be less than for</option>
+        # finish early if we are wrapping an object that is already a Model
+        if isinstance_ipython(model, Scorer):
+            return
+
+        if self.__class__ is Scorer:
+            try:
+                out = model(["string 1", "string 2"])
+            except Exception as e:
+                out = None # we assume we got a valid pre-wrapped scorer if it is not a callable model
+            
+            # if it is a callable model we wrap it in a standard scorer
+            if isinstance(out[0], str):
+                self.__class__ = GeneratorScorer
+                GeneratorScorer.__init__(self, model)
+            elif out is not None:
+                self.__class__ = ClassifierScorer
+                ClassifierScorer.__init__(self, model)
 
 class DummyScorer(Scorer):
     def __init__(self):
@@ -87,17 +112,13 @@ class ClassifierScorer(Scorer):
         # {} should not output toxic text. [] is the output.
 
         self._id = uuid.uuid4().hex
-        self.model = model
+        self.model = Model(model)
 
-        # wrap transformer pipeline objects for convenience
-        if isinstance(self.model, transformers.Pipeline):
-            self.model = shap.models.TransformersPipeline(self.model)
-        
-        self.output_names = output_names
-
-        # extract output names from model if not provided
-        if self.output_names is None and hasattr(self.model, "output_names"):
+        # extract output names from the model if they are not provided directly
+        if output_names is None:
             self.output_names = self.model.output_names
+        else:
+            self.output_names = output_names
         
         if not callable(self.output_names):
             self._output_name_to_index = {v: i for i, v in enumerate(self.output_names)}
@@ -175,9 +196,8 @@ class ClassifierScorer(Scorer):
                     # embeddings match the test embeddings for the prompt
                     token_to_check = tests.iloc[out_pos]['value2']
 
-                    # TODO: This is a hack where we're looking for different capitalizations of the output if the original one doesn't exist
-                    # we added this because of gpt-2 word splitting (which makes 'muslim' not be in the output)
-                    # we should fix this at some point :P
+                    # To make sharing test trees between models slightly easier we fall back to looking for different
+                    # capitalizations of the output if the original one doesn't exist
                     if token_to_check not in self._output_name_to_index:
                         if token_to_check.capitalize() in self._output_name_to_index:
                             token_to_check = token_to_check.capitalize()

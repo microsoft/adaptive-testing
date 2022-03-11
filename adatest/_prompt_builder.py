@@ -252,6 +252,8 @@ class PromptBuilder():
             for k in reversed(prompt_ids):
                 row = test_tree.loc[k]
                 if suggest_topics:
+                    if row["topic"] == "":
+                        continue # we can't use the root to help suggest topic names
                     parents,child = row["topic"].rsplit("/", 1)
                     prompt.append((parents, child, "", ""))
                 else:
