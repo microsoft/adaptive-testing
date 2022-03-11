@@ -82,7 +82,7 @@ class TestTree():
         marked_topics = {t: True for t in set(self._tests.loc[self._tests["type"] == "topic_marker"]["topic"])}
         for topic in set(self._tests["topic"]):
             parts = topic.split("/")
-            for i in range(1, len(parts)):
+            for i in range(1, len(parts)+1):
                 parent_topic = "/".join(parts[:i])
                 if parent_topic not in marked_topics:
                     self._tests.loc[uuid.uuid4().hex] = {
