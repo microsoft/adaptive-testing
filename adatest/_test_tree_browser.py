@@ -582,7 +582,15 @@ class TestTreeBrowser():
         # save a lookup we can use to detect duplicate tests
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            test_map[test.type + " " + test.value1 + " " +  test.value2 + " " +  test.value3] = True
+            if test.type == "topic_marker":
+                parts = test.topic.rsplit("/", 1)
+                if len(parts) == 2:
+                    value1 = parts[1]
+                else:
+                    value1 = ""
+            else:
+                value1 = test.value1
+            test_map[test.type + " " + value1 + " " +  test.value2 + " " +  test.value3] = True
 
         # see if we have a finite set of valid outputs
         # valid_outputs = getattr(self.scorer, "output_names", None)

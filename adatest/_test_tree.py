@@ -89,6 +89,9 @@ class TestTree():
                         "type": "topic_marker",
                         "topic": parent_topic,
                         "author": "anonymous",
+                        "value1": "",
+                        "value2": "",
+                        "value3": "",
                         "description": ""
                     }
                     marked_topics[parent_topic] = True
