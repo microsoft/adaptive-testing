@@ -4,7 +4,7 @@ import logging
 import os
 import io
 from ._prompt_builder import PromptBuilder
-from ._test_tree_browser import TestTreeBrowser
+from ._test_tree_browser import TestTreeBrowser, is_subtopic
 
 class TestTree():
     """ A hierarchically organized set of tests represented as a DataFrame.
@@ -151,6 +151,17 @@ class TestTree():
             self._tests.to_csv(self._tests_location)
         else:
             self._tests.to_csv(file)
+
+    def topic(self, topic):
+        """ Return a subset of the test tree containing only tests that match the given topic.
+
+        Parameters
+        ----------
+        topic : str
+            The topic to filter the test tree by.
+        """
+        ids = [id for id, test in self._tests.iterrows() if is_subtopic(topic, test.topic)]
+        return self.loc[ids]
 
     def __call__(self, scorer=None, dataset=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
                  max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_backend="default", starting_path="",
