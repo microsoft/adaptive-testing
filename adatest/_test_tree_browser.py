@@ -445,13 +445,21 @@ class TestTreeBrowser():
                                 self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
+
+                            if test.type == 'topic_marker' and test.topic == k:
+                                if id in self._embeddings:
+                                    del self._embeddings[id]
+                    # Move topic out of suggestions into tests
                     for id, test in self.suggestions.iterrows():
                         if is_subtopic(k, test.topic):
                             if msg[k]["topic"] != "suggestion":
                                 self.suggestions.loc[id, "topic"] = msg[k]["topic"]
                                 self.test_tree.loc[id] = self.suggestions.loc[id]
                                 self.suggestions.drop(id, inplace=True)
-                
+
+                # Recompute any missing embeddings to handle any changes
+                self._compute_embeddings_and_scores(self.test_tree)
+                self._compute_embeddings_and_scores(self.suggestions)
                 self._auto_save()
                 self._refresh_interface()
 

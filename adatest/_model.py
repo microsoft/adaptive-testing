@@ -51,7 +51,8 @@ class Model():
             if isinstance_ipython(model, transformers.Pipeline):
                 self.__class__ = shap.models.TransformersPipeline
                 shap.models.TransformersPipeline.__init__(self, model, **kwargs)
-                self.output_names = output_names
+                if output_names is not None: # Override output names if user supplied
+                    self.output_names = output_names
             else:
                 self.inner_model = model
                 self.output_names = output_names

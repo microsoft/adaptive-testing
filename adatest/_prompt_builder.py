@@ -143,15 +143,16 @@ class PromptBuilder():
                     continue
                 hidden_scaling[i] = 0.0
 
-        # compute a positive single value score for each test
-        scores = np.array([score_max(test_tree.loc[k, score_column]) for k in ids])
-        scores -= np.nanmin(scores) - 1e-8 # the 1e-8 terms causes NaN scores to be last priority
-        scores = np.nan_to_num(scores)
-
         # filter down to a single test type (chosen to match the top scoring test)
         if suggest_topics:
             test_type = "topic_marker"
+            scores = np.ones(len(ids)) # Scores should not influence topic suggestions
         else:
+            # compute a positive single value score for each test
+            scores = np.array([score_max(test_tree.loc[k, score_column]) for k in ids])
+            scores -= np.nanmin(scores) - 1e-8 # the 1e-8 terms causes NaN scores to be last priority
+            scores = np.nan_to_num(scores)
+
             rank_vals = scores * topic_scaling * hidden_scaling
             test_type = test_tree.loc[ids[np.argmax(rank_vals)], "type"]
             for i,k in enumerate(ids):
@@ -175,7 +176,7 @@ class PromptBuilder():
             scores_curr = scores.copy()
             topic_scaling_curr = topic_scaling.copy()
 
-            # score randomization
+            # score randomization TODO: Scott look into scores_curr > 1
             score_weights = topic_scaling * (scores_curr > 1)
             if np.sum(score_weights) > 0:
                 std_dev = np.sqrt(np.cov(scores_curr, aweights=score_weights)) + 1e-6
