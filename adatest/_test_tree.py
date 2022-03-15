@@ -15,7 +15,7 @@ class TestTree():
     webserver. A TestTree object also conforms to most of the standard pandas DataFrame API.
     """
 
-    def __init__(self, tests=None, **kwargs):
+    def __init__(self, tests=None, index=None, **kwargs):
         """ Create a new test tree.
 
         Parameters
@@ -24,8 +24,8 @@ class TestTree():
             The tests to load as a test tree. If a string is provided, it is assumed to be a path to a CSV file containing
             the tests. Otherwise tests is passed to the pandas DataFrame constructor to load the tests as a DataFrame.
 
-        auto_save : bool
-            If True, the test tree will automatically save itself to disk when it is modified.
+        index : list or list-like or None
+            Assigns an index to underlying tests frame, or auto generates if not provided.s
 
         kwargs : dict
             Additional keyword arguments are passed to the pandas DataFrame constructor.
@@ -57,9 +57,10 @@ class TestTree():
                 raise Exception(f"The provided tests file does not exist: {tests}. If you wish to create a new file use `auto_save=True`")
 
         else:
-            if "index" not in kwargs:
-                kwargs["index"] = [uuid.uuid4().hex for _ in range(len(tests))]
+            if index is None:
+                index = [uuid.uuid4().hex for _ in range(len(tests))]
             self._tests = pd.DataFrame(tests, **kwargs)
+            self._tests.index = index
             self._tests_location = None
 
         # # ensure auto saving is possible when requested
@@ -110,17 +111,23 @@ class TestTree():
         #     self._last_saved_tests = self._tests.copy()
 
     def __getitem__(self, key):
-        """ TestSets act just like a DataFrame when sliced.
-        """
-        return self._tests.__getitem__(key)
+        """ TestSets act just like a DataFrame when sliced. """
+        subset = self._tests[key]
+        if hasattr(subset, 'columns') and all(subset.columns == self.columns):
+            return self.__class__(subset, index=subset.index)
+        return subset
+
+    def __setitem__(self, key, value):
+        """ TestSets act just like a DataFrame when sliced, including assignment. """
+        self._tests[key] = value
 
     # all these methods directly expose the underlying DataFrame API
     @property
     def loc(self):
-        return self._tests.loc
+        return TestTreeLocIndexer(self)
     @property
     def iloc(self):
-        return self._tests.iloc
+        return TestTreeILocIndexer(self)
     @property
     def index(self):
         return self._tests.index
@@ -242,3 +249,47 @@ class TestTree():
 
     def _repr_html_(self):
         return self._tests._repr_html_()
+
+class TestTreeLocIndexer():
+    def __init__(self, test_tree):
+        self.test_tree = test_tree
+
+    def __repr__(self):
+        return "TestTreeLocIndexer is an intermediate object for operating on TestTrees. Slice this object further to yield useful results."
+
+    def __getitem__(self, key):
+        # If all columns haven't changed, it's still a valid test tree
+        # If columns have been dropped, return a Pandas object
+        
+        subset = self.test_tree._tests.loc[key]
+        if hasattr(subset, 'columns') and all(subset.columns == self.test_tree.columns):
+            test_tree_slice = TestTree(subset)
+            test_tree_slice._tests_location = self.test_tree._tests_location
+            return test_tree_slice
+        else:
+            return subset
+    
+    def __setitem__(self, key, value):
+        self.test_tree._tests.loc[key] = value
+    
+class TestTreeILocIndexer():
+    def __init__(self, test_tree):
+        self.test_tree = test_tree
+
+    def __repr__(self):
+        return "TestTreeILocIndexer is an intermediate object for operating on TestTrees. Slice this object further to yield useful results."
+
+    def __getitem__(self, key):
+        # If all columns haven't changed, it's still a valid test tree
+        # If columns have been dropped, return a Pandas object
+        
+        subset = self.test_tree._tests.iloc[key]
+        if hasattr(subset, 'columns') and all(subset.columns == self.test_tree.columns):
+            test_tree_slice = TestTree(subset)
+            test_tree_slice._tests_location = self.test_tree._tests_location
+            return test_tree_slice
+        else:
+            return subset
+    
+    def __setitem__(self, key, value):
+        self.test_tree._tests.iloc[key] = value
