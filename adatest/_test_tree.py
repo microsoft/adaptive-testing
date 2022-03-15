@@ -262,7 +262,7 @@ class TestTreeLocIndexer():
         # If columns have been dropped, return a Pandas object
         
         subset = self.test_tree._tests.loc[key]
-        if hasattr(subset, 'columns') and all(subset.columns == self.test_tree.columns):
+        if hasattr(subset, 'columns') and len(set(["type", "topic", "value1", "value2", "value3"]) - set(subset.columns)) == 0:
             test_tree_slice = TestTree(subset)
             test_tree_slice._tests_location = self.test_tree._tests_location
             return test_tree_slice

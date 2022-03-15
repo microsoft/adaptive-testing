@@ -721,10 +721,6 @@ def compute_dirichlet_equality_score(model_output1, model_output2, k=1, concentr
 
     assert len(model_output1) == len(model_output2)
 
-    
-
-    
-
     # shrink the number of dims we have to deal with by collapsing low probability dims
     used_inds = [i for i in range(len(model_output1)) if model_output1[i] > domination_threshold or model_output2[i] > domination_threshold]
     # model_output1 = model_output1[used_inds]
@@ -735,6 +731,7 @@ def compute_dirichlet_equality_score(model_output1, model_output2, k=1, concentr
     model_output2_padded = np.zeros(len(used_inds) + 1)
     model_output2_padded[1:] = model_output2[used_inds]
     model_output2_padded[0] = 1 - np.sum(model_output2)
+    assert model_output1_padded[0] >= 0 and model_output2_padded[0] >= 0, "The given model output probabilities do not sum to 1!"
     
     # normalize the scores for the Dirichlet parameter
     normed_output1 = np.array(model_output1_padded) + 1e-6
