@@ -25,7 +25,7 @@ class TestTree():
             the tests. Otherwise tests is passed to the pandas DataFrame constructor to load the tests as a DataFrame.
 
         index : list or list-like or None
-            Assigns an index to underlying tests frame, or auto generates if not provided.s
+            Assigns an index to underlying tests frame, or auto generates if not provided.
 
         kwargs : dict
             Additional keyword arguments are passed to the pandas DataFrame constructor.
@@ -113,7 +113,7 @@ class TestTree():
     def __getitem__(self, key):
         """ TestSets act just like a DataFrame when sliced. """
         subset = self._tests[key]
-        if hasattr(subset, 'columns') and all(subset.columns == self.columns):
+        if hasattr(subset, 'columns') and len(set(["type", "topic", "value1", "value2", "value3"]) - set(subset.columns)) == 0:
             return self.__class__(subset, index=subset.index)
         return subset
 
@@ -284,7 +284,7 @@ class TestTreeILocIndexer():
         # If columns have been dropped, return a Pandas object
         
         subset = self.test_tree._tests.iloc[key]
-        if hasattr(subset, 'columns') and all(subset.columns == self.test_tree.columns):
+        if hasattr(subset, 'columns') and len(set(["type", "topic", "value1", "value2", "value3"]) - set(subset.columns)) == 0:
             test_tree_slice = TestTree(subset)
             test_tree_slice._tests_location = self.test_tree._tests_location
             return test_tree_slice
