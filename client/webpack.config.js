@@ -27,13 +27,13 @@ module.exports = {
     extensions: ['*', '.js', '.jsx'],
   },
   externals: {
-    'react': 'React',
-    'react-dom': 'ReactDOM'
+    // 'react': 'React',
+    // 'react-dom': 'ReactDOM'
   },
   output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'main.js',
   },
-  //mode: "production"
-  mode: "development"
+  mode: "production"
+  //mode: "development"
 };

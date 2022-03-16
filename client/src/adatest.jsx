@@ -1,6 +1,7 @@
 import "./adatest.css";
 
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { withRouter } from 'react-router-dom';
 import { BrowserRouter } from "react-router-dom";
 import { MemoryRouter } from 'react-router';
@@ -36,5 +37,7 @@ export default class AdaTest extends React.Component {
   }
 }
 
+window.AdaTestReact = React
+window.AdaTestReactDOM = ReactDOM
 window.AdaTest = AdaTest
 

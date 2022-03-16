@@ -218,12 +218,10 @@ class TestTreeBrowser():
         interface_html = f"""
 <div id="adatest_container_{self._id}" style="width: 100%; all: initial;"></div>
 <script src="https://kit.fontawesome.com/fcd9b03029.js" crossorigin="anonymous"></script>
-<script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script type='text/javascript'>
   {js_data};
-  ReactDOM.render(
-    React.createElement(AdaTest, {{
+  AdaTestReactDOM.render(
+    AdaTestReact.createElement(AdaTest, {{
       interfaceId: "{self._id}", environment: "{environment}", startingTopic: "{self.current_topic}", prefix: "{prefix}",
       websocket_server: {"undefined" if websocket_server is None else '"'+websocket_server+'"'},\
     }}, null),
