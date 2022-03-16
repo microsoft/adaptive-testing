@@ -217,7 +217,6 @@ class TestTreeBrowser():
             js_data = f.read()
         interface_html = f"""
 <div id="adatest_container_{self._id}" style="width: 100%; all: initial;"></div>
-<script src="https://kit.fontawesome.com/fcd9b03029.js" crossorigin="anonymous"></script>
 <script type='text/javascript'>
   {js_data};
   AdaTestReactDOM.render(
@@ -546,7 +545,7 @@ class TestTreeBrowser():
         # this is just for users who don't know when to stop scrolling down...
         # SML: I expect we can delete this at some point?
         if self.score_filter == "auto":
-            if len(children_scores) < 10:
+            if len(children) < 10:
                 score_filter = -1e12
             else:
                 children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children])
