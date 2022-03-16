@@ -74,6 +74,19 @@ export default class Row extends React.Component {
   }
   
   componentDidUpdateOrMount(mount) {
+    // update any listeners for score totals
+    if (this.props.scoreColumns) {
+      for (const k of this.props.scoreColumns) {
+        if (this.state.scores && this.props.updateTotals) {
+          // console.log("this.props.updateTotals", k, this.state.scores[k])
+          this.props.updateTotals(k,
+            this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0),
+            this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)
+          );
+        }
+      }
+    }
+
     // see if we should scroll to make ourselves visible
     if (this.scrollToView) {
       console.log("scrollingtoView!");
@@ -86,7 +99,9 @@ export default class Row extends React.Component {
   }
 
   render() {
+    console.log("---- render Row ----");
     if (this.state.type === null) return null; // only render if we have data
+    console.log("real render Row");
 
     const main_score = this.props.scoreColumns ? this.props.scoreColumns[0] : undefined;
     // console.log("rendering row", this.props)
@@ -119,6 +134,7 @@ export default class Row extends React.Component {
       const re = RegExp(this.props.value2Filter); // TODO: rename value2Filter to reflect it's global nature
       if (!re.test(this.state.topic_name)) return null;
     }
+    console.log("real render Row2");
 
 
     // extract the raw model outputs as strings for tooltips
@@ -181,6 +197,7 @@ export default class Row extends React.Component {
       //console.log("score filter ", this.state.value1, score, this.props.scoreFilter)
       return null;
     }
+    console.log("real render Row3");
 
     return <div className={outerClasses} draggable onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut} onMouseDown={this.onMouseDown}
                 onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} onDragOver={this.onDragOver}
@@ -270,12 +287,6 @@ export default class Row extends React.Component {
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
-        if (Number.isFinite(overall_score[k]) && this.props.updateTotals) {
-          this.props.updateTotals(
-            this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0),
-            this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)
-          );
-        }
         
         // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
         // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);

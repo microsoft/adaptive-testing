@@ -193,7 +193,7 @@ class TestTreeBrowser():
 
         # init a blank set of suggetions
         self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-        self._suggestions_error = False # tracks if we failed to generate suggestions
+        self._suggestions_error = "" # tracks if we failed to generate suggestions
 
     def _repr_html_(self, prefix="", environment="jupyter", websocket_server=None):
         """ Returns the HTML interface for this browser.
@@ -261,14 +261,17 @@ class TestTreeBrowser():
                 
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
-                    # try:
-                    self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                    self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                    self._suggestions_error = False
-                    # except Exception as e:
-                    #     log.debug(e)
-                    #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-                    #     self._suggestions_error = True
+                    if self._active_backend_obj is None:
+                        self._suggestions_error = "No AdaTest backend has been set!"
+                    else:
+                        # try:
+                        self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
+                        self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                        self._suggestions_error = ""
+                        # except Exception as e:
+                        #     log.debug(e)
+                        #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                        #     self._suggestions_error = True
                     self._refresh_interface()
                 
                 # change the current topic

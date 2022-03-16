@@ -263,7 +263,9 @@ class ClassifierScorer(Scorer):
                         shown_tmp[self.model.output_names[j]] = float(model_out[i+1][j])
                     value2_outputs[out_pos] = shown_tmp
                     
-                    if self.method == "dirichlet":
+                    if np.isnan(model_out[i][0]):
+                        score = np.nan
+                    elif self.method == "dirichlet":
                         score = compute_dirichlet_equality_score(
                             model_out[i], model_out[i+1], self.topk, concentration=self.dirichlet_concentration,
                             # we treat values less than 1% of the top value as unlikely to impact the results
@@ -731,8 +733,11 @@ def compute_dirichlet_equality_score(model_output1, model_output2, k=1, concentr
     model_output2_padded = np.zeros(len(used_inds) + 1)
     model_output2_padded[1:] = model_output2[used_inds]
     model_output2_padded[0] = 1 - np.sum(model_output2)
-    assert model_output1_padded[0] >= 0 and model_output2_padded[0] >= 0, "The given model output probabilities do not sum to 1!"
-    
+
+    assert model_output1_padded[0] >= -1e-6 and model_output2_padded[0] >= -1e-6, "The given model output probabilities do not sum to 1!"
+    model_output1_padded[0] = max(model_output1_padded[0], 0)
+    model_output2_padded[0] = max(model_output2_padded[0], 0)
+
     # normalize the scores for the Dirichlet parameter
     normed_output1 = np.array(model_output1_padded) + 1e-6
     normed_output1 /= normed_output1.sum()

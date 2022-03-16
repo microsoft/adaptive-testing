@@ -102,7 +102,7 @@ export default class Browser extends React.Component {
 
 
   render() {
-    console.log("render AdaTest browser", )
+    console.log("----- render AdaTest browser -----", )
     // compute the width of the largest type selection option (used to size the type column)
     let selectWidths = {};
     for (const i in this.state.test_types) {
@@ -121,13 +121,24 @@ export default class Browser extends React.Component {
 
     // console.log("location.pathname", location.pathname);
 
+    let totalPasses = {};
+    let totalFailures = {};
+    this.totalPassesObjects = {};
+    this.totalFailuresObjects = {};
+    if (this.state.score_columns) {
+      for (const k of this.state.score_columns) {
+        console.log("k", k)
+        totalPasses[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {console.log("H", k, el); this.totalPassesObjects[k] = el}} />;
+        totalFailures[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {console.log("I", k, el); this.totalFailuresObjects[k] = el}} />;
+        console.log("totalPasses", totalPasses)
+      }
+    }
     let topicPath = "";
     // console.log("tests.render4", this.state.tests, stripSlash(this.stripPrefix(this.props.location.pathname)), this.state.topic);
 
     let breadCrumbParts = stripSlash(this.stripPrefix(this.state.topic)).split("/");
-
-    let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
-    let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
+    // let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
+    // let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
     return (<div onKeyDown={this.keyDownHandler} tabIndex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
       <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
@@ -148,11 +159,11 @@ export default class Browser extends React.Component {
 
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
         <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
-          {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
+          {/* {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
             </div>
-          })}
+          })} */}
           <span style={{fontSize: "16px"}}>
           {breadCrumbParts.map((name, index) => {
             //console.log("bread crum", name, index);
@@ -246,7 +257,7 @@ export default class Browser extends React.Component {
             }
             {this.state.suggestions_error && 
               <div style={{cursor: "pointer", color: "#990000", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
-                The suggestion server had an error and no suggestions were returned, you might try again.
+                {this.state.suggestions_error}
               </div>
             }
             {/* {this.state.loading_suggestions && this.state.tests.length < 5 &&
@@ -256,6 +267,16 @@ export default class Browser extends React.Component {
             } */}
           </div>
         </div>}
+
+        {this.state.score_columns && this.state.score_columns.length > 1 &&
+          <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
+            {this.state.score_columns.map(k => {
+              return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px", width: "100px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>
+                {k.replace(" score", "")}
+              </span>
+            })}
+          </div>
+        }
         
         <div className="adatest-children-frame">
           {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
@@ -278,9 +299,11 @@ export default class Browser extends React.Component {
                 onOpen={this.setLocation}
                 onSelectToggle={this.toggleSelection}
                 onDrop={this.onDrop}
-                updateTotals={(passes, failures) => {
-                  this.totalPassesObj.setSubtotal(id, passes);
-                  this.totalFailuresObj.setSubtotal(id, failures);
+                updateTotals={(k, passes, failures) => {
+                  if (this.totalPassesObjects[k]) {
+                    this.totalPassesObjects[k].setSubtotal(id, passes);
+                    this.totalFailuresObjects[k].setSubtotal(id, failures);
+                  }
                 }}
                 comm={this.comm}
                 selectWidth={maxSelectWidth}
@@ -298,16 +321,20 @@ export default class Browser extends React.Component {
         </div>
       </div>
 
-      <div style={{textAlign: "right"}}>
-        <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
-          <FontAwesomeIcon icon={faCheck} style={{fontSize: "14px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
-          <span style={{lineHeight: "20px"}}>{totalPasses}</span>
-          {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
-        </div>
-        <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "12px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
-          <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
-          <span style={{lineHeight: "20px"}}>{totalFailures}</span>
-        </div>
+      <div style={{textAlign: "right", paddingRight: "12px"}}>
+        {this.state.score_columns && this.state.score_columns.map(k => {
+          return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
+            <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
+              <FontAwesomeIcon icon={faCheck} style={{fontSize: "14px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
+              <span style={{lineHeight: "20px"}}>{totalPasses[k]}</span>
+              {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
+            </div>
+            <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
+              <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
+              <span style={{lineHeight: "20px"}}>{totalFailures[k]}</span>
+            </div>
+          </span>
+        })}
       </div>
     </div>);
   }
