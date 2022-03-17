@@ -1,3 +1,4 @@
+import time
 from IPython.display import display, HTML
 import openai
 import numpy as np
@@ -182,8 +183,13 @@ class TestTreeBrowser():
             "tests", # suggest new tests
             "topics" # suggest new subtopics
         ]
+        
+        self.dataset_preds, self.dataset_tests = None, None
         if dataset is not None:
             self.mode_options.append("dataset") # suggest new tests based on samples from the given dataset
+            self.dataset_preds = self._load_dataset()
+            self.dataset_tests = self._convert_dataset_to_tests(self.dataset_preds)
+            self._compute_embeddings_and_scores(self.dataset_tests) # NOTE: Can be computationally intensive. Might re-compute scores.
 
         # make sure all the tests have scores (if we have a scorer)
         self._compute_embeddings_and_scores(self.test_tree)
@@ -587,6 +593,37 @@ class TestTreeBrowser():
             The filter to apply to the tests while generating suggestions.
         """
 
+        if self.mode == "dataset":
+            current_tests = self.test_tree[(self.test_tree['topic'] == self.current_topic) & (self.test_tree['type'] != 'topic_marker')]
+            if len(current_tests) == 0: # If empty or all topic_markers
+                # Just return largest error samples here
+                error_indices = self.dataset_preds.sort_values(by='largest_error_proba', ascending=False).head(n=self.max_suggestions).index
+                output = self.dataset_tests.loc[error_indices].copy()
+                output['topic'] = self.current_topic
+                return output
+
+            # Otherwise find topics closest to the current tests in topic
+            self._compute_embeddings_and_scores(current_tests) # Make sure the current tests have embeddings calculated
+            topic_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in current_tests.index])
+            data_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in self.dataset_tests.index])
+            
+            method = 'distance_to_avg' # TODO: Pick one, just leaving both for experimentation
+            if method == 'avg_distance':
+                dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
+                closest_indices = torch.topk(dist.mean(axis=0), k=self.max_suggestions).indices
+                
+            elif method == 'distance_to_avg':
+                avg_topic_embedding = topic_embeddings.mean(axis=0)
+
+                distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
+                closest_indices = torch.topk(distance, k=self.max_suggestions).indices
+
+            output = self.dataset_tests.iloc[np.array(closest_indices).squeeze()].copy()
+            output['topic'] = self.current_topic
+            return output
+
+        #--Backend-driven suggestions--
+
         # save a lookup we can use to detect duplicate tests
         test_map = {}
         for _, test in self.test_tree.iterrows():
@@ -805,6 +842,96 @@ class TestTreeBrowser():
                 tests.loc[k, "value1"] = tests_to_score.loc[k, "value1"]
                 tests.loc[k, "value2"] = tests_to_score.loc[k, "value2"]
                 tests.loc[k, "value3"] = tests_to_score.loc[k, "value3"]
+
+    def _load_dataset(self, time_budget=30, min_samples=100):
+        '''Evaluate model on dataset and capture useful information.'''
+        # TODO: Generalize to more dataset formats
+        if self.dataset is None:
+            return None
+        
+        model = self.scorer['model'].model
+
+        # Unpack dataset object
+        X, y = self.dataset[0], self.dataset[1]
+        output_names = self.scorer['model'].output_names
+        
+        unknown_labels = set(y) - set(output_names)
+        assert len(unknown_labels) == 0, f"Unknown labels found: {unknown_labels}. \
+        Please update the label vector or output names property."
+
+        # Time how long inference takes on a single sample
+        try:
+            start = time.time()
+            _ = model(X[0:1])
+            end = time.time()
+        except Exception as e: # TODO: Improve this message
+            raise ValueError(f"Training data cannot be evaluated by model. Error recieved: {e}.")
+
+
+        # Ensure min_samples <= n_samples <= len(data) and computes in {time_budget} seconds
+        n_samples = int(min(max(time_budget // (end - start), min_samples), len(X)))
+
+        if n_samples < len(X):
+            print(f"Only using {n_samples} samples to meet time budget of {time_budget} seconds.")
+            # TODO: unify input types
+            sample_indices = np.random.choice(np.arange(len(X)), n_samples, replace=False)
+            X = [X[sample] for sample in sample_indices]
+            y = [y[sample] for sample in sample_indices]
+
+        # Build output frame
+        df = pd.DataFrame(columns=['sample', 'label', 'label_proba', \
+                                            'pred', 'pred_proba', 'largest_error', 'largest_error_proba'])
+        df['sample'] = X
+        df['label'] = y
+
+        # model's current prediction
+        raw_model_output = model(X)
+        pred_indices = np.argsort(raw_model_output, axis=1)
+        
+        df['pred_proba'] = raw_model_output[range(len(pred_indices)), pred_indices[:, -1]]
+        df['pred'] = [output_names[i] for i in pred_indices[:, -1]]
+
+        label_lookup = {output:index for index, output in enumerate(output_names)}
+        label_indices = [label_lookup[label] for label in y]
+        df['label_proba'] = raw_model_output[range(len(label_indices)), label_indices]
+        
+
+        correct_predictions = df['pred'] == df['label']
+        mispredictions = ~correct_predictions
+        
+        # For mispredicted samples, the largest error is the current prediction.
+        df.loc[mispredictions, 'largest_error'] = df.loc[mispredictions, 'pred']
+        df.loc[mispredictions, 'largest_error_proba'] = df.loc[mispredictions, 'pred_proba']
+        
+        # For correct samples, we use the 2nd highest class as the largest error.
+        largest_errors = pred_indices[correct_predictions][:, -2]
+        df.loc[correct_predictions, 'largest_error'] = [output_names[i] for i in largest_errors]
+        df.loc[correct_predictions, 'largest_error_proba'] = raw_model_output[range(len(largest_errors)), largest_errors]
+
+        df.index = [uuid.uuid4().hex for _ in range(len(df))]
+        return df
+
+    def _convert_dataset_to_tests(self, dataset_frame): # TODO: Consider removing from class?
+        '''Converts a loaded dataset into test formats.'''
+        
+        column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
+        'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
+
+        test_frame = pd.DataFrame(columns=column_names)
+
+        # All tests currently formatted as not predicting the largest error.
+        test_frame['value1'] = dataset_frame['sample']
+        test_frame['type'] = "{} should not output {}"
+        test_frame['value2'] = dataset_frame['largest_error']
+
+        # Constants
+        test_frame['topic'] = ''
+        test_frame['author'] = "dataset"
+        test_frame['description'] = ''
+
+        test_frame.index = dataset_frame.index
+        
+        return test_frame # TODO: Cast this as a formal TestTree instead of dataframe
 
     def templatize(self, s):
         prompt = """INPUT: "Where are regular people on Twitter"
