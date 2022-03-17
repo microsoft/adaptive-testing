@@ -28,23 +28,32 @@ class Scorer():
         """ Auto detect the model type and subclass to the right scorer object.
         """
 
-        # finish early if we are wrapping an object that is already a Model
-        if isinstance_ipython(model, Scorer):
-            return
+        # do common init stuff if this is the first time we are called
+        if not hasattr(self, "_id"):
+            self._id = uuid.uuid4().hex
 
+            # ensure we have a model of type Model
+            if isinstance_ipython(model, Model):
+                self.model = model
+            else:
+                self.model = Model(model)
+
+        # If we are in the base class we need to pick the right specialized subclass to become
         if self.__class__ is Scorer:
-            try:
-                out = model(["string 1", "string 2"])
-            except Exception as e:
-                out = None # we assume we got a valid pre-wrapped scorer if it is not a callable model
+
+            # finish early if we are wrapping an object that is already a Scorer (__new__ will have already done the work)
+            if isinstance_ipython(model, Scorer):
+                return
             
-            # if it is a callable model we wrap it in a standard scorer
+            # see if we are scoring a generator or a classifier
+            out = self.model(["string 1", "string 2"])
             if isinstance(out[0], str):
                 self.__class__ = GeneratorScorer
                 GeneratorScorer.__init__(self, model)
-            elif out is not None:
+            else:
                 self.__class__ = ClassifierScorer
                 ClassifierScorer.__init__(self, model)
+            
 
 class DummyScorer(Scorer):
     def __init__(self):
@@ -91,6 +100,11 @@ class ClassifierScorer(Scorer):
             values lead to a tighter prior centered around the model's probability outputs (so scores are more likely to
             be -1 or +1).
         """
+        super().__init__(model)
+
+        # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
+        if hasattr(self, "supported_test_types"):
+            return # already initialized
 
         self.supported_test_types = [
             "{} should output {}",
@@ -110,9 +124,6 @@ class ClassifierScorer(Scorer):
         # {} should not output text containing {}
         # {} should output toxic text. [] is the output.
         # {} should not output toxic text. [] is the output.
-
-        self._id = uuid.uuid4().hex
-        self.model = Model(model)
 
         # extract output names from the model if they are not provided directly
         if output_names is None:
@@ -302,98 +313,13 @@ class ClassifierScorer(Scorer):
         pairs = list([v for v in zip(lines, self.output_names) if v[1] not in current])
         pairs.sort()
         return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
-        
-TextScorer = ClassifierScorer
-
-# class GeneratorScorer(Scorer):
-#     """ Wraps a model and defines a callable scorer that returns a score value for any input/output pair.
-#     """
-
-#     def __init__(self, model):
-#         self._id = uuid.uuid4().hex
-#         self.model = model
-
-#     def __call__(self, tests):
-#         eval_inputs = []
-#         eval_inds = []
-#         variations1 = []
-#         variations2 = []
-#         for i, (k, test) in enumerate(tests.iterrows()):
-#             if test.comparator == "should not be" or test.comparator == "should be":
-#                 v1 = expand_template(test.value1)
-#                 for s1 in v1:
-#                     eval_inputs.append(s1)
-#                     eval_inds.append(i)
-#                 variations1.append(v1)
-#                 variations2.append(None)
-#             elif test.comparator == "should be the same as for":
-#                 # eval_inputs.append(test.value1)
-#                 # eval_inputs.append(test.value2)
-#                 v1 = expand_template(test.value1)
-#                 v2 = expand_template(test.value2)
-#                 for s1 in v1:
-#                     for s2 in v2:
-#                         eval_inputs.append(s1)
-#                         eval_inputs.append(s2)
-#                         eval_inds.append(i)
-#                         eval_inds.append(i)
-#                 variations1.append(v1)
-#                 variations2.append(v2)
-
-#         try:
-#             model_out = self.model(eval_inputs)
-#         except Exception as e:
-#             model_out = ["ERROR" for _ in range(len(eval_inputs))]#np.zeros((len(eval_inputs), len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
-#             log.error(e)
-#             log.error(eval_inputs)
-#             log.error("The model threw an exception when evaluating inputs! We are patching this disaster with 'ERROR' for the sake of the user study!")
-
-#         out = [[] for _ in range(tests.shape[0])]
-#         out_pos = 0
-#         i = 0
-#         value1_outputs = [{} for _ in range(tests.shape[0])]
-#         value2_outputs = [{} for _ in range(tests.shape[0])]
-#         while i < len(model_out):
-#             out_pos = eval_inds[i]
-
-#             comparator = tests.iloc[out_pos]["comparator"]
-#             if comparator == "should not be" or comparator == "should be":
-                
-#                 # auto fill missing outputs
-#                 if tests.iloc[out_pos]['value2'] is None:
-#                     tests.iloc[out_pos]['value2'] = model_out[i]
-                
-#                 # save the model output
-#                 value1_outputs[out_pos]  = {}
-#                 value1_outputs[out_pos][model_out[i]] = 1
-
-#                 # multiple tokens can be checked at the same time with templates
-#                 for token_part in expand_template(tests.iloc[out_pos]['value2']):
-#                     out[out_pos].append(1 if model_out[i] == token_part else -1)
-#                 i += 1
-#             elif comparator == "should be the same as for":
-
-#                 # save the model outputs
-#                 value1_outputs[out_pos]  = {}
-#                 value1_outputs[out_pos][model_out[i]] = 1
-#                 value2_outputs[out_pos]  = {}
-#                 value2_outputs[out_pos][model_out[i+1]] = 1
-                
-#                 # save the score
-#                 out[out_pos].append(1 if model_out[i] == model_out[i+1] else -1)
-#                 i += 2
-#             else:
-#                 raise Exception(f"Comparator type '{comparator}' not yet supported!")
-
-#             # out_pos += 1
-#         return out, value1_outputs, value2_outputs
 
 
 class GeneratorScorer(Scorer):
     """ Wraps a text generation model in a scorer that can score the target model against tests.
     """
 
-    def __init__(self, model, reverse_model=None, embedding_model=None, classifers={}, similarity_threshold=0.9):
+    def __init__(self, model, reverse_model=None, embedding_model=None, feature_models={}, similarity_threshold=0.9):
         """ Initializes a new scorer for a given target model.
 
         Parameters
@@ -411,7 +337,7 @@ class GeneratorScorer(Scorer):
         embedding_model : callable
             Used to embed the tests for comparison purposes. TODO: shouldn't this be shared with the main adatest backend?
 
-        classifers : dict
+        feature_models : dict
             A dictionary of classifiers that can be used to score the generated output. The keys are the names of the
             classifier label that is predicted and the values are the classifiers themselves. Each classifer is expected
             to take a list of strings as input and return a list of floats between 0 and 1.
@@ -422,31 +348,38 @@ class GeneratorScorer(Scorer):
             similarity score between 0 and 1).
             TODO: this was just used for the 'should be invertable' test type. Should we use it for other test types as well?
         """
+        super().__init__(model)
 
-        self._id = uuid.uuid4().hex
-        self.model = model
+        # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
+        if hasattr(self, "supported_test_types"):
+            return # already initialized
+
         self.reverse_model = reverse_model
         self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
-        self.classifers = classifers
+        self.feature_models = feature_models
 
         self.supported_test_types = [
             "{} should output {}",
             "{} should not output {}", # TODO: should this use semantic similarity instead of exact string match?
-            # "{} should have the same output as {}",
-            "{} should not output text containing {}"
+            "{} should have the same output as {}",
+            "{} should output text containing {}",
+            "{} should not output text containing {}",
+            "{} should output text that is {}",
+            "{} should not output text that is {}",
+            "{} should not be completed to become {}"
         ]
 
         # see if we can support the inversion test
         if self.reverse_model is not None and self.embedding_model is not None: # TODO: do we need an embeddig model or just use the backend?
             self.supported_test_types.append("{} should be invertable. [] is the output.") # Note that {} means user-editable, [] means read-only
 
-        # see if we have user-provided classifier tests
-        for k in self.classifers:
-            self.supported_test_types.extend([
-                "{} should output "+k+" text. [] is the output.",
-                "{} should not output "+k+" text. [] is the output."
-            ])
+        # # see if we have user-provided classifier tests
+        # for k in self.feature_models:
+        #     self.supported_test_types.extend([
+        #         "{} should output "+k+" text. [] is the output.",
+        #         "{} should not output "+k+" text. [] is the output."
+        #     ])
 
         
 
@@ -458,21 +391,48 @@ class GeneratorScorer(Scorer):
         eval_reverse_pos = []
         variations1 = []
         variations2 = []
+        eval_output_feature_pos = {k: [] for k in self.feature_models}
+        eval_input_feature_pos = {k: [] for k in self.feature_models}
+        eval_io_feature_pos = {k: [] for k in self.feature_models}
         for i, (k, test) in enumerate(tests.iterrows()):
-            if test.comparator == "should not be" or test.comparator == "should be":
+            if test.type in ["{} should not output {}", "{} should output {}",
+                             "{} should not output text containing {}", "{} should output text containing {}"]:
                 v1 = expand_template(test.value1)
                 for s1 in v1:
                     eval_inputs.append(s1)
                     eval_inds.append(i)
                 variations1.append(v1)
                 variations2.append(None)
-            elif test.comparator == "should be invertable.":
+            elif test.type == "{} should not output text that is {}" or test.type == "{} should output text that is {}":
+                v1 = expand_template(test.value1)
+                v2 = expand_template(test.value2)
+                for s1 in v1:
+                    eval_inputs.append(s1)
+                    eval_inds.append(i)
+                    for s2 in v2: # mark each feature in the template for evaluation
+                        if s2 in eval_output_feature_pos:
+                            eval_output_feature_pos[s2].append(len(eval_inputs)-1)
+                variations1.append(v1)
+                variations2.append(None)
+            elif test.type == "{} should not be completed to become {}":
+                v1 = expand_template(test.value1)
+                v2 = expand_template(test.value2)
+                for s1 in v1:
+                    eval_inputs.append(s1)
+                    eval_inds.append(i)
+                    for s2 in v2: # mark each feature in the template for evaluation
+                        if s2 in eval_input_feature_pos:
+                            eval_io_feature_pos[s2].append(len(eval_inputs)-1)
+                            eval_input_feature_pos[s2].append(len(eval_inputs)-1)
+                variations1.append(v1)
+                variations2.append(None)
+            elif test.type == "{} should be invertable.":
                 v1 = expand_template(test.value1)
                 for s1 in v1:
                     eval_inputs.append(s1)
                     eval_inds.append(i)
                     eval_reverse_pos.append(len(eval_inputs) - 1)
-            elif test.comparator == "should be the same as for":
+            elif test.type == "{} should have the same output as {}":
                 v1 = expand_template(test.value1)
                 v2 = expand_template(test.value2)
                 for s1 in v1:
@@ -490,6 +450,35 @@ class GeneratorScorer(Scorer):
             log.error(e)
             log.error(eval_inputs)
             log.error("The model threw an exception when evaluating inputs! We are patching this disaster with 'ERROR' for the sake of the user study!")
+
+        # run feature models when we need to
+        model_output_feature = {}
+        model_input_feature = {}
+        model_io_feature = {}
+        for k in self.feature_models:
+            if len(eval_output_feature_pos[k]) > 0:
+                feature_out = self.feature_models[k]([model_out[ind] for ind in eval_output_feature_pos[k]])
+                model_output_feature[k] = [None for _ in model_out]
+                for i, ind in enumerate(eval_output_feature_pos[k]):
+                    model_output_feature[k][ind] = feature_out[i]
+            if len(eval_input_feature_pos[k]) > 0:
+                feature_out = self.feature_models[k]([model_out[ind] for ind in eval_input_feature_pos[k]])
+                model_input_feature[k] = [None for _ in model_out]
+                for i, ind in enumerate(eval_input_feature_pos[k]):
+                    model_input_feature[k][ind] = feature_out[i]
+            if len(eval_io_feature_pos[k]) > 0:
+                feature_out = self.feature_models[k]([eval_inputs[ind] + model_out[ind] for ind in eval_io_feature_pos[k]])
+                model_io_feature[k] = [None for _ in model_out]
+                for i, ind in enumerate(eval_io_feature_pos[k]):
+                    model_io_feature[k][ind] = feature_out[i]
+
+        # feature_model_inputs = {k: [] for k in self.feature_models}
+        # i = 0
+        # while i < len(model_out):
+        #     if test.type == "{} should not output text that is {}" or test.type == "{} should output text that is {}":
+        #         if test.value1 in self.feature_models:
+        #             feature_model_inputs[test.value1].append((i, model_out[i]))
+        #     i += 1
 
         # run the reverse model on any outputs we need to
         # eval_reverse_inputs = []
@@ -535,8 +524,10 @@ class GeneratorScorer(Scorer):
         while i < len(model_out):
             out_pos = eval_inds[i]
 
-            comparator = tests.iloc[out_pos]["comparator"]
-            if comparator == "should not be" or comparator == "should be":
+            test_type = tests.iloc[out_pos]["type"]
+            if test_type == "{} should not output {}" or test_type == "{} should output {}" or test_type == "{} should not output text containing {}":
+                invert = -1 if test_type == "{} should not output {}" or test_type == "{} should not output text containing {}" else 1
+                contain_check = test_type == "{} should not output text containing {}" or test_type == "{} should output text containing {}"
                 
                 # auto fill missing outputs
                 if tests.iloc[out_pos]['value2'] is None:
@@ -548,9 +539,58 @@ class GeneratorScorer(Scorer):
 
                 # multiple tokens can be checked at the same time with templates
                 for token_part in expand_template(tests.iloc[out_pos]['value2']):
-                    out[out_pos].append(1 if model_out[i] == token_part else -1)
+                    if contain_check:
+                        out[out_pos].append(-invert if token_part in model_out[i] else invert)
+                    else:
+                        out[out_pos].append(-invert if model_out[i] == token_part else invert)
                 i += 1
-            elif comparator == "should be invertable.":
+            elif test_type == "{} should output text that is {}" or test_type == "{} should not output text that is {}":
+                should_be = test_type == "{} should output text that is {}"
+
+                # multiple features can be checked at the same time with templates
+                for feature in expand_template(tests.iloc[out_pos]['value2']):
+                    if feature in model_output_feature:
+                        feature_prob = model_output_feature[feature][i]
+                        if should_be:
+                            score = (0.5 - feature_prob) * 2
+                        else:
+                            score = (feature_prob - 0.5) * 2
+                    else:
+                        score = np.nan
+                    out[out_pos].append(score)
+                
+                # save the model round trip output
+                value1_outputs[out_pos]  = {}
+                value1_outputs[out_pos][model_out[i]] = 1
+
+                i += 1
+            
+            elif test_type == "{} should not be completed to become {}":
+
+                # multiple features can be checked at the same time with templates
+                for feature in expand_template(tests.iloc[out_pos]['value2']):
+                    if feature in model_io_feature:# and feature in model_input_feature is implied
+                        io_feature_prob = model_io_feature[feature][i]
+                        input_feature_prob = model_input_feature[feature][i]
+                        if input_feature_prob <= 0.5 and io_feature_prob >= 0.5:
+                            score = io_feature_prob - input_feature_prob
+                        elif input_feature_prob <= 0.5 and io_feature_prob <= 0.5:
+                            score = io_feature_prob - input_feature_prob - 0.5
+                        elif input_feature_prob >= 0.5 and io_feature_prob >= 0.5:
+                            score = io_feature_prob - input_feature_prob + 0.5
+                        else: # if input_feature_prob >= 0.5 and io_feature_prob <= 0.5
+                            score = io_feature_prob - input_feature_prob
+                    else:
+                        score = np.nan
+                    out[out_pos].append(score)
+                
+                # save the model round trip output
+                value1_outputs[out_pos]  = {}
+                value1_outputs[out_pos][model_out[i]] = 1
+
+                i += 1
+            
+            elif test_type == "{} should be invertable.":
                 
                 # compare embedding distances
                 score = sentence_transformers.util.pytorch_cos_sim(input_embed[i], round_trip_embed[i]).numpy()[0][0]
@@ -564,7 +604,7 @@ class GeneratorScorer(Scorer):
                 value1_outputs[out_pos][str(model_out[i])] = 1
 
                 i += 1
-            elif comparator == "should be the same as for":
+            elif test_type == "{} should have the same output as {}":
 
                 # save the model outputs
                 value1_outputs[out_pos]  = {}
@@ -576,7 +616,7 @@ class GeneratorScorer(Scorer):
                 out[out_pos].append(1 if model_out[i] == model_out[i+1] else -1)
                 i += 2
             else:
-                raise Exception(f"Comparator type '{comparator}' not yet supported!")
+                raise Exception(f"Test type type '{test_type}' not yet supported!")
 
             # out_pos += 1
         return {

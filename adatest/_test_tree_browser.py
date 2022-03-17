@@ -630,6 +630,7 @@ class TestTreeBrowser():
         # {} should not output toxic text. [] is the output.
         
         # {}'s output should not contain {}
+        
 
 
         

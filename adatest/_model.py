@@ -48,11 +48,16 @@ class Model():
         if self.__class__ is Model:
             
             # wrap transformer pipeline objects for convenience
-            if isinstance_ipython(model, transformers.Pipeline):
+            if isinstance_ipython(model, transformers.pipelines.text_classification.TextClassificationPipeline):
                 self.__class__ = shap.models.TransformersPipeline
                 shap.models.TransformersPipeline.__init__(self, model, **kwargs)
                 if output_names is not None: # Override output names if user supplied
                     self.output_names = output_names
+
+            elif isinstance_ipython(model, transformers.pipelines.text_generation.TextGenerationPipeline):
+                self.__class__ = TransformersTextGenerationPipeline
+                TransformersTextGenerationPipeline.__init__(self, model, **kwargs)
+            
             else:
                 self.inner_model = model
                 self.output_names = output_names
@@ -61,25 +66,18 @@ class Model():
         return np.array(self.inner_model(*args))
 
     
-# class TransformersPipelineWrap():
-#     """ This wraps the SHAP version to allow of direct output_names assignment.
+class TransformersTextGenerationPipeline():
+    """ This wraps the transformer text generation pipeline object to match the Model API.
 
-#     TOTO: move direct output_names assignment support to SHAP.
-#     """
-#     def __init__(self, pipeline, output_names=None, rescale_to_logits=False):
-#         self._inner_model = shap.models.TransformersPipeline(pipeline, rescale_to_logits)
-#         self.output_names = output_names
+    TOTO: move this to SHAP.
+    """
+    def __init__(self, pipeline):
+        self._inner_model = pipeline
+        self.output_names = None
 
-#     @property
-#     def output_names(self):
-#         return self._inner_model.output_names
-
-#     @output_names.setter
-#     def output_names(self, value):
-#         self._inner_model.output_names = value
-#         if value is not None:
-#             self._inner_model.label2id = {name: i for i, name in enumerate(value)}
-#             self._inner_model.id2label = {i: name for i, name in enumerate(value)}
-
-#     def __call__(self, strings):
-#         return self._inner_model(strings)
+    def __call__(self, strings):
+        inner_out = self._inner_model(strings)
+        out = []
+        for s, data in zip(strings, inner_out):
+            out.append(data[0]["generated_text"][len(s):]) # remove the input text from the output
+        return out

@@ -39,7 +39,7 @@ class TestTree():
             self._tests = pd.DataFrame([], columns=column_names)
             self._tests_location = None
 
-        # create a new test tree on disk
+        # create a new test tree on disk (lazily saved)
         elif isinstance(tests, str) and not os.path.isfile(tests):
             self._tests = pd.DataFrame([], columns=column_names)
             self._tests_location = tests

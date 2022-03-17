@@ -263,42 +263,6 @@ class PromptBuilder():
         
         return test_type, prompts
 
-    # def _complete_prompt(self, prompts, n, temperature, valid_outputs, implicit_output):
-    #     log.debug(f"_complete_prompt(prompts={prompts}, n={n}, temperature={temperature}")
-
-    #     response = openai.Completion.create(
-    #         engine=self.engine, prompt=[p["prompt"] for p in prompts], max_tokens=50, # "curie-msft"
-    #         temperature=temperature, n=n, stop="\n"
-    #     )
-
-    #     lines = [choice["text"] for choice in response["choices"]]
-    #     log.debug(f"response lines = {lines}")
-
-    #     suggested_tests = []
-    #     for i, line in enumerate(lines):
-    #         match = re.search('^([^"]*)"\W+([^"]*)\W+"([^"]*)"', line)
-    #         if match is not None:
-    #             value1,comparator,value2 = match.groups()
-    #             if prompts[i//n]["implicit_comparator"] is not None:
-    #                 comparator = prompts[i//n]["implicit_comparator"]
-    #             elif comparator not in valid_comparators:
-    #                 comparator = random.choice(valid_comparators)
-    #         elif implicit_output:
-    #             match = re.search('^([^"]*)"[^"]*', line)
-    #             if match is not None:
-    #                 value1 = match.groups()[0]
-    #                 value2 = None if valid_outputs is None or len(valid_outputs) != 1 else valid_outputs[0]
-    #                 comparator = prompts[i//n]["implicit_comparator"]
-    #             else:
-    #                 continue
-    #         else:
-    #             continue
-
-    #         suggested_tests.append((value1, comparator, value2))
-
-    #     #log.debug("suggested_tests", suggested_tests)
-    #     return suggested_tests
-
 def is_subtopic(topic, candidate):
     """ Returns True if candidate is a subtopic of topic.
     """
