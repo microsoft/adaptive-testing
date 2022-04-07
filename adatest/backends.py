@@ -6,6 +6,7 @@ import transformers
 import openai
 import numpy as np
 import copy
+import os
 from ._filters import clean_string
 
 class Backend():
@@ -203,7 +204,10 @@ class OpenAI(Backend):
         self.temperature = temperature
         self.top_p = top_p
         if api_key is not None:
-            openai.api_key = api_key
+            if api_key[0] in ["/", ".", "~"]:
+                openai.api_key_path = os.path.expanduser(api_key)
+            else:
+                openai.api_key = api_key
 
     def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
         prompts = self._validate_prompts(prompts)

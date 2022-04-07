@@ -319,7 +319,7 @@ class GeneratorScorer(Scorer):
     """ Wraps a text generation model in a scorer that can score the target model against tests.
     """
 
-    def __init__(self, model, reverse_model=None, embedding_model=None, feature_models={}, similarity_threshold=0.9):
+    def __init__(self, model, completions=1, reverse_model=None, embedding_model=None, feature_models={}, similarity_threshold=0.9):
         """ Initializes a new scorer for a given target model.
 
         Parameters
@@ -327,6 +327,9 @@ class GeneratorScorer(Scorer):
         model : callable
             The model we are scoring against the tests. It is expected to be a function that takes a list of strings as
             input and returns a list of strings as output.
+
+        completions : int
+            The number of completions to generate for each model input.
 
         reverse_model : callable
             The inverse of model, such that x = reverse_model(model(x)). Note that this is optional and only required
@@ -354,6 +357,7 @@ class GeneratorScorer(Scorer):
         if hasattr(self, "supported_test_types"):
             return # already initialized
 
+        self.completions = completions
         self.reverse_model = reverse_model
         self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
@@ -365,10 +369,13 @@ class GeneratorScorer(Scorer):
             "{} should have the same output as {}",
             "{} should output text containing {}",
             "{} should not output text containing {}",
+            "{} should output text starting with {}",
+            "{} should not output text starting with {}",
             "{} should output text that is {}",
             "{} should not output text that is {}",
             "{} should not be completed to become {}"
         ]
+        # '"{}[]" should not become "{}" when completed. 
 
         # see if we can support the inversion test
         if self.reverse_model is not None and self.embedding_model is not None: # TODO: do we need an embeddig model or just use the backend?
@@ -396,7 +403,8 @@ class GeneratorScorer(Scorer):
         eval_io_feature_pos = {k: [] for k in self.feature_models}
         for i, (k, test) in enumerate(tests.iterrows()):
             if test.type in ["{} should not output {}", "{} should output {}",
-                             "{} should not output text containing {}", "{} should output text containing {}"]:
+                             "{} should not output text containing {}", "{} should output text containing {}",
+                             "{} should not output text starting with {}", "{} should output text starting with {}"]:
                 v1 = expand_template(test.value1)
                 for s1 in v1:
                     eval_inputs.append(s1)
@@ -443,13 +451,14 @@ class GeneratorScorer(Scorer):
                         eval_inds.append(i)
                 variations1.append(v1)
                 variations2.append(v2)
-        try:
-            model_out = self.model(eval_inputs)
-        except Exception as e:
-            model_out = ["ERROR" for _ in range(len(eval_inputs))]#np.zeros((len(eval_inputs), len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
-            log.error(e)
-            log.error(eval_inputs)
-            log.error("The model threw an exception when evaluating inputs! We are patching this disaster with 'ERROR' for the sake of the user study!")
+        # try:
+            # model_out = self.model(eval_inputs) {} should {} {}
+        model_out = self.model(eval_inputs, completions=self.completions) # now a list of lists
+        # except Exception as e:
+        #     model_out = [["__ERROR__"]*self.completions for _ in range(len(eval_inputs))]#np.zeros((len(eval_inputs), len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
+        #     log.error(e)
+        #     log.error(eval_inputs)
+        #     log.error("The model threw an exception when evaluating inputs! We are patching this disaster with '__ERROR__'!")
 
         # run feature models when we need to
         model_output_feature = {}
@@ -457,17 +466,19 @@ class GeneratorScorer(Scorer):
         model_io_feature = {}
         for k in self.feature_models:
             if len(eval_output_feature_pos[k]) > 0:
-                feature_out = self.feature_models[k]([model_out[ind] for ind in eval_output_feature_pos[k]])
+                feature_out_flat = self.feature_models[k]([v for ind in eval_output_feature_pos[k] for v in model_out[ind]])
+                feature_out = np.reshape(feature_out_flat, (-1, 2))
                 model_output_feature[k] = [None for _ in model_out]
                 for i, ind in enumerate(eval_output_feature_pos[k]):
                     model_output_feature[k][ind] = feature_out[i]
             if len(eval_input_feature_pos[k]) > 0:
-                feature_out = self.feature_models[k]([model_out[ind] for ind in eval_input_feature_pos[k]])
+                feature_out = self.feature_models[k]([eval_inputs[ind] for ind in eval_input_feature_pos[k]])
                 model_input_feature[k] = [None for _ in model_out]
                 for i, ind in enumerate(eval_input_feature_pos[k]):
                     model_input_feature[k][ind] = feature_out[i]
             if len(eval_io_feature_pos[k]) > 0:
-                feature_out = self.feature_models[k]([eval_inputs[ind] + model_out[ind] for ind in eval_io_feature_pos[k]])
+                feature_out_flat = self.feature_models[k]([eval_inputs[ind] + v for ind in eval_io_feature_pos[k] for v in model_out[ind]])
+                feature_out = np.reshape(feature_out_flat, (-1, self.completions))
                 model_io_feature[k] = [None for _ in model_out]
                 for i, ind in enumerate(eval_io_feature_pos[k]):
                     model_io_feature[k][ind] = feature_out[i]
@@ -525,24 +536,30 @@ class GeneratorScorer(Scorer):
             out_pos = eval_inds[i]
 
             test_type = tests.iloc[out_pos]["type"]
-            if test_type == "{} should not output {}" or test_type == "{} should output {}" or test_type == "{} should not output text containing {}":
-                invert = -1 if test_type == "{} should not output {}" or test_type == "{} should not output text containing {}" else 1
+            if test_type in ["{} should not output {}", "{} should output {}",
+                             "{} should output text containing {}", "{} should not output text containing {}",
+                             "{} should output text starting with {}", "{} should not output text starting with {}"]:
+                invert = -1 if test_type in ["{} should not output {}", "{} should not output text containing {}", "{} should not output text starting with {}"] else 1
                 contain_check = test_type == "{} should not output text containing {}" or test_type == "{} should output text containing {}"
+                starting_with_check = test_type == "{} should not output text starting with {}" or test_type == "{} should output text starting with {}"
                 
-                # auto fill missing outputs
+                # auto fill missing outputs TODO: this is a hack
                 if tests.iloc[out_pos]['value2'] is None:
-                    tests.loc[tests.index[out_pos], 'value2'] = str(model_out[i])
+                    tests.loc[tests.index[out_pos], 'value2'] = str(model_out[i][0])
                 
                 # save the model output
-                value1_outputs[out_pos]  = {}
-                value1_outputs[out_pos][model_out[i]] = 1
+                value1_outputs[out_pos] = {}
+                value1_outputs[out_pos]["string"] = list(model_out[i])
 
                 # multiple tokens can be checked at the same time with templates
                 for token_part in expand_template(tests.iloc[out_pos]['value2']):
-                    if contain_check:
-                        out[out_pos].append(-invert if token_part in model_out[i] else invert)
-                    else:
-                        out[out_pos].append(-invert if model_out[i] == token_part else invert)
+                    for c in range(self.completions):
+                        if contain_check:
+                            out[out_pos].append(-invert if token_part in model_out[i][c] else invert)
+                        elif starting_with_check:
+                            out[out_pos].append(-invert if token_part.startswith(model_out[i][c]) else invert)
+                        else:
+                            out[out_pos].append(-invert if model_out[i][c] == token_part else invert)
                 i += 1
             elif test_type == "{} should output text that is {}" or test_type == "{} should not output text that is {}":
                 should_be = test_type == "{} should output text that is {}"
@@ -568,25 +585,32 @@ class GeneratorScorer(Scorer):
             elif test_type == "{} should not be completed to become {}":
 
                 # multiple features can be checked at the same time with templates
+                io_feature_probs = []
+                input_feature_probs = []
                 for feature in expand_template(tests.iloc[out_pos]['value2']):
-                    if feature in model_io_feature:# and feature in model_input_feature is implied
-                        io_feature_prob = model_io_feature[feature][i]
-                        input_feature_prob = model_input_feature[feature][i]
-                        if input_feature_prob <= 0.5 and io_feature_prob >= 0.5:
-                            score = io_feature_prob - input_feature_prob
-                        elif input_feature_prob <= 0.5 and io_feature_prob <= 0.5:
-                            score = io_feature_prob - input_feature_prob - 0.5
-                        elif input_feature_prob >= 0.5 and io_feature_prob >= 0.5:
-                            score = io_feature_prob - input_feature_prob + 0.5
-                        else: # if input_feature_prob >= 0.5 and io_feature_prob <= 0.5
-                            score = io_feature_prob - input_feature_prob
-                    else:
-                        score = np.nan
-                    out[out_pos].append(score)
+                    for c in range(self.completions):
+                        if feature in model_io_feature:# and feature in model_input_feature is implied
+                            io_feature_prob = model_io_feature[feature][i][c]
+                            input_feature_prob = model_input_feature[feature][i]
+                            if input_feature_prob <= 0.5 and io_feature_prob <= 0.5 or input_feature_prob >= 0.5 and io_feature_prob >= 0.5:
+                                score = io_feature_prob - input_feature_prob - 0.5
+                            else: # if input_feature_prob >= 0.5 and io_feature_prob <= 0.5 or (input_feature_prob <= 0.5 and io_feature_prob >= 0.5)
+                                score = io_feature_prob - input_feature_prob
+                        else:
+                            input_feature_prob = io_feature_prob = 0
+                            score = np.nan
+                        out[out_pos].append(score)
+                        input_feature_probs.append(input_feature_prob)
+                        io_feature_probs.append(io_feature_prob)
                 
-                # save the model round trip output
-                value1_outputs[out_pos]  = {}
-                value1_outputs[out_pos][model_out[i]] = 1
+                # save the model output
+                value1_outputs[out_pos] = {}
+                value1_outputs[out_pos]["string"] = list(model_out[i])
+
+                max_score_ind = np.argmax(out[out_pos])
+                value2_outputs[out_pos] = {}
+                value2_outputs[out_pos]["input prob"] = input_feature_probs[max_score_ind]
+                value2_outputs[out_pos]["input+output prob"] = io_feature_probs[max_score_ind]
 
                 i += 1
             
@@ -626,7 +650,7 @@ class GeneratorScorer(Scorer):
         }
 
 
-def expand_template(s):
+def expand_template(s, keep_braces=False):
     """ Expand a template string into a list of strings.
     """
     # parts = []
@@ -635,7 +659,10 @@ def expand_template(s):
     s = re.sub("{[^}]*}", "{}", s)
     template_groups = [str(m)[1:-1].split("|") for m in matches]
     try:
-        return [s.format(*parts) for parts in itertools.product(*template_groups)]
+        if keep_braces:
+            return [s.format(*['{{{p}}}' for p in parts]) for parts in itertools.product(*template_groups)]
+        else:
+            return [s.format(*parts) for parts in itertools.product(*template_groups)]
     except ValueError:
         return [s] # we return the template not filled in if it is invalid
 

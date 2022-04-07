@@ -36,7 +36,7 @@ class TestTree():
 
         # create a new test tree in memory
         if tests is None:
-            self._tests = pd.DataFrame([], columns=column_names)
+            self._tests = pd.DataFrame([], columns=column_names, dtype=str)
             self._tests_location = None
 
         # create a new test tree on disk (lazily saved)
@@ -48,11 +48,7 @@ class TestTree():
         elif isinstance(tests, str) or isinstance(tests, io.TextIOBase):
             self._tests_location = tests
             if os.path.isfile(tests) or isinstance(tests, io.TextIOBase):
-                self._tests = pd.read_csv(tests, index_col=0, dtype={
-                    "topic": str, "type": str, "value1": str, "value2": str,
-                    "value3": str, "author": str, "description": str
-                    }, keep_default_na=False
-                )
+                self._tests = pd.read_csv(tests, index_col=0, dtype=str, keep_default_na=False)
             else:
                 raise Exception(f"The provided tests file does not exist: {tests}. If you wish to create a new file use `auto_save=True`")
 

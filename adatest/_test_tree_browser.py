@@ -10,6 +10,8 @@ import torch
 import json
 import re
 import collections
+
+from transformers import MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING
 from .comm import JupyterComm
 import uuid
 import pathlib
@@ -417,6 +419,7 @@ class TestTreeBrowser():
                     for value in ["value1", "value2", "value3"]:
                         outputs = {c: [[k, json.loads(df.loc[k].get(c[:-6] + " "+value+" outputs", "{}"))]] for c in self.score_columns}
                         sendback_data[value+"_outputs"] = outputs
+                    sendback_data.update(self.test_display_parts(df.loc[k]))
                     self.comm.send({k: sendback_data})
 
             # if we are just changing the topic
@@ -514,6 +517,7 @@ class TestTreeBrowser():
                         for value in ["value1", "value2", "value3"]:
                             data[k][value] = test[value]
                             data[k][value+"_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " "+value+" outputs", "{}"))]] for c in self.score_columns}
+                        data[k].update(self.test_display_parts(test))
                         if test.topic == self.current_topic:
                             children.append(k)
             
@@ -527,6 +531,8 @@ class TestTreeBrowser():
 
             # sort by score and always put new topics first
             def sort_key(id):
+                if len(self.score_columns) == 0:
+                    return 0
                 total = 0
                 count = 0
                 for s in data[id]["scores"][self.score_columns[0]]:
@@ -562,6 +568,13 @@ class TestTreeBrowser():
         else:
             score_filter = self.score_filter
 
+        if self.scorer is not None:
+            test_types = self.scorer[self.score_columns[0][:-6]].supported_test_types
+            test_type_parts = {t: split_test_type(t) for t in self.scorer[self.score_columns[0][:-6]].supported_test_types}
+        else:
+            test_types = []
+            test_type_parts = {}
+
         # compile the global browser state for the frontend
         data["browser"] = {
             "suggestions": suggestions_children,
@@ -578,8 +591,8 @@ class TestTreeBrowser():
             "active_backend": self.active_backend,
             "mode": self.mode,
             "mode_options": self.mode_options,
-            "test_types": self.scorer[self.score_columns[0][:-6]].supported_test_types,
-            "test_type_parts": {t: split_test_type(t) for t in self.scorer[self.score_columns[0][:-6]].supported_test_types},
+            "test_types": test_types,
+            "test_type_parts": test_type_parts,
         }
 
         self.comm.send(data)
@@ -934,6 +947,61 @@ class TestTreeBrowser():
         
         return test_frame # TODO: Cast this as a formal TestTree instead of dataframe
 
+    def test_display_parts(self, test):
+        
+        # find which template instantiation has the highest score (and so should be displayed)
+        score_parts = test[self.score_columns[0]].split("|")
+        if len(score_parts) == 1:
+            max_score_ind = 0
+        else:
+            max_score_ind = np.argmax([float(v) for v in test[self.score_columns[0]].split("|")])
+        
+        if test.type == "{} should not be completed to become {}":
+            value1_outputs = safe_json_load(test.get(self.score_columns[0][:-6] + " value1 outputs", "{}")).get("string", [""])
+            if not isinstance(value1_outputs, list):
+                value1_outputs = [value1_outputs]
+            if len(value1_outputs) == 1:
+                value1_outputs_str = value1_outputs[0]
+            else:
+                value1_outputs_str = "{" + "|".join(value1_outputs) + "}"
+
+            # hispanic / 95f08d610df74679afc1217f03b9c1b3.template[0] "this is a test of[]" should not be completed to become "toxic"
+            # {}
+
+            out = []
+            for i,option in enumerate(expand_template(test.value1 + "|||" + value1_outputs_str + "|||" + test.value2, keep_braces=False)):
+                value1_disp,d_text1b,value2_disp = option.split("|||")
+                out.append({
+                    "d_text1a": '"',
+                    "d_value1": "{}",
+                    "value1_disp": value1_disp,
+                    "d_text1b": d_text1b + '"',
+                    "d_text2a": '"',
+                    "d_value2": "{}",
+                    "value2_disp": value2_disp,
+                    "d_text2b": '"',
+                    "d_text3a": '',
+                    "d_value3": "",
+                    "d_text3b": ''
+                })
+        else: # this is the default two-value test format that only varies in the select value
+            out = [{
+                "d_text1a": '"',
+                "d_value1": "{}",
+                "d_text1b": '"',
+                "d_text2a": '"',
+                "d_value2": "{}",
+                "d_text2b": '"',
+                "d_text3a": '',
+                "d_value3": "",
+                "d_text3b": ''
+            }]
+        
+        return {
+            "display_parts": out,
+            "max_score_ind": int(max_score_ind)
+        }
+
     def templatize(self, s):
         prompt = """INPUT: "Where are regular people on Twitter"
     OUTPUT: "Where are {regular|normal|sane|typical} people on {Twitter|Facebook|Reddit|Instagram}"
@@ -986,7 +1054,7 @@ class TestTreeBrowser():
             self.test_tree.to_csv()
 
 def score_max(s, nan_val=-1e3):
-    if s == "":
+    if s == "" or s is None:
         return nan_val
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])
@@ -1021,6 +1089,8 @@ def split_test_type(test_type):
     for i, part in enumerate(parts):
         part_values[i] = part
     return {name: value for name,value in zip(part_names, part_values)}
+
+
 
 def safe_mode(l):
     """ This just silences the error from a double mode from python <= 3.7.

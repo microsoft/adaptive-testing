@@ -6,4 +6,6 @@ from ._model import Model
 from ._topic_model import ChainTopicModel, StandardTopicModel
 from . import backends
 
+__version__ = '0.0.4'
+
 backend = None

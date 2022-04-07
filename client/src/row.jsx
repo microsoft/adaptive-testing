@@ -99,9 +99,9 @@ export default class Row extends React.Component {
   }
 
   render() {
-    console.log("---- render Row ----");
+    // console.log("---- render Row ----");
     if (this.state.type === null) return null; // only render if we have data
-    console.log("real render Row");
+    // console.log("real render Row");
 
     const main_score = this.props.scoreColumns ? this.props.scoreColumns[0] : undefined;
     // console.log("rendering row", this.props)
@@ -134,7 +134,7 @@ export default class Row extends React.Component {
       const re = RegExp(this.props.value2Filter); // TODO: rename value2Filter to reflect it's global nature
       if (!re.test(this.state.topic_name)) return null;
     }
-    console.log("real render Row2");
+    // console.log("real render Row2");
 
 
     // extract the raw model outputs as strings for tooltips
@@ -147,10 +147,14 @@ export default class Row extends React.Component {
           const d = val_outputs[k][0][1];
           let str = k.slice(0, -6) + " outputs for " + val + ": \n";
           for (const name in d) {
-            if (typeof d[name] === 'string') {
-              str += name + ": " + "|".join(d[name].split("|").map(x => "" + parseFloat(x).toFixed(3)));
+            if (name === "string") {
+              str += d[name] + "\n";
             } else {
-              str += name + ": " + d[name].toFixed(3) + "\n";
+              if (typeof d[name] === 'string') {
+                str += name + ": " + "|".join(d[name].split("|").map(x => "" + parseFloat(x).toFixed(3)));
+              } else {
+                str += name + ": " + d[name].toFixed(3) + "\n";
+              }
             }
           }
           model_output_strings[val].push(str);
@@ -192,12 +196,16 @@ export default class Row extends React.Component {
         overall_score[k] = NaN;
       }
     }
+
+    // get the display parts for the template instantiation with the highest score
+    const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
+
     // console.log("overall_score[main_score]", overall_score[main_score], this.props.score_filter)
     if (this.props.scoreFilter && overall_score[main_score] < this.props.scoreFilter && this.props.scoreFiler > -1000) {
       //console.log("score filter ", this.state.value1, score, this.props.scoreFilter)
       return null;
     }
-    console.log("real render Row3");
+    // console.log("real render Row3");
 
     return <div className={outerClasses} draggable onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut} onMouseDown={this.onMouseDown}
                 onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} onDragOver={this.onDragOver}
@@ -242,8 +250,7 @@ export default class Row extends React.Component {
           </React.Fragment> : (
           <div className="adatest-row">
             <div className="adatest-row-input" onClick={this.clickRow}>
-              <span style={{color: "#aaa"}}>{test_type_parts.text1}</span>
-              &nbsp;<div onClick={this.clickValue1} style={{display: "inline-block"}}><span style={{color: "#aaa"}}>"</span><span title={model_output_strings["value1"]} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span><span style={{color: "#aaa"}}>"</span></div>
+              <div onClick={this.clickValue1} style={{display: "inline-block"}}><span style={{color: "#aaa"}}>{display_parts.d_text1a}</span><span title={model_output_strings["value1"]} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span><span style={{color: "#aaa", whiteSpace: "pre-wrap"}}>{display_parts.d_text1b}</span></div>
             </div>
             <div style={{flex: "0 0 "+this.props.selectWidth+"px", color: "#999999", textAlign: "center", overflow: "hidden", display: "flex"}}>
               <div style={{alignSelf: "flex-end", display: "inline-block"}}>
@@ -258,26 +265,19 @@ export default class Row extends React.Component {
               <span style={{alignSelf: "flex-end"}}>
                 {test_type_parts.value2 === "[]" &&
                   <React.Fragment>
-                    <span style={{color: "#aaa"}}>"</span><span style={{color: "#666666"}}>{this.state.value2}</span><span style={{color: "#aaa"}}>"</span><span style={{color: "#aaa", opacity: this.state.hovering ? 1 : 0, transition: "opacity 1s"}}>&nbsp;{!this.props.inFillin && "is the inversion."}</span>
+                    <span style={{color: "#aaa"}}>{display_parts.d_text2a}</span><span style={{color: "#666666"}}>{this.state.value2}</span><span style={{color: "#aaa"}}>{display_parts.d_text2b}</span><span style={{color: "#aaa", opacity: this.state.hovering ? 1 : 0, transition: "opacity 1s"}}>&nbsp;{!this.props.inFillin && "is the inversion."}</span>
                   </React.Fragment>
                 }
                 {test_type_parts.value2 === "{}" &&
                   <React.Fragment>
-                    <span style={{color: "#aaa"}}>"</span><span title={model_output_strings["value2"]}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={this.state.value2} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span><span style={{color: "#aaa"}}>"</span>
-                  </React.Fragment>
-                }
-                {test_type_parts.text3}
-                {test_type_parts.value3 === "[]" &&
-                  <React.Fragment>
-                    <span style={{color: "#aaa"}}>"</span><span style={{color: "#666666"}}>{this.state.value3}</span><span style={{color: "#aaa"}}>"</span><span style={{color: "#aaa", opacity: this.state.hovering ? 1 : 0, transition: "opacity 1s"}}>&nbsp;{!this.props.inFillin && "is the inversion."}</span>
+                    <span style={{color: "#aaa"}}>{display_parts.d_text2a}</span><span title={model_output_strings["value2"]}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={this.state.value2} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span><span style={{color: "#aaa"}}>{display_parts.d_text2b}</span>
                   </React.Fragment>
                 }
                 {test_type_parts.value3 === "{}" &&
                   <React.Fragment>
-                    <span style={{color: "#aaa"}}>"</span><span title={model_output_strings["value3"]}><ContentEditable ref={el => this.value3Editable = el} onClick={this.clickValue3} text={this.state.value3} onInput={this.inputValue3} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value3Default} /></span><span style={{color: "#aaa"}}>"</span>
+                    <span style={{color: "#aaa"}}>{display_parts.d_text3a}</span><span title={model_output_strings["value3"]}><ContentEditable ref={el => this.value3Editable = el} onClick={this.clickValue3} text={this.state.value3} onInput={this.inputValue3} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value3Default} /></span><span style={{color: "#aaa"}}>{display_parts.d_text3b}</span>
                   </React.Fragment>
                 }
-                {test_type_parts.text4}
               </span>
             </div>
           </div>
