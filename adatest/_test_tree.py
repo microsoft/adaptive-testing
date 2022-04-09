@@ -149,6 +149,9 @@ class TestTree():
     @property
     def insert(self):
         return self._tests.insert
+    @property
+    def copy(self):
+        return self._tests.copy
     def __len__(self):
         return self._tests.__len__()
     def __setitem__(self, key, value):
@@ -170,8 +173,8 @@ class TestTree():
         ids = [id for id, test in self._tests.iterrows() if is_subtopic(topic, test.topic)]
         return self.loc[ids]
 
-    def __call__(self, scorer=None, dataset=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
-                 max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_backend="default", starting_path="",
+    def __call__(self, scorer=None, generators=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
+                 max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
                  embedding_model=None, score_filter=-1e10, topic_model_scale=0):
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
 
@@ -185,8 +188,8 @@ class TestTree():
             Passing a dictionary of scorers will score multiple models at the same time. Note that the models are expected to take
             a list of strings as input, and output either a classification probability vector or a string.
 
-        dataset : adatest.Dataset
-            A dataset to use when suggesting new tests for the test tree.
+        generators : adatest.Generator or dict[adatest.Generators]
+            A source to generate new tests from. Currently supported generator types are language models, existing test trees, or datasets.
 
         auto_save : bool
             Whether to automatically save the test tree after each edit.
@@ -214,9 +217,9 @@ class TestTree():
             A prompt builder to use when generating prompts for new tests. This object controls how the LM prompts
             are created when generating new tests.
 
-        active_backend : "default", or a key name if adatest.backend is a dictionary
-            Which backend from adatest.backend to use when generating new tests. This should always be set to "default" if
-            adatest.backend is just a single backend and not a dictionary of backends.
+        active_generator : "default", or a key name if generators is a dictionary
+            Which generator from adatest.generators to use when generating new tests. This should always be set to "default" if
+            generators is just a single generator and not a dictionary of generators.
 
         starting_path : str
             The path to start browsing the test tree from.
@@ -229,7 +232,7 @@ class TestTree():
         return TestTreeBrowser(
             self,
             scorer=scorer,
-            dataset=dataset,
+            generators=generators,
             auto_save=auto_save,
             user=user,
             recompute_scores=recompute_scores,
@@ -237,7 +240,7 @@ class TestTree():
             max_suggestions=max_suggestions,
             suggestion_thread_budget=suggestion_thread_budget,
             prompt_builder=prompt_builder,
-            active_backend=active_backend,
+            active_generator=active_generator,
             starting_path=starting_path,
             embedding_model=embedding_model,
             score_filter=score_filter,

@@ -261,7 +261,7 @@ class PromptBuilder():
                     prompt.append((row["topic"], row["value1"], row["value2"], row["value3"]))
             prompts.append(prompt)
         
-        return test_type, prompts
+        return test_type, prompts, prompt_ids
 
 def is_subtopic(topic, candidate):
     """ Returns True if candidate is a subtopic of topic.
@@ -269,7 +269,7 @@ def is_subtopic(topic, candidate):
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
 def score_max(s):
-    if s == "":
+    if s == "" or s is None:
         return -1e3
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])

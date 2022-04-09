@@ -242,12 +242,13 @@ export default class Browser extends React.Component {
               <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length >= 0 ? "0.6" : "0.2", cursor: this.state.tests.length >= 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
                 <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
-                {this.state.backend_options && this.state.backend_options.length > 1 &&
-                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_backend} onChange={this.changeBackend} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
-                  {this.state.backend_options.map((backend_option) => {
-                    return <option>{backend_option}</option>
+                {this.state.generator_options && this.state.generator_options.length > 1 &&
+                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "50px"}}>
+                  {this.state.generator_options.map((generator_option) => {
+                    return <option>{generator_option}</option>
                   })}
-                </select>}
+                </select>
+                }
                 <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
                   {(this.state.mode_options || []).map((mode_option) => {
                     return <option key={mode_option}>{mode_option}</option>
@@ -419,6 +420,11 @@ export default class Browser extends React.Component {
       selections[newId] = true;
       this.setState({selections: selections});
     }
+  }
+
+  changeGenerator(e) {
+    this.comm.send(this.id, {"active_generator": e.target.value})
+    this.setState({active_generator: e.target.value})
   }
 
   changeMode(e) {

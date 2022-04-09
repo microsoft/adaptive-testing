@@ -1,26 +1,28 @@
-""" A set of backends for AdaTest.
+""" A set of generators for AdaTest.
 """
 import asyncio
+import time
+import uuid
 import aiohttp
 import transformers
 import openai
 import numpy as np
+import pandas as pd
 import copy
 from ._filters import clean_string
+from ._test_tree import TestTree
+from ._model import Model
 
-class Backend():
-    """ Abstract class for language model backends.
+class Generator():
+    """ Abstract class for generators.
     """
     
-    def __init__(self, models, sep, subsep, quote, filter_profanity):
-        """ Create a new backend with the given separators and max length.
+    def __init__(self, source, sep=None, subsep=None, quote=None, filter_profanity=None):
+        """ Create a new generator with the given separators and max length.
         """
-        if not isinstance(models, list) and not isinstance(models, tuple):
-            models = [models]
-        self.model = models[0]
-        self.models = models
-        self.subsep = subsep
+        self.source = source
         self.sep = sep
+        self.subsep = subsep
         self.quote = quote
         self.filter_profanity = filter_profanity
 
@@ -31,8 +33,6 @@ class Backend():
         # value1_comparator_format = '"{value1}" {comparator} "{value2}"'
         # comparator_value2_format = '"{value1}" {comparator} "{value2}"'
 
-
-    
     def __call__(self, prompts, max_length=None):
         """ This should be overridden by concrete subclasses.
 
@@ -127,11 +127,13 @@ class Backend():
         return samples
 
            
-class Transformers(Backend):
+class Transformers(Generator):
     def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter_profanity=True):
-        super().__init__(models=model, sep=sep, subsep=subsep, quote=quote)
+        # TODO [Harsha]: Add validation logic to make sure model is of supported type.
+        super().__init__(source=model, sep=sep, subsep=subsep, quote=quote)
+        self.gen_type = "model"
         self.tokenizer = tokenizer
-        self.device = self.model.device
+        self.device = self.source.device
 
         class StopAtSequence(transformers.StoppingCriteria):
             def __init__(self, stop_string, tokenizer, window_size=10):
@@ -150,31 +152,31 @@ class Transformers(Backend):
 
         self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
     
-    def __call__(self, prompts, topic, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
         
         prompts = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # monkey-patch a method that prevents the use of past_key_values
-        saved_func = self.model.prepare_inputs_for_generation
+        saved_func = self.source.prepare_inputs_for_generation
         def prepare_inputs_for_generation(input_ids, **kwargs):
             if "past_key_values" in kwargs:
                 return {"input_ids": input_ids, "past_key_values": kwargs["past_key_values"]}
             else:
                 return {"input_ids": input_ids}
-        self.model.prepare_inputs_for_generation = prepare_inputs_for_generation
+        self.source.prepare_inputs_for_generation = prepare_inputs_for_generation
         
         # run the generative LM for each prompt
         suggestion_texts = []
         for prompt_string in prompt_strings:
             input_ids = self.tokenizer.encode(prompt_string, return_tensors='pt').to(self.device)
-            cache_out = self.model(input_ids[:, :-1], use_cache=True)
+            cache_out = self.source(input_ids[:, :-1], use_cache=True)
 
             for _ in range(num_samples):
                 self._sep_stopper.prompt_length = 1
                 self._sep_stopper.max_length = max_length
-                out = self.model.sample(
-                    input_ids[:, -1:], pad_token_id=self.model.config.eos_token_id,
+                out = self.source.sample(
+                    input_ids[:, -1:], pad_token_id=self.source.config.eos_token_id,
                     stopping_criteria=self._sep_stopper,
                     past_key_values=cache_out.past_key_values # TODO: enable re-using during sample unrolling as well
                 )
@@ -189,17 +191,19 @@ class Transformers(Backend):
                 suggestion_texts.append(suggestion_text)
 
         # restore the old function that prevents the past_key_values argument from getting passed
-        self.model.prepare_inputs_for_generation = saved_func
+        self.source.prepare_inputs_for_generation = saved_func
         
         return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
-class OpenAI(Backend):
+class OpenAI(Generator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
     
     def __init__(self, models, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter_profanity=True):
+        # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(models, sep=sep, subsep=subsep, quote=quote, filter_profanity=filter_profanity)
+        self.gen_type = "model"
         self.temperature = temperature
         self.top_p = top_p
         if api_key is not None:
@@ -255,7 +259,7 @@ class OpenAI(Backend):
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
-            engine=self.model, prompt=prompt_strings, max_tokens=max_length,
+            engine=self.source, prompt=prompt_strings, max_tokens=max_length,
             temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=stop_string
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
@@ -278,24 +282,26 @@ class OpenAI(Backend):
         #             suggestion_texts = [choice["text"] for choice in response["choices"]]
 
 
-class AI21(Backend):
+class AI21(Generator):
     """ Backend wrapper for the AI21 API.
     """
     
     def __init__(self, model, api_key, sep="\n", subsep=" ", quote="\"", temperature=0.95, filter_profanity=True):
+        # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep=sep, subsep=subsep, quote=quote, filter_profanity=filter_profanity)
+        self.gen_type = "model"
         self.api_key = api_key
         self.temperature = temperature
         self.event_loop = asyncio.get_event_loop()
     
-    def __call__(self, prompts, topic, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
         prompts = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # define an async call to the API
         async def http_call(prompt_string):
             async with aiohttp.ClientSession() as session:
-                async with session.post(f"https://api.ai21.com/studio/v1/{self.model}/complete",
+                async with session.post(f"https://api.ai21.com/studio/v1/{self.source}/complete",
                         headers={"Authorization": f"Bearer {self.api_key}"},
                         json={
                             "prompt": prompt_string, 
@@ -315,3 +321,115 @@ class AI21(Backend):
             suggestion_texts.extend(result)
         
         return self._parse_suggestion_texts(suggestion_texts, prompts)
+
+
+class TestTreeSource(Generator):
+
+    def __init__(self, test_tree, assistant_generator=None):
+        # TODO: initialize with test tree
+        super().__init__(test_tree)
+        self.gen_type = "test_tree"
+        self.assistant_generator = assistant_generator # TODO [Harsha] Rename this to have a user friendly name.
+
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100, current_tests=None, embeddings=None): # TODO: Unify all __call__ functions to match this signature
+        prompts = self._validate_prompts(prompts)
+        # TODO: should we be doing more here? Hallucinating examples from assistant_generator?
+        # return prompts 
+
+        # if current_tests is not None and len(current_tests) < 10:
+        #     # Hallucinate more tests to get to a viable topic embedding?
+        #     if self.assistant_generator is not None:
+        #         test_suggestions = self.assistant_generator(prompts, topic, test_type, scorer, num_samples= 10 - len(current_tests))
+                
+
+
+
+def test_tree_from_dataset(X, y, model=None, time_budget=60, min_samples=100):
+    column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
+        'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
+
+    test_frame = pd.DataFrame(columns=column_names)
+
+    if model is None: # All we can do without a model defined at this stage.
+        test_frame['value1'] = X
+        test_frame['type'] = "{} should output {}"
+        test_frame['value2'] = y
+
+        # Constants
+        test_frame['topic'] = ''
+        test_frame['author'] = "dataset"
+        test_frame['description'] = ''
+
+        return TestTree(test_frame)
+    
+    if not isinstance(model, Model):
+        model = Model(model)
+
+    # Validate output types
+    output_names = model.output_names   
+    unknown_labels = set(y) - set(output_names)
+    assert len(unknown_labels) == 0, f"Unknown labels found: {unknown_labels}. \
+    Please update the label vector or output names property."
+
+    # Time how long inference takes on a single sample
+    try:
+        start = time.time()
+        _ = model(X[0:1])
+        end = time.time()
+    except Exception as e: # TODO: Improve this message
+        raise ValueError(f"Training data cannot be evaluated by model. Error recieved: {e}.")
+
+    # Ensure min_samples <= n_samples <= len(data) and computes in {time_budget} seconds
+    n_samples = int(min(max(time_budget // (end - start), min_samples), len(X)))
+
+    if n_samples < len(X):
+        print(f"Only using {n_samples} samples to meet time budget of {time_budget} seconds.")
+        # TODO: unify input types
+        sample_indices = np.random.choice(np.arange(len(X)), n_samples, replace=False)
+        X = [X[sample] for sample in sample_indices]
+        y = [y[sample] for sample in sample_indices]
+
+    # Build intermediate convenience frame
+    df = pd.DataFrame(columns=['sample', 'label', 'label_proba', \
+                                        'pred', 'pred_proba', 'largest_error', 'largest_error_proba'])
+    df['sample'] = X
+    df['label'] = y
+
+    # model's current prediction
+    raw_model_output = model(X)
+    pred_indices = np.argsort(raw_model_output, axis=1)
+    
+    df['pred_proba'] = raw_model_output[range(len(pred_indices)), pred_indices[:, -1]]
+    df['pred'] = [output_names[i] for i in pred_indices[:, -1]]
+
+    label_lookup = {output:index for index, output in enumerate(output_names)}
+    label_indices = [label_lookup[label] for label in y]
+    df['label_proba'] = raw_model_output[range(len(label_indices)), label_indices]
+    
+    correct_predictions = df['pred'] == df['label']
+    mispredictions = ~correct_predictions
+    
+    # For mispredicted samples, the largest error is the current prediction.
+    df.loc[mispredictions, 'largest_error'] = df.loc[mispredictions, 'pred']
+    df.loc[mispredictions, 'largest_error_proba'] = df.loc[mispredictions, 'pred_proba']
+    
+    # For correct samples, we use the 2nd highest class as the largest error.
+    largest_errors = pred_indices[correct_predictions][:, -2]
+    df.loc[correct_predictions, 'largest_error'] = [output_names[i] for i in largest_errors]
+    df.loc[correct_predictions, 'largest_error_proba'] = raw_model_output[range(len(largest_errors)), largest_errors]
+
+    df.index = [uuid.uuid4().hex for _ in range(len(df))]
+
+    # If we have a scorer, we prefer to format tests as {X} should not output {largest_error}
+    test_frame['value1'] = df['sample']
+    test_frame['type'] = "{} should not output {}"
+    test_frame['value2'] = df['largest_error']
+
+    # Constants
+    test_frame['topic'] = ''
+    test_frame['author'] = "dataset"
+    test_frame['description'] = ''
+
+    test_frame.index = df.index
+    
+    return TestTree(test_frame, index=test_frame.index)
