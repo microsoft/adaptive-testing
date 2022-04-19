@@ -1,17 +1,14 @@
 """ A set of generators for AdaTest.
 """
 import asyncio
-import time
+
 import uuid
 import aiohttp
 import transformers
 import openai
-import numpy as np
-import pandas as pd
 import copy
 from ._filters import clean_string
-from ._test_tree import TestTree
-from ._model import Model
+
 
 class Generator():
     """ Abstract class for generators.
@@ -329,107 +326,9 @@ class TestTreeSource(Generator):
         # TODO: initialize with test tree
         super().__init__(test_tree)
         self.gen_type = "test_tree"
-        self.assistant_generator = assistant_generator # TODO [Harsha] Rename this to have a user friendly name.
+        self.assistant_generator = assistant_generator
 
-    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100, current_tests=None, embeddings=None): # TODO: Unify all __call__ functions to match this signature
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100, current_tests=None): # TODO: Unify all __call__ functions to match this signature
         prompts = self._validate_prompts(prompts)
-        # TODO: should we be doing more here? Hallucinating examples from assistant_generator?
-        # return prompts 
-
-        # if current_tests is not None and len(current_tests) < 10:
-        #     # Hallucinate more tests to get to a viable topic embedding?
-        #     if self.assistant_generator is not None:
-        #         test_suggestions = self.assistant_generator(prompts, topic, test_type, scorer, num_samples= 10 - len(current_tests))
-                
-
-
-
-def test_tree_from_dataset(X, y, model=None, time_budget=60, min_samples=100):
-    column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
-        'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
-
-    test_frame = pd.DataFrame(columns=column_names)
-
-    if model is None: # All we can do without a model defined at this stage.
-        test_frame['value1'] = X
-        test_frame['type'] = "{} should output {}"
-        test_frame['value2'] = y
-
-        # Constants
-        test_frame['topic'] = ''
-        test_frame['author'] = "dataset"
-        test_frame['description'] = ''
-
-        return TestTree(test_frame)
-    
-    if not isinstance(model, Model):
-        model = Model(model)
-
-    # Validate output types
-    output_names = model.output_names   
-    unknown_labels = set(y) - set(output_names)
-    assert len(unknown_labels) == 0, f"Unknown labels found: {unknown_labels}. \
-    Please update the label vector or output names property."
-
-    # Time how long inference takes on a single sample
-    try:
-        start = time.time()
-        _ = model(X[0:1])
-        end = time.time()
-    except Exception as e: # TODO: Improve this message
-        raise ValueError(f"Training data cannot be evaluated by model. Error recieved: {e}.")
-
-    # Ensure min_samples <= n_samples <= len(data) and computes in {time_budget} seconds
-    n_samples = int(min(max(time_budget // (end - start), min_samples), len(X)))
-
-    if n_samples < len(X):
-        print(f"Only using {n_samples} samples to meet time budget of {time_budget} seconds.")
-        # TODO: unify input types
-        sample_indices = np.random.choice(np.arange(len(X)), n_samples, replace=False)
-        X = [X[sample] for sample in sample_indices]
-        y = [y[sample] for sample in sample_indices]
-
-    # Build intermediate convenience frame
-    df = pd.DataFrame(columns=['sample', 'label', 'label_proba', \
-                                        'pred', 'pred_proba', 'largest_error', 'largest_error_proba'])
-    df['sample'] = X
-    df['label'] = y
-
-    # model's current prediction
-    raw_model_output = model(X)
-    pred_indices = np.argsort(raw_model_output, axis=1)
-    
-    df['pred_proba'] = raw_model_output[range(len(pred_indices)), pred_indices[:, -1]]
-    df['pred'] = [output_names[i] for i in pred_indices[:, -1]]
-
-    label_lookup = {output:index for index, output in enumerate(output_names)}
-    label_indices = [label_lookup[label] for label in y]
-    df['label_proba'] = raw_model_output[range(len(label_indices)), label_indices]
-    
-    correct_predictions = df['pred'] == df['label']
-    mispredictions = ~correct_predictions
-    
-    # For mispredicted samples, the largest error is the current prediction.
-    df.loc[mispredictions, 'largest_error'] = df.loc[mispredictions, 'pred']
-    df.loc[mispredictions, 'largest_error_proba'] = df.loc[mispredictions, 'pred_proba']
-    
-    # For correct samples, we use the 2nd highest class as the largest error.
-    largest_errors = pred_indices[correct_predictions][:, -2]
-    df.loc[correct_predictions, 'largest_error'] = [output_names[i] for i in largest_errors]
-    df.loc[correct_predictions, 'largest_error_proba'] = raw_model_output[range(len(largest_errors)), largest_errors]
-
-    df.index = [uuid.uuid4().hex for _ in range(len(df))]
-
-    # If we have a scorer, we prefer to format tests as {X} should not output {largest_error}
-    test_frame['value1'] = df['sample']
-    test_frame['type'] = "{} should not output {}"
-    test_frame['value2'] = df['largest_error']
-
-    # Constants
-    test_frame['topic'] = ''
-    test_frame['author'] = "dataset"
-    test_frame['description'] = ''
-
-    test_frame.index = df.index
-    
-    return TestTree(test_frame, index=test_frame.index)
+        # TODO: Halluciante examples from assistant generator if existing samples are too small.
+        return prompts

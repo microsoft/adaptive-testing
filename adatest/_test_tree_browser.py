@@ -11,6 +11,8 @@ import json
 import re
 import collections
 
+from adatest.generators import TestTreeSource
+
 from .comm import JupyterComm
 import uuid
 import pathlib
@@ -25,7 +27,7 @@ import checklist.editor
 from threading import Timer
 from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer, Scorer
 from ._prompt_builder import PromptBuilder
-# import adatest
+import adatest # Need to import like this to prevent circular dependencies
 
 # from https://gist.github.com/walkermatt/2871026
 def throttle(interval):
@@ -64,8 +66,6 @@ def file_log(*args):
     f.flush()
     f.close()
 
-cached_embedding_model = None
-
 def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
@@ -94,7 +94,7 @@ class TestTreeBrowser():
 
     def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
                  max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
-                 embedding_model, score_filter, topic_model_scale):
+                 score_filter, topic_model_scale):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -112,9 +112,20 @@ class TestTreeBrowser():
         self.prompt_builder = prompt_builder
         self.active_generator = active_generator
         self.current_topic = starting_path
-        self.embedding_model = embedding_model
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
+
+        # convert single generator to the multi-generator format
+        if not isinstance(self.generators, dict):
+            self.generators = {'generator': self.generators}
+
+        if adatest.default_generators is not None: # Merge default generators into generators
+            self.generators = {**self.generators, **adatest.default_generators}
+
+        # Find and cast any TestTrees in generators to TestTreeSource
+        for generator_name, generator in self.generators.items():
+            if isinstance(generator, adatest._test_tree.TestTree):
+                self.generators[generator_name] = TestTreeSource(generator) 
 
         # get a reference to the active backend object
         if self.active_generator == "default":
@@ -163,18 +174,8 @@ class TestTreeBrowser():
         self._id = uuid.uuid4().hex 
 
         # these are all temporary state
-        self._embeddings = {} # Cached embedding vectors for each input/output pair (keyed on the pair ids)
         self._hidden_topics = {}
         self.comm = None
-
-        # set the embedding model we use for similarity computations
-        global cached_embedding_model
-        if self.scorer is not None and embedding_model is None:
-            if cached_embedding_model is None:
-                cached_embedding_model = sentence_transformers.SentenceTransformer('stsb-roberta-base') # was large, not base in the past
-            self.embedding_model = cached_embedding_model
-        else:
-            self.embedding_model = embedding_model
 
         # define our current mode, and set of supported modes
         self.mode = "tests"
@@ -271,10 +272,18 @@ class TestTreeBrowser():
                     else:
                         # try:
                         self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                        # ignore topic markers in sort
-                        self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
-                        self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                        self._suggestions_error = ""
+                        # filter suggestions to relevant types
+                        if self.mode == "topics":
+                            self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
+                        elif self.mode == "tests":
+                            self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
+
+                        # Ensure valid suggestions exist.
+                        if self.suggestions.shape[0] > 0:  
+                            self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                            self._suggestions_error = ""
+                        else:
+                            self._suggestions_error = True # Not sure if we should do this?
                         # except Exception as e:
                         #     log.debug(e)
                         #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
@@ -411,8 +420,8 @@ class TestTreeBrowser():
                     for k2 in msg[k]:
                         df.loc[k, k2] = msg[k][k2]
                     df.loc[k, self.score_columns] = None
-                    if k in self._embeddings:
-                        del self._embeddings[k]
+                    if k in adatest._embedding_cache:
+                        del adatest._embedding_cache[k]
                     self._compute_embeddings_and_scores(df)
                     self._auto_save()
 
@@ -457,8 +466,8 @@ class TestTreeBrowser():
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
 
                             if test.type == 'topic_marker' and test.topic == k:
-                                if id in self._embeddings:
-                                    del self._embeddings[id]
+                                if id in adatest._embedding_cache:
+                                    del adatest._embedding_cache[id]
                     # Move topic out of suggestions into tests
                     for id, test in self.suggestions.iterrows():
                         if is_subtopic(k, test.topic):
@@ -597,37 +606,6 @@ class TestTreeBrowser():
             The filter to apply to the tests while generating suggestions.
         """
 
-        # TODO [Harsha]: Switch this to checking active backend for dataset.
-        # TODO [Harsha]: Decide how to support topic generation from datasets 
-        # if self.mode == "dataset":
-        #     current_tests = self.test_tree[(self.test_tree['topic'] == self.current_topic) & (self.test_tree['type'] != 'topic_marker')]
-        #     if len(current_tests) == 0: # If empty or all topic_markers
-        #         # Just return largest error samples here
-        #         error_indices = self.dataset_preds.sort_values(by='largest_error_proba', ascending=False).head(n=self.max_suggestions).index
-        #         output = self.dataset_tests.loc[error_indices].copy()
-        #         output['topic'] = self.current_topic
-        #         return output
-
-        #     # Otherwise find topics closest to the current tests in topic
-        #     self._compute_embeddings_and_scores(current_tests) # Make sure the current tests have embeddings calculated
-        #     topic_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in current_tests.index])
-        #     data_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in self.dataset_tests.index])
-            
-        #     method = 'distance_to_avg' # TODO: Pick one, just leaving both for experimentation
-        #     if method == 'avg_distance':
-        #         dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
-        #         closest_indices = torch.topk(dist.mean(axis=0), k=self.max_suggestions).indices
-                
-        #     elif method == 'distance_to_avg':
-        #         avg_topic_embedding = topic_embeddings.mean(axis=0)
-
-        #         distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
-        #         closest_indices = torch.topk(distance, k=self.max_suggestions).indices
-
-        #     output = self.dataset_tests.iloc[np.array(closest_indices).squeeze()].copy()
-        #     output['topic'] = self.current_topic
-        #     return output
-
         #--Backend-driven suggestions--
 
         # save a lookup we can use to detect duplicate tests
@@ -686,7 +664,7 @@ class TestTreeBrowser():
         # compute the maximum number of suggestion threads we can use given our suggestion_thread_budget
         p = self.prompt_builder.prompt_size
         budget = 1 + self.suggestion_thread_budget
-        suggestion_threads =  max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
+        suggestion_threads = max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
         
         # generate the prompts for the backend
         test_type, prompts, prompt_ids = self.prompt_builder(
@@ -696,18 +674,17 @@ class TestTreeBrowser():
             repetitions=suggestion_threads,
             filter=filter,
             suggest_topics=self.mode == "topics",
-            embeddings=self._embeddings
+            embeddings=adatest._embedding_cache
         )
 
         # generate the suggestions TODO [Harsha]: Augment list of prompts if needed via this __call__ function.
         if self._active_generator_obj.gen_type == "test_tree":
-            current_tests = self.test_tree[(self.test_tree['topic'] == self.current_topic) & (self.test_tree['type'] != 'topic_marker')]
-            proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer, embeddings=self._embeddings) # TODO: Experiment with this parameter
+            proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer) # TODO: Experiment with this parameter
 
             # Find tests closest to the proposals in the embedding space
             # self._compute_embeddings_and_scores(proposals) # Make sure the current proposals have embeddings calculated
-            topic_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in prompt_ids]) # TODO: Check if proposals has an index?
-            data_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in self._active_generator_obj.source.index])
+            topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in prompt_ids]) # TODO: Check if proposals has an index?
+            data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in self._active_generator_obj.source.index])
             
             method = 'distance_to_avg'
             if method == 'avg_distance':
@@ -804,8 +781,8 @@ class TestTreeBrowser():
             self._compute_scores(tests, recompute=recompute)
 
         # model outputs and embeddings
-        if self.embedding_model is not None:
-            new_embedding_ids = [k for k in tests.index if k not in self._embeddings]
+        if adatest.embedding_model is not None:
+            new_embedding_ids = [k for k in tests.index if k not in adatest._embedding_cache]
             if len(new_embedding_ids) > 0:
                 value1s = []
                 value2s = []
@@ -820,11 +797,11 @@ class TestTreeBrowser():
                         value1s.append(str(tests.loc[k, "value1"]))
                         value2s.append(str(tests.loc[k, "value2"]))
                         value3s.append(str(tests.loc[k, "value3"]))
-                new_value1_embeddings = self.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value2_embeddings = self.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value3_embeddings = self.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value1_embeddings = adatest.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value2_embeddings = adatest.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value3_embeddings = adatest.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
                 for i,k in enumerate(new_embedding_ids):
-                    self._embeddings[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
+                    adatest._embedding_cache[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
 
     def _compute_scores(self, tests, recompute):
         """ Use the scorer(s) to fill in scores in the passed TestTree.

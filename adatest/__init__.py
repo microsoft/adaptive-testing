@@ -7,4 +7,8 @@ from ._topic_model import ChainTopicModel, StandardTopicModel
 from . import backends
 from . import generators
 
-backend = None
+from sentence_transformers import SentenceTransformer # necessary to initialize global
+
+default_generators = {"abstract": TestTree(r"test_trees/abstract_capabilities.csv")}
+embedding_model = SentenceTransformer('stsb-roberta-base')
+_embedding_cache = {}
