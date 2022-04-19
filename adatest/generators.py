@@ -342,11 +342,14 @@ class TestTreeSource(Generator):
         self.gen_type = "test_tree"
         self.assistant_generator = assistant_generator
 
-    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100, current_tests=None): # TODO: Unify all __call__ functions to match this signature
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100): # TODO: Unify all __call__ signatures
         prompts, prompt_ids = self._validate_prompts(prompts)
 
+        # TODO: Currently only returns valid subtopics. Update to include similar topics based on embedding distance?
         if test_type == "topic_marker":
-            pass # Generating topics from test tree is currently unsupported. TODO: Return similar topic markers or direct subtopics?
+            output = self.source.topic(topic) 
+            return output[output['type'] == test_type ]# return any existing valid subtopics
+
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # Find tests closest to the proposals in the embedding space
         topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in prompt_ids]) 

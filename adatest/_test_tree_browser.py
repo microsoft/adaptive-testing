@@ -541,17 +541,22 @@ class TestTreeBrowser():
 
             # sort by score and always put new topics first
             def sort_key(id):
-                total = 0
-                count = 0
-                for s in data[id]["scores"][self.score_columns[0]]:
-                    val = score_max(s[1], nan_val=np.nan)
-                    if not np.isnan(val):
-                        total += val
-                        count += 1
-                if count == 0:
-                    return 1e3
-                else:
-                    return -total / count
+                try:
+                    total = 0
+                    count = 0
+                    for s in data[id]["scores"][self.score_columns[0]]:
+                        val = score_max(s[1], nan_val=np.nan)
+                        if not np.isnan(val) and val is not None:
+                            total += val
+                            count += 1
+                    if count == 0:
+                        return 1e3
+                    else:
+                        return -total / count
+                except Exception as e:
+                    print(e)
+                    print(id)
+                    print(val)
             sorted_children = sorted(children, key=sort_key)
             sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id].get("value1", "") == "New test" else 1)
 
@@ -681,8 +686,9 @@ class TestTreeBrowser():
         # generate the suggestions
         proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer, num_samples=self.max_suggestions // len(prompts))
         
-        # Build up suggestions catalog, unless generating from a test tree source:
-        if isinstance(proposals, pd.DataFrame):
+        # Build up suggestions catalog, unless generating from a test tree source.
+        # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
+        if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
         else:
             suggestions = []
@@ -974,7 +980,7 @@ class TestTreeBrowser():
             self.test_tree.to_csv()
 
 def score_max(s, nan_val=-1e3):
-    if s == "":
+    if s == "" or s is None:
         return nan_val
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])

@@ -9,6 +9,7 @@ import pandas as pd
 from ._prompt_builder import PromptBuilder
 from ._test_tree_browser import TestTreeBrowser, is_subtopic
 from ._model import Model
+import adatest
 
 class TestTree():
     """ A hierarchically organized set of tests represented as a DataFrame.
@@ -131,7 +132,29 @@ class TestTree():
         self._tests = self._tests[column_names + [c for c in self._tests.columns if c not in column_names]]
 
         if compute_embeddings:
-            pass
+            # TODO: Shared logic with TestTreeBrowser._compute_embeddings_and_scores. Refactor!
+            if adatest.embedding_model is not None:
+                new_embedding_ids = [k for k in self._tests.index if k not in adatest._embedding_cache]
+                if len(new_embedding_ids) > 0:
+                    value1s = []
+                    value2s = []
+                    value3s = []
+                    for k in new_embedding_ids:
+                        if self._tests.loc[k, "type"] == "topic_marker":
+                            parts = self._tests.loc[k, "topic"].rsplit("/", 1)
+                            value1s.append(parts[1] if len(parts) == 2 else "")
+                            value2s.append("")
+                            value3s.append("")
+                        else:
+                            value1s.append(str(self._tests.loc[k, "value1"]))
+                            value2s.append(str(self._tests.loc[k, "value2"]))
+                            value3s.append(str(self._tests.loc[k, "value3"]))
+                    new_value1_embeddings = adatest.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                    new_value2_embeddings = adatest.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                    new_value3_embeddings = adatest.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                    for i,k in enumerate(new_embedding_ids):
+                        adatest._embedding_cache[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
+
         # # keep track of our original state
         # if self.auto_save:
         #     self._last_saved_tests = self._tests.copy()
