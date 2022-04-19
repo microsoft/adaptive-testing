@@ -27,6 +27,7 @@ import checklist.editor
 from threading import Timer
 from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer, Scorer
 from ._prompt_builder import PromptBuilder
+import builtins
 import adatest # Need to import like this to prevent circular dependencies
 
 # from https://gist.github.com/walkermatt/2871026
@@ -667,7 +668,7 @@ class TestTreeBrowser():
         suggestion_threads = max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
         
         # generate the prompts for the backend
-        test_type, prompts, prompt_ids = self.prompt_builder(
+        test_type, prompts = self.prompt_builder(
             test_tree=self.test_tree,
             topic=self.current_topic,
             score_column=self.score_columns[0],
@@ -677,33 +678,13 @@ class TestTreeBrowser():
             embeddings=adatest._embedding_cache
         )
 
-        # generate the suggestions TODO [Harsha]: Augment list of prompts if needed via this __call__ function.
-        if self._active_generator_obj.gen_type == "test_tree":
-            proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer) # TODO: Experiment with this parameter
-
-            # Find tests closest to the proposals in the embedding space
-            # self._compute_embeddings_and_scores(proposals) # Make sure the current proposals have embeddings calculated
-            topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in prompt_ids]) # TODO: Check if proposals has an index?
-            data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in self._active_generator_obj.source.index])
-            
-            method = 'distance_to_avg'
-            if method == 'avg_distance':
-                dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
-                closest_indices = torch.topk(dist.mean(axis=0), k=self.max_suggestions).indices
-                
-            elif method == 'distance_to_avg':
-                avg_topic_embedding = topic_embeddings.mean(axis=0)
-
-                distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
-                closest_indices = torch.topk(distance, k=self.max_suggestions).indices
-
-            output = self._active_generator_obj.source.iloc[np.array(closest_indices).squeeze()].copy()
-            output['topic'] = self.current_topic
-            return output
+        # generate the suggestions
+        proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer, num_samples=self.max_suggestions // len(prompts))
+        
+        # Build up suggestions catalog, unless generating from a test tree source:
+        if isinstance(proposals, pd.DataFrame):
+            suggestions = proposals
         else:
-            proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer, num_samples=self.max_suggestions // len(prompts))
-            
-            # filter out suggestions that are duplicates before we score them
             suggestions = []
             test_map_tmp = copy.copy(test_map)
             for value1, value2, value3 in proposals:
@@ -729,21 +710,24 @@ class TestTreeBrowser():
 
             suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
             self._compute_embeddings_and_scores(suggestions)
-            if self.mode != "topics":
-                suggestions = suggestions.dropna(subset=[self.score_columns[0]])
 
-            # When we have outputs filled in by the scorer we might have more duplicates we need to remove
-            duplicates = []
-            for k,row in suggestions.iterrows():
-                str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
-                if str_val in test_map:
-                    duplicates.append(k)
-                test_map[str_val] = True
-            suggestions = suggestions.drop(duplicates)
+        # Filter invalid suggestions
+        if self.mode != "topics":
+            suggestions = suggestions.dropna(subset=[self.score_columns[0]])
 
-            if self.topic_model_scale != 0:
-                self._add_topic_model_score(suggestions, topic_model_scale=self.topic_model_scale)
-            return suggestions
+        # When we have outputs filled in by the scorer we might have more duplicates we need to remove
+        duplicates = []
+        for k,row in suggestions.iterrows():
+            # str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
+            str_val = " ".join(builtins.filter(None, (row.topic, test_type, row.value1, row.value2, row.value3))) # Safely handles None
+            if str_val in test_map:
+                duplicates.append(k)
+            test_map[str_val] = True
+        suggestions = suggestions.drop(duplicates)
+
+        if self.topic_model_scale != 0:
+            self._add_topic_model_score(suggestions, topic_model_scale=self.topic_model_scale)
+        return suggestions
 
     def _add_topic_model_score(self, df, topic_model_scale):
         documents = []

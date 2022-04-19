@@ -256,12 +256,12 @@ class PromptBuilder():
                     if row["topic"] == "":
                         continue # we can't use the root to help suggest topic names
                     parents,child = row["topic"].rsplit("/", 1)
-                    prompt.append((parents, child, "", ""))
+                    prompt.append((k, parents, child, "", ""))
                 else:
-                    prompt.append((row["topic"], row["value1"], row["value2"], row["value3"]))
+                    prompt.append((k, row["topic"], row["value1"], row["value2"], row["value3"]))
             prompts.append(prompt)
         
-        return test_type, prompts, prompt_ids
+        return test_type, prompts
 
 def is_subtopic(topic, candidate):
     """ Returns True if candidate is a subtopic of topic.

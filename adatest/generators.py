@@ -8,6 +8,11 @@ import transformers
 import openai
 import copy
 from ._filters import clean_string
+import sentence_transformers
+import pandas as pd
+import numpy as np
+import torch
+import adatest
 
 
 class Generator():
@@ -44,7 +49,17 @@ class Generator():
         """
         if isinstance(prompts[0][0], str):
             prompts = [prompts]
-        return prompts
+        
+        # Split apart prompt IDs and prompts
+        prompt_ids, trimmed_prompts = [], []
+        for prompt in prompts:
+            prompt_without_id = []
+            for entry in prompt:
+                prompt_ids.append(entry[0])
+                prompt_without_id.append(entry[1:])
+            trimmed_prompts.append(prompt_without_id)
+
+        return trimmed_prompts, prompt_ids
     
     def _varying_values(self, prompts, topic):
         """ Marks with values vary in the set of prompts.
@@ -150,8 +165,7 @@ class Transformers(Generator):
         self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
     
     def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
-        
-        prompts = self._validate_prompts(prompts)
+        prompts, prompt_ids = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # monkey-patch a method that prevents the use of past_key_values
@@ -207,7 +221,7 @@ class OpenAI(Generator):
             openai.api_key = api_key
 
     def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
-        prompts = self._validate_prompts(prompts)
+        prompts, prompt_ids = self._validate_prompts(prompts)
         # prompt_strings = self._create_prompt_strings(prompts, topic)
 
         # find out which values in the prompt have multiple values and so should be generated
@@ -292,7 +306,7 @@ class AI21(Generator):
         self.event_loop = asyncio.get_event_loop()
     
     def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
-        prompts = self._validate_prompts(prompts)
+        prompts, prompt_ids = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # define an async call to the API
@@ -329,6 +343,27 @@ class TestTreeSource(Generator):
         self.assistant_generator = assistant_generator
 
     def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100, current_tests=None): # TODO: Unify all __call__ functions to match this signature
-        prompts = self._validate_prompts(prompts)
-        # TODO: Halluciante examples from assistant generator if existing samples are too small.
-        return prompts
+        prompts, prompt_ids = self._validate_prompts(prompts)
+
+        if test_type == "topic_marker":
+            pass # Generating topics from test tree is currently unsupported. TODO: Return similar topic markers or direct subtopics?
+        # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
+        # Find tests closest to the proposals in the embedding space
+        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in prompt_ids]) 
+        data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in self.source.index])
+        
+        max_suggestions = num_samples * len(prompts)
+        method = 'distance_to_avg'
+        if method == 'avg_distance':
+            dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
+            closest_indices = torch.topk(dist.mean(axis=0), k=max_suggestions).indices
+            
+        elif method == 'distance_to_avg':
+            avg_topic_embedding = topic_embeddings.mean(axis=0)
+
+            distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
+            closest_indices = torch.topk(distance, k=max_suggestions).indices
+
+        output = self.source.iloc[np.array(closest_indices).squeeze()].copy()
+        output['topic'] = topic
+        return output
