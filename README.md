@@ -32,7 +32,7 @@ dataset_tree = adatest.TestTree((X, y), compute_embeddings=True)
 tests = adatest.TestTree("test_trees/sentiment_analysis/two_way_demo.csv", auto_save=True)
 
 # apply the tests to our model to launch a notebook-based testing interface
-tests(classifier, generators={'curie': generator, 'dataset': dataset_tree}) # wrap with adatest.serve to launch a standalone server
+tests(classifier, generators={'davinci': generator, 'dataset': dataset_tree}) # wrap with adatest.serve to launch a standalone server
 ```
 
 **Image showing the root and scores for the basic two way sentiment tree.**
