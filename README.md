@@ -23,13 +23,16 @@ import adatest
 classifier = transformers.pipeline("sentiment-analysis", return_all_scores=True)
 
 # set AdaTest's language model backend (HuggingFace and AI21 also supported)
-adatest.backend = adatest.backends.OpenAI('davinci', api_key=OPENAI_API_KEY)
+generator = adatest.generators.OpenAI('davinci', api_key=OPENAI_API_KEY)
+
+# optional: load tests from a dataset
+dataset_tree = adatest.TestTree((X, y), compute_embeddings=True)
 
 # load a starting tree of tests targeted at sentiment analysis
 tests = adatest.TestTree("test_trees/sentiment_analysis/two_way_demo.csv", auto_save=True)
 
 # apply the tests to our model to launch a notebook-based testing interface
-tests(classifier) # wrap with adatest.serve to launch a standalone server
+tests(classifier, generators={'curie': generator, 'dataset': dataset_tree}) # wrap with adatest.serve to launch a standalone server
 ```
 
 **Image showing the root and scores for the basic two way sentiment tree.**
