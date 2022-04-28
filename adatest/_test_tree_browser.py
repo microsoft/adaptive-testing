@@ -452,6 +452,8 @@ class TestTreeBrowser():
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"]
                                 self.suggestions.loc[id] = self.test_tree.loc[id]
                                 self.test_tree.drop(id, inplace=True)
+                            elif msg[k]["topic"] == "_DELETE_":
+                                self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
 
@@ -461,7 +463,9 @@ class TestTreeBrowser():
                     # Move topic out of suggestions into tests
                     for id, test in self.suggestions.iterrows():
                         if is_subtopic(k, test.topic):
-                            if msg[k]["topic"] != "suggestion":
+                            if msg[k]["topic"] == "_DELETE_":
+                                self.suggestions.drop(id, inplace=True)
+                            elif msg[k]["topic"] != "suggestion":
                                 self.suggestions.loc[id, "topic"] = msg[k]["topic"]
                                 self.test_tree.loc[id] = self.suggestions.loc[id]
                                 self.suggestions.drop(id, inplace=True)
