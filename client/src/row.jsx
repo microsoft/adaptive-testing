@@ -1,7 +1,7 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faCheck, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
 import { defer } from 'lodash';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
@@ -31,6 +31,7 @@ export default class Row extends React.Component {
     this.props.comm.subscribe(this.props.id, this.dataLoaded);
 
     window["row_"+this.props.id] = this;
+    window.faTimes = faTimes;
   }
 
   dataLoaded(state) {
@@ -162,7 +163,6 @@ export default class Row extends React.Component {
       }
       model_output_strings[val] = model_output_strings[val].join("\n");
     }
-
     
 
     let outerClasses = "adatest-row-child";
@@ -197,6 +197,19 @@ export default class Row extends React.Component {
       }
     }
 
+    var hack_score = overall_score[this.props.scoreColumns[0]];
+    var hack_output_flip = {
+      "todo": "not todo",
+      "not todo": "todo"
+    }
+    console.log("asdfa", main_score, this.state["value1_outputs"]);
+    if (this.state["value1_outputs"]) {
+      var tmp = this.state["value1_outputs"][main_score][0][1];
+      console.log(Object.keys(tmp));
+      var hack_output_name = Object.keys(tmp).reduce((a, b) => tmp[a] > tmp[b] ? a : b);
+    }
+    var label_opacity = this.props.isSuggestion ? 0.5 : 1;
+
     // get the display parts for the template instantiation with the highest score
     const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
 
@@ -218,11 +231,18 @@ export default class Row extends React.Component {
           <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", color: "rgb(84, 174, 255)", display: "inline-block"}} />
         </div>
       }
-      {this.props.isSuggestion &&
+      {this.props.isSuggestion && this.state.topic_name !== null &&
         <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
           <FontAwesomeIcon icon={this.state.topic_name === null ? faPlus : faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
+      {/* {this.state.topic_name === null &&
+        <svg height="20" width="50" style={{marginTop: "5px", flex: "0 0 50px", display: "inline-block", marginLeft: "8px"}}>
+          <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="15px" style={{color: "rgb(0, 0, 0)", cursor: "pointer"}} textAnchor="middle" />
+          <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-15px" style={{color: "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+        </svg>
+      } */}
+      
       <div style={{padding: "5px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
         {this.state.topic_name !== null ? <React.Fragment>
           <div style={{display: "flex", marginTop: "3px", fontSize: "14px"}}> 
@@ -237,12 +257,12 @@ export default class Row extends React.Component {
             <div className="adatest-row-input">
               <span style={{color: "#aaa", opacity: this.state.hovering ? 1 : 0, transition: "opacity 1s"}}>{this.state.prefix}</span><span style={{color: "#aaa"}}>"</span>{this.state.previewValue1}<span style={{color: "#aaa"}}>"</span>
             </div>
-            <div style={{flex: "0 0 "+this.props.selectWidth+"px", color: "#999999", textAlign: "center", overflow: "hidden", opacity: (this.state.previewValue1 ? 1 : 0)}}>
+            <div style={{flex: "0 0 25px", color: "#999999", textAlign: "center", overflow: "hidden", opacity: (this.state.previewValue1 ? 1 : 0)}}>
               <div style={{lineHeight: "13px", height: "16px", opacity: "1.0", verticalAlign: "middle", display: "inline-block"}}>
                 <span style={{color: "#aaa"}}>should not be</span> {/* TODO: fix this for varying comparators */}
               </div>
             </div>
-            <div style={{flex: "0 0 200px", textAlign: "left"}}>
+            <div style={{flex: "0 0 150px", textAlign: "left"}}>
             <span style={{color: "#aaa"}}>"</span>{this.state.previewValue2}<span style={{color: "#aaa"}}>"</span>
             </div>
           </div>
@@ -250,18 +270,19 @@ export default class Row extends React.Component {
           </React.Fragment> : (
           <div className="adatest-row">
             <div className="adatest-row-input" onClick={this.clickRow}>
-              <div onClick={this.clickValue1} style={{display: "inline-block"}}><span style={{color: "#aaa"}}>{display_parts.d_text1a}</span><span title={model_output_strings["value1"]} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span><span style={{color: "#aaa", whiteSpace: "pre-wrap"}}>{display_parts.d_text1b}</span></div>
+              <div onClick={this.clickValue1} style={{display: "inline-block"}}><span title={model_output_strings["value1"]} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span></div>
             </div>
-            <div style={{flex: "0 0 "+this.props.selectWidth+"px", color: "#999999", textAlign: "center", overflow: "hidden", display: "flex"}}>
+            <div style={{flex: "0 0 25px", color: "#999999", textAlign: "center", overflow: "hidden", display: "flex"}}>
               <div style={{alignSelf: "flex-end", display: "inline-block"}}>
-                &nbsp;<span style={{color: "#aaa"}}><select className="adatest-plain-select" style={{marginLeft: "0px", color: "#aaa"}} value={this.state.type} onChange={this.changeTestType}>
+              <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block", marginLeft: "5px"}} textAnchor="left" />
+                {/* &nbsp;<span style={{color: "#aaa"}}><select className="adatest-plain-select" style={{marginLeft: "0px", color: "#aaa"}} value={this.state.type} onChange={this.changeTestType}>
                   {(this.props.test_types || []).map((type) => {
                     return <option key={type} value={type}>{this.props.test_type_parts[type].text2}</option>
                   })}
-                </select></span>
+                </select></span> */}
               </div>
             </div>
-            <div onClick={this.clickValue2} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 200px", textAlign: "left", display: "flex"}}>
+            <div onClick={this.clickValue2} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 150px", textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
                 {test_type_parts.value2 === "[]" &&
                   <React.Fragment>
@@ -270,7 +291,7 @@ export default class Row extends React.Component {
                 }
                 {test_type_parts.value2 === "{}" &&
                   <React.Fragment>
-                    <span style={{color: "#aaa"}}>{display_parts.d_text2a}</span><span title={model_output_strings["value2"]}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={this.state.value2} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span><span style={{color: "#aaa"}}>{display_parts.d_text2b}</span>
+                   <span title={model_output_strings["value2"]}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={hack_output_name} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span>
                   </React.Fragment>
                 }
                 {test_type_parts.value3 === "{}" &&
@@ -286,7 +307,22 @@ export default class Row extends React.Component {
       {/* <div className="adatest-row-score-text-box">
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
+      {this.state.topic_name === null &&
+        <svg height="20" width="50" style={{marginTop: "5px", flex: "0 0 50px", display: "inline-block", marginLeft: "8px", marginRight: "25px"}}>
+          <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="15px" style={{color: hack_score > 0 ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+          <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-15px" style={{color: hack_score <= 0 ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+        </svg>
+      }
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
+
+        let total_pass = 0;
+        if (this.state.topic_name !== null) {
+          total_pass = this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0);
+        }
+        let total_fail = 0;
+        if (this.state.topic_name !== null) {
+          total_fail = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
+        }
         
         // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
         // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
@@ -294,8 +330,9 @@ export default class Row extends React.Component {
           {overall_score[k] > 0 ?
             <svg height="20" width="100">
               {Number.isFinite(overall_score[k]) && <React.Fragment>
-                <line x1="50" y1="10" x2={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(0, 0, 0, 0.1)", strokeWidth: "20"}}></line>
-                {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
+                <line x1="50" y1="10" x2={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(207, 34, 46,"+(this.props.isSuggestion ? 0.15 : 0.15)+")", strokeWidth: "20", cursor: "pointer"}}></line>
+                <line x2="50" y1="10" x1={50 + 48*scale_score(-overall_score[k])} y2="10" style={{stroke: "rgba(26, 127, 55, 0)", strokeWidth: "20", cursor: "pointer"}}></line>
+                {/* {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
                   //console.log("scale_score(score[1])", scale_score(score[1]))
                   return <line key={index} onMouseOver={e => this.onScoreOver(e, score[0])}
                               onMouseOut={e => this.onScoreOut(e, score[0])}
@@ -303,20 +340,38 @@ export default class Row extends React.Component {
                               x2={50 + 48*scale_score(score[1])} y2="20"
                               style={{stroke: score[1] <= 0 ? "rgb(26, 127, 55)" : "rgb(207, 34, 46)", strokeWidth: "2"}}
                         ></line>
-                })}
+                })} */}
                 <line x1={50} y1="0"
                       x2={50} y2="20" strokeDasharray="2"
                       style={{stroke: "#bbbbbb", strokeWidth: "1"}}
                 ></line>
-                {this.state.topic_name !== null && 
+                {/* {this.state.topic_name !== null && 
                   <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>
                 }
                 {this.state.topic_name !== null &&
                   <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)}</text>
+                } */}
+                {this.state.topic_name !== null && total_pass > 0 &&
+                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "normal", fontSize: "14px"}}>{total_pass}</text>
+                }
+                {this.state.topic_name !== null && total_fail > 0 &&
+                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "normal", fontSize: "14px"}}>{total_fail}</text>
+                }
+                {/* {this.state.topic_name === null &&
+                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
+                } */}
+                {/* {this.state.topic_name === null &&
+                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s", fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "rgb(207, 34, 46)", fontSize: "11px", opacity: 1}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
+                } */}
+                {/* {this.state.topic_name === null &&
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="25px" style={{color: "rgba(207, 34, 46,"+(this.props.isSuggestion ? 0.5 : 1)+")", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.topic_name === null &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                }
+                  <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-25px" style={{color: "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                } */}
+                {/* {
+                  <path class="fa" fill="rgb(207, 34, 46)" d={faTimes.icon[4]} />
+                } */}
                 {this.state.topic_name === 3324 && !isNaN(overall_score[k]) &&
                   <text x={(48*scale_score(overall_score[k]) > 3000 ? 50 + 5 : 50 + 48*scale_score(overall_score[k]) + 5)} y="11" dominantBaseline="middle" textAnchor="start" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(207, 34, 46)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
                 }
@@ -325,28 +380,41 @@ export default class Row extends React.Component {
           :
             <svg height="20" width="100">
               {Number.isFinite(overall_score[k]) && <React.Fragment>
-                <line x2="50" y1="10" x1={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(0, 0, 0, 0.1)", strokeWidth: "20"}}></line>
-                {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
+                <line x2="50" y1="10" x1={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(26, 127, 55, 0.15)", strokeWidth: "20", cursor: "pointer"}}></line>
+                <line x1="50" y1="10" x2={50 + 48*scale_score(-overall_score[k])} y2="10" style={{stroke: "rgba(207, 34, 46, 0)", strokeWidth: "20", cursor: "pointer"}}></line>
+                {/* {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
                   return <line key={index} onMouseOver={e => this.onScoreOver(e, score[0])}
                               onMouseOut={e => this.onScoreOut(e, score[0])}
                               x1={50 + 48*scale_score(score[1])} y1="0"
                               x2={50 + 48*scale_score(score[1])} y2="20"
                               style={{stroke: score[1] <= 0 ? "rgb(26, 127, 55)" : "rgb(207, 34, 46)", strokeWidth: "2"}}
                         ></line>
-                })}
+                })} */}
                 <line x1={50} y1="0"
                       x2={50} y2="20" strokeDasharray="2"
                       style={{stroke: "#bbbbbb", strokeWidth: "1"}}
                 ></line>
-                {this.state.topic_name !== null &&
+                {/* {this.state.topic_name !== null &&
                   <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>
                 }
                 {this.state.topic_name !== null &&
                   <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)}</text>
+                } */}
+                {this.state.topic_name !== null && total_pass > 0 &&
+                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "normal", fontSize: "14px"}}>{total_pass}</text>
+                }
+                {this.state.topic_name !== null && total_fail > 0 &&
+                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "normal", fontSize: "14px"}}>{total_fail}</text>
+                }
+                {/* {this.state.topic_name === null &&
+                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
+                } */}
+                {/* {this.state.topic_name === null &&
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="25px" style={{color: "rgb(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.topic_name === null &&
-                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                }
+                  <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-25px" style={{color: "rgb(26, 127, 55)", cursor: "pointer"}} textAnchor="middle" />
+                } */}
                 {this.state.topic_name === 2342 && !isNaN(overall_score[k]) &&
                   <text x={(48*scale_score(overall_score[k]) < -3000 ? 50 - 5 : 50 + 48*scale_score(overall_score[k]) - 5)} y="11" dominantBaseline="middle" textAnchor="end" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(26, 127, 55)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
                 }

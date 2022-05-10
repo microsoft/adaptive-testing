@@ -268,15 +268,7 @@ export default class Browser extends React.Component {
           </div>
         </div>}
 
-        {this.state.score_columns && this.state.score_columns.length > 1 &&
-          <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
-            {this.state.score_columns.map(k => {
-              return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px", width: "100px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>
-                {k.replace(" score", "")}
-              </span>
-            })}
-          </div>
-        }
+        
         
         <div className="adatest-children-frame">
           {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
@@ -319,18 +311,39 @@ export default class Browser extends React.Component {
             </React.Fragment>
           })}
         </div>
+        {this.state.score_columns && this.state.score_columns.length > 1 &&
+          <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
+            <div style={{width: "200px", textAlign: "right", display: "inline-block"}}>
+              Input
+            </div>
+            <div style={{width: "25px", textAlign: "left", display: "inline-block"}}>
+              
+            </div>
+            <div style={{width: "171px", textAlign: "left", display: "inline-block"}}>
+              Output
+            </div>
+            <div style={{width: "50px", textAlign: "left", display: "inline-block", marginRight: "8px"}}>
+              Label
+            </div>
+            {this.state.score_columns.map(k => {
+              return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px", width: "100px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>
+                {k.replace(" score", "")}
+              </span>
+            })}
+          </div>
+        }
       </div>
 
-      <div style={{textAlign: "right", paddingRight: "12px"}}>
+      <div style={{textAlign: "right", paddingRight: "11px"}}>
         {this.state.score_columns && this.state.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faCheck} style={{fontSize: "14px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
+              <FontAwesomeIcon icon={faCheck} style={{fontSize: "15px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalPasses[k]}</span>
               {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
             </div>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
+              <FontAwesomeIcon icon={faTimes} style={{fontSize: "15px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalFailures[k]}</span>
             </div>
           </span>

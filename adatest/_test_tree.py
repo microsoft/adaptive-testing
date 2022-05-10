@@ -32,7 +32,7 @@ class TestTree():
         """
 
         # the canonical ordered list of test tree columns
-        column_names = ['topic', 'type', 'value1', 'value2', 'value3', 'author', 'description']
+        column_names = ['topic', 'input', 'output', 'label', 'labeler', 'description']
 
         # create a new test tree in memory
         if tests is None:
@@ -64,16 +64,17 @@ class TestTree():
         #     raise Exception("auto_save=True is only supported when loading from a file or IO stream")
         # self.auto_save = auto_save
 
-        # ensure we at least have a type column
-        if "type" not in self._tests.columns:
-            raise Exception("The test tree being loaded must contain a 'type' column!")
+        # ensure we have required columns
+        for c in ["input", "output", "label"]:
+            if c not in self._tests.columns:
+                raise Exception("The test tree being loaded must contain a '"+c+"' column!")
 
         # fill in any other missing columns
-        for column in ["topic", "value1", "value2", "value3", "description"]:
+        for column in ["topic", "description"]:
             if column not in self._tests.columns:
                 self._tests[column] = ["" for _ in range(self._tests.shape[0])]
-        if "author" not in self._tests.columns:
-            self._tests["author"] = ["anonymous" for _ in range(self._tests.shape[0])]
+        if "labeler" not in self._tests.columns:
+            self._tests["labeler"] = ["anonymous" for _ in range(self._tests.shape[0])]
 
         # ensure that all topics have a topic_marker entry
         marked_topics = {t: True for t in set(self._tests.loc[self._tests["type"] == "topic_marker"]["topic"])}

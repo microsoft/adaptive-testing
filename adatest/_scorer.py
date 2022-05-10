@@ -364,16 +364,17 @@ class GeneratorScorer(Scorer):
         self.feature_models = feature_models
 
         self.supported_test_types = [
-            "{} should output {}",
-            "{} should not output {}", # TODO: should this use semantic similarity instead of exact string match?
-            "{} should have the same output as {}",
-            "{} should output text containing {}",
-            "{} should not output text containing {}",
-            "{} should output text starting with {}",
-            "{} should not output text starting with {}",
-            "{} should output text that is {}",
-            "{} should not output text that is {}",
-            "{} should not be completed to become {}"
+            "{} can output {}",
+            "{} can only output {}",
+            "{} cannot output {}", # TODO: should this use semantic similarity instead of exact string match?
+            "{} can have the same output as {}",
+            "{} can output text containing {}",
+            "{} cannot output text containing {}",
+            "{} can output text starting with {}",
+            "{} cannot output text starting with {}",
+            "{} can output text that is {}",
+            "{} cannot output text that is {}",
+            "{} cannot be completed to become {}"
         ]
         # '"{}[]" should not become "{}" when completed. 
 
