@@ -7,7 +7,7 @@ from .utils import isinstance_ipython
 class Model():
     """ This wraps models used in AdaTest so that have a consistent interface.
 
-    This should eveutually just be the Model class from SHAP, but we keep a simple version here for now
+    This should eventually just be the Model class from SHAP, but we keep a simple version here for now
     so we can easily update it during initial development.
     """
 

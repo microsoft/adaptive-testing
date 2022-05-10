@@ -12,6 +12,8 @@ import re
 import collections
 
 from transformers import MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING
+from adatest.generators import TestTreeSource
+
 from .comm import JupyterComm
 import uuid
 import pathlib
@@ -26,7 +28,8 @@ import checklist.editor
 from threading import Timer
 from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer, Scorer
 from ._prompt_builder import PromptBuilder
-import adatest
+import builtins
+import adatest # Need to import like this to prevent circular dependencies
 
 # from https://gist.github.com/walkermatt/2871026
 def throttle(interval):
@@ -65,8 +68,6 @@ def file_log(*args):
     f.flush()
     f.close()
 
-cached_embedding_model = None
-
 def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
@@ -93,9 +94,9 @@ class TestTreeBrowser():
     """ Used for browsing and expanding a test tree.
     """
 
-    def __init__(self, test_tree, scorer, dataset, user, auto_save, recompute_scores, drop_inactive_score_columns,
-                 max_suggestions, suggestion_thread_budget, prompt_builder, active_backend, starting_path,
-                 embedding_model, score_filter, topic_model_scale):
+    def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
+                 max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
+                 score_filter, topic_model_scale):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -103,7 +104,7 @@ class TestTreeBrowser():
 
         self.test_tree = test_tree
         self.scorer = scorer
-        self.dataset = dataset
+        self.generators = generators
         self.user = user
         self.auto_save = auto_save
         self.recompute_scores = recompute_scores
@@ -111,20 +112,31 @@ class TestTreeBrowser():
         self.max_suggestions = max_suggestions
         self.suggestion_thread_budget = suggestion_thread_budget
         self.prompt_builder = prompt_builder
-        self.active_backend = active_backend
+        self.active_generator = active_generator
         self.current_topic = starting_path
-        self.embedding_model = embedding_model
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
 
+        # convert single generator to the multi-generator format
+        if not isinstance(self.generators, dict):
+            self.generators = {'generator': self.generators}
+
+        if adatest.default_generators is not None: # Merge default generators into generators
+            self.generators = {**self.generators, **adatest.default_generators}
+
+        # Find and cast any TestTrees in generators to TestTreeSource
+        for generator_name, generator in self.generators.items():
+            if isinstance(generator, adatest._test_tree.TestTree):
+                self.generators[generator_name] = TestTreeSource(generator) 
+
         # get a reference to the active backend object
-        if self.active_backend == "default":
-            if isinstance(adatest.backend, dict):
-                self._active_backend_obj = next(iter(adatest.backend.items()))[1]
+        if self.active_generator == "default":
+            if isinstance(self.generators, dict):
+                self._active_generator_obj = next(iter(self.generators.items()))[1]
             else:
-                self._active_backend_obj = adatest.backend
+                self._active_generator_obj = self.generators
         else:
-            self._active_backend_obj = adatest.backend[self.active_backend]
+            self._active_generator_obj = self.generators[self.active_generator]
 
         # if we are recomputing the scores then we erase all the old scores
         if recompute_scores is True:
@@ -164,18 +176,8 @@ class TestTreeBrowser():
         self._id = uuid.uuid4().hex 
 
         # these are all temporary state
-        self._embeddings = {} # Cached embedding vectors for each input/output pair (keyed on the pair ids)
         self._hidden_topics = {}
         self.comm = None
-
-        # set the embedding model we use for similarity computations
-        global cached_embedding_model
-        if self.scorer is not None and embedding_model is None:
-            if cached_embedding_model is None:
-                cached_embedding_model = sentence_transformers.SentenceTransformer('stsb-roberta-base') # was large, not base in the past
-            self.embedding_model = cached_embedding_model
-        else:
-            self.embedding_model = embedding_model
 
         # define our current mode, and set of supported modes
         self.mode = "tests"
@@ -185,16 +187,17 @@ class TestTreeBrowser():
             "tests", # suggest new tests
             "topics" # suggest new subtopics
         ]
-        
-        self.dataset_preds, self.dataset_tests = None, None
-        if dataset is not None:
-            self.mode_options.append("dataset") # suggest new tests based on samples from the given dataset
-            self.dataset_preds = self._load_dataset()
-            self.dataset_tests = self._convert_dataset_to_tests(self.dataset_preds)
-            self._compute_embeddings_and_scores(self.dataset_tests) # NOTE: Can be computationally intensive. Might re-compute scores.
 
         # make sure all the tests have scores (if we have a scorer)
         self._compute_embeddings_and_scores(self.test_tree)
+
+        # ensure any test tree based generator has embeddings calculated
+        if isinstance(self.generators, dict):
+            for name, gen in self.generators.items():
+                if gen.gen_type == "test_tree":
+                    self._compute_embeddings_and_scores(gen.source)
+        elif self.generators.gen_type == "test_tree":
+            self._compute_embeddings_and_scores(self.generators.source)
 
         # save the current state of the test tree
         self._auto_save()
@@ -266,13 +269,23 @@ class TestTreeBrowser():
                 
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
-                    if self._active_backend_obj is None:
-                        self._suggestions_error = "No AdaTest backend has been set!"
+                    if self._active_generator_obj is None:
+                        self._suggestions_error = "No AdaTest generator has been set!"
                     else:
                         # try:
                         self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                        self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                        self._suggestions_error = ""
+                        # filter suggestions to relevant types
+                        if self.mode == "topics":
+                            self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
+                        elif self.mode == "tests":
+                            self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
+
+                        # Ensure valid suggestions exist.
+                        if self.suggestions.shape[0] > 0:  
+                            self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                            self._suggestions_error = ""
+                        else:
+                            self._suggestions_error = True # Not sure if we should do this?
                         # except Exception as e:
                         #     log.debug(e)
                         #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
@@ -380,12 +393,12 @@ class TestTreeBrowser():
                     self._auto_save()
                     self._refresh_interface()
 
-                # change which backend is active
-                elif action is None and "active_backend" in msg[k]:
-                    self.active_backend = msg[k]["active_backend"]
-                    self._active_backend_obj = adatest.backend[self.active_backend]
+                # change which generator is active
+                elif action is None and "active_generator" in msg[k]:
+                    self.active_generator = msg[k]["active_generator"]
+                    self._active_generator_obj = self.generators[self.active_generator]
 
-                # change which backend is active
+                # change which generator is active
                 elif action is None and "mode" in msg[k]:
                     self.mode = msg[k]["mode"]
 
@@ -409,8 +422,8 @@ class TestTreeBrowser():
                     for k2 in msg[k]:
                         df.loc[k, k2] = msg[k][k2]
                     df.loc[k, self.score_columns] = None
-                    if k in self._embeddings:
-                        del self._embeddings[k]
+                    if k in adatest._embedding_cache:
+                        del adatest._embedding_cache[k]
                     self._compute_embeddings_and_scores(df)
                     self._auto_save()
 
@@ -458,8 +471,8 @@ class TestTreeBrowser():
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
 
                             if test.type == 'topic_marker' and test.topic == k:
-                                if id in self._embeddings:
-                                    del self._embeddings[id]
+                                if id in adatest._embedding_cache:
+                                    del adatest._embedding_cache[id]
                     # Move topic out of suggestions into tests
                     for id, test in self.suggestions.iterrows():
                         if is_subtopic(k, test.topic):
@@ -535,19 +548,22 @@ class TestTreeBrowser():
 
             # sort by score and always put new topics first
             def sort_key(id):
-                if len(self.score_columns) == 0:
-                    return 0
-                total = 0
-                count = 0
-                for s in data[id]["scores"][self.score_columns[0]]:
-                    val = score_max(s[1], nan_val=np.nan)
-                    if not np.isnan(val):
-                        total += val
-                        count += 1
-                if count == 0:
-                    return 1e3
-                else:
-                    return -total / count
+                try:
+                    total = 0
+                    count = 0
+                    for s in data[id]["scores"][self.score_columns[0]]:
+                        val = score_max(s[1], nan_val=np.nan)
+                        if not np.isnan(val) and val is not None:
+                            total += val
+                            count += 1
+                    if count == 0:
+                        return 1e3
+                    else:
+                        return -total / count
+                except Exception as e:
+                    print(e)
+                    print(id)
+                    print(val)
             sorted_children = sorted(children, key=sort_key)
             sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id].get("value1", "") == "New test" else 1)
 
@@ -591,8 +607,8 @@ class TestTreeBrowser():
             "read_only": False,
             "score_columns": self.score_columns,
             "suggestions_error": self._suggestions_error,
-            "backend_options": adatest.backend.keys() if isinstance(adatest.backend, dict) else [self.active_backend],
-            "active_backend": self.active_backend,
+            "generator_options": [str(x) for x in self.generators.keys()] if isinstance(self.generators, dict) else [self.active_generator],
+            "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
             "test_types": test_types,
@@ -609,35 +625,6 @@ class TestTreeBrowser():
         filter : str
             The filter to apply to the tests while generating suggestions.
         """
-
-        if self.mode == "dataset":
-            current_tests = self.test_tree[(self.test_tree['topic'] == self.current_topic) & (self.test_tree['type'] != 'topic_marker')]
-            if len(current_tests) == 0: # If empty or all topic_markers
-                # Just return largest error samples here
-                error_indices = self.dataset_preds.sort_values(by='largest_error_proba', ascending=False).head(n=self.max_suggestions).index
-                output = self.dataset_tests.loc[error_indices].copy()
-                output['topic'] = self.current_topic
-                return output
-
-            # Otherwise find topics closest to the current tests in topic
-            self._compute_embeddings_and_scores(current_tests) # Make sure the current tests have embeddings calculated
-            topic_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in current_tests.index])
-            data_embeddings = torch.vstack([torch.tensor(self._embeddings[k]) for k in self.dataset_tests.index])
-            
-            method = 'distance_to_avg' # TODO: Pick one, just leaving both for experimentation
-            if method == 'avg_distance':
-                dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
-                closest_indices = torch.topk(dist.mean(axis=0), k=self.max_suggestions).indices
-                
-            elif method == 'distance_to_avg':
-                avg_topic_embedding = topic_embeddings.mean(axis=0)
-
-                distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
-                closest_indices = torch.topk(distance, k=self.max_suggestions).indices
-
-            output = self.dataset_tests.iloc[np.array(closest_indices).squeeze()].copy()
-            output['topic'] = self.current_topic
-            return output
 
         #--Backend-driven suggestions--
 
@@ -692,13 +679,12 @@ class TestTreeBrowser():
         # failure focused (focus on making high scoring (failing) tests, then secondarily on making those tests valid and in-topic)
         # topics (suggest new sub-topics)
         # file_name dataset (suggest tests based on samples from the provided dataset)
-        
 
 
         # compute the maximum number of suggestion threads we can use given our suggestion_thread_budget
         p = self.prompt_builder.prompt_size
         budget = 1 + self.suggestion_thread_budget
-        suggestion_threads =  max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
+        suggestion_threads = max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
         
         # generate the prompts for the backend
         test_type, prompts = self.prompt_builder(
@@ -708,47 +694,52 @@ class TestTreeBrowser():
             repetitions=suggestion_threads,
             filter=filter,
             suggest_topics=self.mode == "topics",
-            embeddings=self._embeddings
+            embeddings=adatest._embedding_cache
         )
 
         # generate the suggestions
-        proposals = self._active_backend_obj(prompts, self.current_topic, test_type, self.scorer, num_samples=self.max_suggestions // len(prompts))
+        proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer, num_samples=self.max_suggestions // len(prompts))
+        
+        # Build up suggestions catalog, unless generating from a test tree source.
+        # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
+        if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
+            suggestions = proposals
+        else:
+            suggestions = []
+            test_map_tmp = copy.copy(test_map)
+            for value1, value2, value3 in proposals:
+                if self.mode == "topics" and ("/" in value1 or "\n" in value1):
+                    value1 = value1.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
+                    value1 = value1.replace("  ", " ").strip() # kill any double spaces we may have introduced
+                str_val = test_type + " " + value1 + " " + value2 + " " + value3
+                if str_val not in test_map_tmp:
+                    s = {
+                        "type": test_type,
+                        "topic": self.current_topic + ("/"+value1 if self.mode == "topics" else ""),
+                        "value1": "" if self.mode == "topics" else value1,
+                        "value2": value2,
+                        "value3": value3,
+                        "author": self._active_generator_obj.__class__.__name__ + " generator",
+                        "description": ""
+                    }
+                    for c in self.score_columns:
+                        s[c] = np.nan
+                    suggestions.append(s)
+                    if str_val is not None:
+                        test_map_tmp[str_val] = True
 
-        log.debug(f"proposals = {proposals}")
+            suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
+            self._compute_embeddings_and_scores(suggestions)
 
-        # filter out suggestions that are duplicates before we score them
-        suggestions = []
-        test_map_tmp = copy.copy(test_map)
-        for value1, value2, value3 in proposals:
-            if self.mode == "topics" and ("/" in value1 or "\n" in value1):
-                value1 = value1.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
-                value1 = value1.replace("  ", " ").strip() # kill any double spaces we may have introduced
-            str_val = test_type + " " + value1 + " " + value2 + " " + value3
-            if str_val not in test_map_tmp:
-                s = {
-                    "type": test_type,
-                    "topic": self.current_topic + ("/"+value1 if self.mode == "topics" else ""),
-                    "value1": "" if self.mode == "topics" else value1,
-                    "value2": value2,
-                    "value3": value3,
-                    "author": self._active_backend_obj.__class__.__name__ + " backend",
-                    "description": ""
-                }
-                for c in self.score_columns:
-                    s[c] = np.nan
-                suggestions.append(s)
-                if str_val is not None:
-                    test_map_tmp[str_val] = True
-
-        suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
-        self._compute_embeddings_and_scores(suggestions)
+        # Filter invalid suggestions
         if self.mode != "topics":
             suggestions = suggestions.dropna(subset=[self.score_columns[0]])
 
         # When we have outputs filled in by the scorer we might have more duplicates we need to remove
         duplicates = []
         for k,row in suggestions.iterrows():
-            str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
+            # str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
+            str_val = " ".join(builtins.filter(None, (row.topic, test_type, row.value1, row.value2, row.value3))) # Safely handles None
             if str_val in test_map:
                 duplicates.append(k)
             test_map[str_val] = True
@@ -794,8 +785,8 @@ class TestTreeBrowser():
             self._compute_scores(tests, recompute=recompute)
 
         # model outputs and embeddings
-        if self.embedding_model is not None:
-            new_embedding_ids = [k for k in tests.index if k not in self._embeddings]
+        if adatest.embedding_model is not None:
+            new_embedding_ids = [k for k in tests.index if k not in adatest._embedding_cache]
             if len(new_embedding_ids) > 0:
                 value1s = []
                 value2s = []
@@ -810,11 +801,11 @@ class TestTreeBrowser():
                         value1s.append(str(tests.loc[k, "value1"]))
                         value2s.append(str(tests.loc[k, "value2"]))
                         value3s.append(str(tests.loc[k, "value3"]))
-                new_value1_embeddings = self.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value2_embeddings = self.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value3_embeddings = self.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value1_embeddings = adatest.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value2_embeddings = adatest.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
+                new_value3_embeddings = adatest.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
                 for i,k in enumerate(new_embedding_ids):
-                    self._embeddings[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
+                    adatest._embedding_cache[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
 
     def _compute_scores(self, tests, recompute):
         """ Use the scorer(s) to fill in scores in the passed TestTree.
@@ -861,95 +852,95 @@ class TestTreeBrowser():
                 tests.loc[k, "value2"] = tests_to_score.loc[k, "value2"]
                 tests.loc[k, "value3"] = tests_to_score.loc[k, "value3"]
 
-    def _load_dataset(self, time_budget=30, min_samples=100):
-        '''Evaluate model on dataset and capture useful information.'''
-        # TODO: Generalize to more dataset formats
-        if self.dataset is None:
-            return None
+    # def _load_dataset(self, time_budget=30, min_samples=100):
+    #     '''Evaluate model on dataset and capture useful information.'''
+    #     # TODO: Generalize to more dataset formats
+    #     if self.dataset is None:
+    #         return None
         
-        model = self.scorer['model'].model
+    #     model = self.scorer['model'].model
 
-        # Unpack dataset object
-        X, y = self.dataset[0], self.dataset[1]
-        output_names = self.scorer['model'].output_names
+    #     # Unpack dataset object
+    #     X, y = self.dataset[0], self.dataset[1]
+    #     output_names = self.scorer['model'].output_names
         
-        unknown_labels = set(y) - set(output_names)
-        assert len(unknown_labels) == 0, f"Unknown labels found: {unknown_labels}. \
-        Please update the label vector or output names property."
+    #     unknown_labels = set(y) - set(output_names)
+    #     assert len(unknown_labels) == 0, f"Unknown labels found: {unknown_labels}. \
+    #     Please update the label vector or output names property."
 
-        # Time how long inference takes on a single sample
-        try:
-            start = time.time()
-            _ = model(X[0:1])
-            end = time.time()
-        except Exception as e: # TODO: Improve this message
-            raise ValueError(f"Training data cannot be evaluated by model. Error recieved: {e}.")
+    #     # Time how long inference takes on a single sample
+    #     try:
+    #         start = time.time()
+    #         _ = model(X[0:1])
+    #         end = time.time()
+    #     except Exception as e: # TODO: Improve this message
+    #         raise ValueError(f"Training data cannot be evaluated by model. Error recieved: {e}.")
 
 
-        # Ensure min_samples <= n_samples <= len(data) and computes in {time_budget} seconds
-        n_samples = int(min(max(time_budget // (end - start), min_samples), len(X)))
+    #     # Ensure min_samples <= n_samples <= len(data) and computes in {time_budget} seconds
+    #     n_samples = int(min(max(time_budget // (end - start), min_samples), len(X)))
 
-        if n_samples < len(X):
-            print(f"Only using {n_samples} samples to meet time budget of {time_budget} seconds.")
-            # TODO: unify input types
-            sample_indices = np.random.choice(np.arange(len(X)), n_samples, replace=False)
-            X = [X[sample] for sample in sample_indices]
-            y = [y[sample] for sample in sample_indices]
+    #     if n_samples < len(X):
+    #         print(f"Only using {n_samples} samples to meet time budget of {time_budget} seconds.")
+    #         # TODO: unify input types
+    #         sample_indices = np.random.choice(np.arange(len(X)), n_samples, replace=False)
+    #         X = [X[sample] for sample in sample_indices]
+    #         y = [y[sample] for sample in sample_indices]
 
-        # Build output frame
-        df = pd.DataFrame(columns=['sample', 'label', 'label_proba', \
-                                            'pred', 'pred_proba', 'largest_error', 'largest_error_proba'])
-        df['sample'] = X
-        df['label'] = y
+    #     # Build output frame
+    #     df = pd.DataFrame(columns=['sample', 'label', 'label_proba', \
+    #                                         'pred', 'pred_proba', 'largest_error', 'largest_error_proba'])
+    #     df['sample'] = X
+    #     df['label'] = y
 
-        # model's current prediction
-        raw_model_output = model(X)
-        pred_indices = np.argsort(raw_model_output, axis=1)
+    #     # model's current prediction
+    #     raw_model_output = model(X)
+    #     pred_indices = np.argsort(raw_model_output, axis=1)
         
-        df['pred_proba'] = raw_model_output[range(len(pred_indices)), pred_indices[:, -1]]
-        df['pred'] = [output_names[i] for i in pred_indices[:, -1]]
+    #     df['pred_proba'] = raw_model_output[range(len(pred_indices)), pred_indices[:, -1]]
+    #     df['pred'] = [output_names[i] for i in pred_indices[:, -1]]
 
-        label_lookup = {output:index for index, output in enumerate(output_names)}
-        label_indices = [label_lookup[label] for label in y]
-        df['label_proba'] = raw_model_output[range(len(label_indices)), label_indices]
+    #     label_lookup = {output:index for index, output in enumerate(output_names)}
+    #     label_indices = [label_lookup[label] for label in y]
+    #     df['label_proba'] = raw_model_output[range(len(label_indices)), label_indices]
         
 
-        correct_predictions = df['pred'] == df['label']
-        mispredictions = ~correct_predictions
+    #     correct_predictions = df['pred'] == df['label']
+    #     mispredictions = ~correct_predictions
         
-        # For mispredicted samples, the largest error is the current prediction.
-        df.loc[mispredictions, 'largest_error'] = df.loc[mispredictions, 'pred']
-        df.loc[mispredictions, 'largest_error_proba'] = df.loc[mispredictions, 'pred_proba']
+    #     # For mispredicted samples, the largest error is the current prediction.
+    #     df.loc[mispredictions, 'largest_error'] = df.loc[mispredictions, 'pred']
+    #     df.loc[mispredictions, 'largest_error_proba'] = df.loc[mispredictions, 'pred_proba']
         
-        # For correct samples, we use the 2nd highest class as the largest error.
-        largest_errors = pred_indices[correct_predictions][:, -2]
-        df.loc[correct_predictions, 'largest_error'] = [output_names[i] for i in largest_errors]
-        df.loc[correct_predictions, 'largest_error_proba'] = raw_model_output[range(len(largest_errors)), largest_errors]
+    #     # For correct samples, we use the 2nd highest class as the largest error.
+    #     largest_errors = pred_indices[correct_predictions][:, -2]
+    #     df.loc[correct_predictions, 'largest_error'] = [output_names[i] for i in largest_errors]
+    #     df.loc[correct_predictions, 'largest_error_proba'] = raw_model_output[range(len(largest_errors)), largest_errors]
 
-        df.index = [uuid.uuid4().hex for _ in range(len(df))]
-        return df
+    #     df.index = [uuid.uuid4().hex for _ in range(len(df))]
+    #     return df
 
-    def _convert_dataset_to_tests(self, dataset_frame): # TODO: Consider removing from class?
-        '''Converts a loaded dataset into test formats.'''
+    # def _convert_dataset_to_tests(self, dataset_frame): # TODO: Consider removing from class?
+    #     '''Converts a loaded dataset into test formats.'''
         
-        column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
-        'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
+    #     column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
+    #     'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
 
-        test_frame = pd.DataFrame(columns=column_names)
+    #     test_frame = pd.DataFrame(columns=column_names)
 
-        # All tests currently formatted as not predicting the largest error.
-        test_frame['value1'] = dataset_frame['sample']
-        test_frame['type'] = "{} should not output {}"
-        test_frame['value2'] = dataset_frame['largest_error']
+    #     # All tests currently formatted as not predicting the largest error.
+    #     test_frame['value1'] = dataset_frame['sample']
+    #     test_frame['type'] = "{} should not output {}"
+    #     test_frame['value2'] = dataset_frame['largest_error']
 
-        # Constants
-        test_frame['topic'] = ''
-        test_frame['author'] = "dataset"
-        test_frame['description'] = ''
+    #     # Constants
+    #     test_frame['topic'] = ''
+    #     test_frame['author'] = "dataset"
+    #     test_frame['description'] = ''
 
-        test_frame.index = dataset_frame.index
+    #     test_frame.index = dataset_frame.index
         
-        return test_frame # TODO: Cast this as a formal TestTree instead of dataframe
+    #     return test_frame # TODO: Cast this as a formal TestTree instead of dataframe
 
     def test_display_parts(self, test):
         

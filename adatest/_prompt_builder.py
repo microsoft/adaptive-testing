@@ -256,9 +256,9 @@ class PromptBuilder():
                     if row["topic"] == "":
                         continue # we can't use the root to help suggest topic names
                     parents,child = row["topic"].rsplit("/", 1)
-                    prompt.append((parents, child, "", ""))
+                    prompt.append((k, parents, child, "", ""))
                 else:
-                    prompt.append((row["topic"], row["value1"], row["value2"], row["value3"]))
+                    prompt.append((k, row["topic"], row["value1"], row["value2"], row["value3"]))
             prompts.append(prompt)
         
         return test_type, prompts
@@ -269,7 +269,7 @@ def is_subtopic(topic, candidate):
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
 def score_max(s):
-    if s == "":
+    if s == "" or s is None:
         return -1e3
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])

@@ -1,27 +1,30 @@
-""" A set of backends for AdaTest. TO BE DEPRECITED IN FAVOR OF GENERATORS.PY
+""" A set of generators for AdaTest.
 """
 import asyncio
+
+import uuid
 import aiohttp
 import transformers
 import openai
-import numpy as np
 import copy
-import os
 from ._filters import clean_string
+import sentence_transformers
+import pandas as pd
+import numpy as np
+import torch
+import adatest
 
-class Backend():
-    """ Abstract class for language model backends.
+
+class Generator():
+    """ Abstract class for generators.
     """
     
-    def __init__(self, models, sep, subsep, quote, filter_profanity):
-        """ Create a new backend with the given separators and max length.
+    def __init__(self, source, sep=None, subsep=None, quote=None, filter_profanity=None):
+        """ Create a new generator with the given separators and max length.
         """
-        if not isinstance(models, list) and not isinstance(models, tuple):
-            models = [models]
-        self.model = models[0]
-        self.models = models
-        self.subsep = subsep
+        self.source = source
         self.sep = sep
+        self.subsep = subsep
         self.quote = quote
         self.filter_profanity = filter_profanity
 
@@ -32,8 +35,6 @@ class Backend():
         # value1_comparator_format = '"{value1}" {comparator} "{value2}"'
         # comparator_value2_format = '"{value1}" {comparator} "{value2}"'
 
-
-    
     def __call__(self, prompts, max_length=None):
         """ This should be overridden by concrete subclasses.
 
@@ -48,7 +49,17 @@ class Backend():
         """
         if isinstance(prompts[0][0], str):
             prompts = [prompts]
-        return prompts
+        
+        # Split apart prompt IDs and prompts
+        prompt_ids, trimmed_prompts = [], []
+        for prompt in prompts:
+            prompt_without_id = []
+            for entry in prompt:
+                prompt_ids.append(entry[0])
+                prompt_without_id.append(entry[1:])
+            trimmed_prompts.append(prompt_without_id)
+
+        return trimmed_prompts, prompt_ids
     
     def _varying_values(self, prompts, topic):
         """ Marks with values vary in the set of prompts.
@@ -128,11 +139,13 @@ class Backend():
         return samples
 
            
-class Transformers(Backend):
+class Transformers(Generator):
     def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter_profanity=True):
-        super().__init__(models=model, sep=sep, subsep=subsep, quote=quote)
+        # TODO [Harsha]: Add validation logic to make sure model is of supported type.
+        super().__init__(source=model, sep=sep, subsep=subsep, quote=quote)
+        self.gen_type = "model"
         self.tokenizer = tokenizer
-        self.device = self.model.device
+        self.device = self.source.device
 
         class StopAtSequence(transformers.StoppingCriteria):
             def __init__(self, stop_string, tokenizer, window_size=10):
@@ -151,31 +164,30 @@ class Transformers(Backend):
 
         self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
     
-    def __call__(self, prompts, topic, num_samples=1, max_length=100):
-        
-        prompts = self._validate_prompts(prompts)
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
+        prompts, prompt_ids = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # monkey-patch a method that prevents the use of past_key_values
-        saved_func = self.model.prepare_inputs_for_generation
+        saved_func = self.source.prepare_inputs_for_generation
         def prepare_inputs_for_generation(input_ids, **kwargs):
             if "past_key_values" in kwargs:
                 return {"input_ids": input_ids, "past_key_values": kwargs["past_key_values"]}
             else:
                 return {"input_ids": input_ids}
-        self.model.prepare_inputs_for_generation = prepare_inputs_for_generation
+        self.source.prepare_inputs_for_generation = prepare_inputs_for_generation
         
         # run the generative LM for each prompt
         suggestion_texts = []
         for prompt_string in prompt_strings:
             input_ids = self.tokenizer.encode(prompt_string, return_tensors='pt').to(self.device)
-            cache_out = self.model(input_ids[:, :-1], use_cache=True)
+            cache_out = self.source(input_ids[:, :-1], use_cache=True)
 
             for _ in range(num_samples):
                 self._sep_stopper.prompt_length = 1
                 self._sep_stopper.max_length = max_length
-                out = self.model.sample(
-                    input_ids[:, -1:], pad_token_id=self.model.config.eos_token_id,
+                out = self.source.sample(
+                    input_ids[:, -1:], pad_token_id=self.source.config.eos_token_id,
                     stopping_criteria=self._sep_stopper,
                     past_key_values=cache_out.past_key_values # TODO: enable re-using during sample unrolling as well
                 )
@@ -190,27 +202,26 @@ class Transformers(Backend):
                 suggestion_texts.append(suggestion_text)
 
         # restore the old function that prevents the past_key_values argument from getting passed
-        self.model.prepare_inputs_for_generation = saved_func
+        self.source.prepare_inputs_for_generation = saved_func
         
         return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
-class OpenAI(Backend):
+class OpenAI(Generator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
     
     def __init__(self, models, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter_profanity=True):
+        # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(models, sep=sep, subsep=subsep, quote=quote, filter_profanity=filter_profanity)
+        self.gen_type = "model"
         self.temperature = temperature
         self.top_p = top_p
         if api_key is not None:
-            if api_key[0] in ["/", ".", "~"]:
-                openai.api_key_path = os.path.expanduser(api_key)
-            else:
-                openai.api_key = api_key
+            openai.api_key = api_key
 
     def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
-        prompts = self._validate_prompts(prompts)
+        prompts, prompt_ids = self._validate_prompts(prompts)
         # prompt_strings = self._create_prompt_strings(prompts, topic)
 
         # find out which values in the prompt have multiple values and so should be generated
@@ -259,7 +270,7 @@ class OpenAI(Backend):
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
-            engine=self.model, prompt=prompt_strings, max_tokens=max_length,
+            engine=self.source, prompt=prompt_strings, max_tokens=max_length,
             temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=stop_string
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
@@ -282,24 +293,26 @@ class OpenAI(Backend):
         #             suggestion_texts = [choice["text"] for choice in response["choices"]]
 
 
-class AI21(Backend):
+class AI21(Generator):
     """ Backend wrapper for the AI21 API.
     """
     
     def __init__(self, model, api_key, sep="\n", subsep=" ", quote="\"", temperature=0.95, filter_profanity=True):
+        # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep=sep, subsep=subsep, quote=quote, filter_profanity=filter_profanity)
+        self.gen_type = "model"
         self.api_key = api_key
         self.temperature = temperature
         self.event_loop = asyncio.get_event_loop()
     
-    def __call__(self, prompts, topic, num_samples=1, max_length=100):
-        prompts = self._validate_prompts(prompts)
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
+        prompts, prompt_ids = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # define an async call to the API
         async def http_call(prompt_string):
             async with aiohttp.ClientSession() as session:
-                async with session.post(f"https://api.ai21.com/studio/v1/{self.model}/complete",
+                async with session.post(f"https://api.ai21.com/studio/v1/{self.source}/complete",
                         headers={"Authorization": f"Bearer {self.api_key}"},
                         json={
                             "prompt": prompt_string, 
@@ -319,3 +332,41 @@ class AI21(Backend):
             suggestion_texts.extend(result)
         
         return self._parse_suggestion_texts(suggestion_texts, prompts)
+
+
+class TestTreeSource(Generator):
+
+    def __init__(self, test_tree, assistant_generator=None):
+        # TODO: initialize with test tree
+        super().__init__(test_tree)
+        self.gen_type = "test_tree"
+        self.assistant_generator = assistant_generator
+
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100): # TODO: Unify all __call__ signatures
+        prompts, prompt_ids = self._validate_prompts(prompts)
+
+        # TODO: Currently only returns valid subtopics. Update to include similar topics based on embedding distance?
+        if test_type == "topic_marker":
+            output = self.source.topic(topic) 
+            return output[output['type'] == test_type ]# return any existing valid subtopics
+
+        # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
+        # Find tests closest to the proposals in the embedding space
+        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in prompt_ids]) 
+        data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in self.source.index])
+        
+        max_suggestions = num_samples * len(prompts)
+        method = 'distance_to_avg'
+        if method == 'avg_distance':
+            dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
+            closest_indices = torch.topk(dist.mean(axis=0), k=max_suggestions).indices
+            
+        elif method == 'distance_to_avg':
+            avg_topic_embedding = topic_embeddings.mean(axis=0)
+
+            distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
+            closest_indices = torch.topk(distance, k=max_suggestions).indices
+
+        output = self.source.iloc[np.array(closest_indices).squeeze()].copy()
+        output['topic'] = topic
+        return output
