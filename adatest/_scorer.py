@@ -8,6 +8,8 @@ import openai
 import scipy.stats
 import transformers
 import shap
+
+import adatest
 from ._model import Model
 from .utils import isinstance_ipython
 #from transformers.tokenization_utils_base import ExplicitEnum
@@ -319,7 +321,7 @@ class GeneratorScorer(Scorer):
     """ Wraps a text generation model in a scorer that can score the target model against tests.
     """
 
-    def __init__(self, model, completions=1, reverse_model=None, embedding_model=None, feature_models={}, similarity_threshold=0.9):
+    def __init__(self, model, completions=1, reverse_model=None, feature_models={}, similarity_threshold=0.9):
         """ Initializes a new scorer for a given target model.
 
         Parameters
@@ -336,9 +338,6 @@ class GeneratorScorer(Scorer):
             to use the 'should be invertable' test type. If for example model is an EN to ES translation model, then
             reverse_model should be an ES to EN translation model. Just like model, reverse_model is expected to take a
             list of strings as input and return a list of strings as output.
-
-        embedding_model : callable
-            Used to embed the tests for comparison purposes. TODO: shouldn't this be shared with the main adatest backend?
 
         feature_models : dict
             A dictionary of classifiers that can be used to score the generated output. The keys are the names of the
@@ -359,7 +358,6 @@ class GeneratorScorer(Scorer):
 
         self.completions = completions
         self.reverse_model = reverse_model
-        self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
         self.feature_models = feature_models
 
@@ -378,7 +376,7 @@ class GeneratorScorer(Scorer):
         # '"{}[]" should not become "{}" when completed. 
 
         # see if we can support the inversion test
-        if self.reverse_model is not None and self.embedding_model is not None: # TODO: do we need an embeddig model or just use the backend?
+        if self.reverse_model is not None and adatest.embedding_model is not None: # TODO: do we need an embeddig model or just use the backend?
             self.supported_test_types.append("{} should be invertable. [] is the output.") # Note that {} means user-editable, [] means read-only
 
         # # see if we have user-provided classifier tests
@@ -506,7 +504,7 @@ class GeneratorScorer(Scorer):
             round_trip_embed = [None for _ in model_out]
             try:
                 # compute input embedding
-                tmp = self.embedding_model.encode([eval_inputs[ind] for ind in eval_reverse_pos], convert_to_tensor=True, show_progress_bar=False).cpu()
+                tmp = adatest.embedding_model.encode([eval_inputs[ind] for ind in eval_reverse_pos], convert_to_tensor=True, show_progress_bar=False).cpu()
                 for i, ind in enumerate(eval_reverse_pos):
                     input_embed[ind] = tmp[i]
 
@@ -516,7 +514,7 @@ class GeneratorScorer(Scorer):
                     model_reverse_out[ind] = str(reverse_out[i])
 
                 # compute round trip embedding
-                tmp = self.embedding_model.encode(reverse_out, convert_to_tensor=True, show_progress_bar=False).cpu()
+                tmp = adatest.embedding_model.encode(reverse_out, convert_to_tensor=True, show_progress_bar=False).cpu()
                 for i, ind in enumerate(eval_reverse_pos):
                     round_trip_embed[ind] = tmp[i]
 
