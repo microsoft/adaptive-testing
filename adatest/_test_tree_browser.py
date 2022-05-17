@@ -664,7 +664,7 @@ class TestTreeBrowser():
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
-            suggestions['topic'] = "/__suggestions__" + suggestions['topic']
+            suggestions['topic'] = self.current_topic + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_topic):] if x != "" else "/")
             self.test_tree.append(suggestions)
             print("appended suggestions into self.test_tree")
             # assert False, "This needs to be fixed to dump into /__suggestions__"

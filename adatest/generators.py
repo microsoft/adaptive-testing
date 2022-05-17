@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import torch
 import adatest
+from pathlib import Path
 
 
 class Generator():
@@ -332,8 +333,10 @@ class TestTreeSource(Generator):
 
         # TODO: Currently only returns valid subtopics. Update to include similar topics based on embedding distance?
         if test_type == "topics":
-            output = self.source.topic(topic) 
-            return output[output['label'] == "topic_marker" ]# return any existing valid subtopics
+            # check if requested topic is *direct* parent of test topic
+            ids = [id for id, test in self.source._tests.iterrows() if topic == test.topic[0:test.topic.rfind('/')]]
+            output = self.source.loc[ids]
+            return output[output['label'] == "topic_marker"] # return any existing valid subtopics
 
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # Find tests closest to the proposals in the embedding space

@@ -12,6 +12,7 @@ from ._test_tree_browser import TestTreeBrowser, is_subtopic
 from ._model import Model
 from ._topic_model import TopicModel
 import adatest
+from pathlib import Path
 
 class TestTree():
     """ A hierarchically organized set of tests represented as a DataFrame.
@@ -240,7 +241,7 @@ class TestTree():
         self.deduplicate()
         self.compute_embeddings()
         return None # TODO: Rethink append logic -- return copy vs. in place update?
-        
+
     def __len__(self):
         return self._tests.__len__()
     def __setitem__(self, key, value):
