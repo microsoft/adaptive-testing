@@ -674,7 +674,7 @@ class TestTreeBrowser():
                     input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
                     str_val = self.current_topic + "/" + input + " __topic_marker__"
                 else:
-                    str_val = self.current_topic + " __JOIN__" + input
+                    str_val = self.current_topic + " __JOIN__ " + input
                 if str_val not in test_map_tmp:
                     id = uuid.uuid4().hex
                     self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
