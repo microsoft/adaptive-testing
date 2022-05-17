@@ -323,7 +323,7 @@ class TestTreeBrowser():
                 
                 # clear the current set of suggestions
                 elif action == "clear_suggestions":
-                    self.test_tree.drop_topic(self.current_topic + "/__suggestions__")
+                    self._clear_suggestions()
                     # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
                     self._refresh_interface()
 

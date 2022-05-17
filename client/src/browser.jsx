@@ -128,10 +128,10 @@ export default class Browser extends React.Component {
     this.totalFailuresObjects = {};
     if (this.state.score_columns) {
       for (const k of this.state.score_columns) {
-        console.log("k", k)
-        totalPasses[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {console.log("H", k, el); this.totalPassesObjects[k] = el}} />;
-        totalFailures[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {console.log("I", k, el); this.totalFailuresObjects[k] = el}} />;
-        console.log("totalPasses", totalPasses)
+        // console.log("k", k)
+        totalPasses[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {this.totalPassesObjects[k] = el}} />;
+        totalFailures[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {this.totalFailuresObjects[k] = el}} />;
+        // console.log("totalPasses", totalPasses)
       }
     }
     let topicPath = "";

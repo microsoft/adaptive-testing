@@ -235,7 +235,7 @@ export default class Row extends React.Component {
       }
       {this.props.isSuggestion && this.state.topic_name !== null &&
         <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
-          <FontAwesomeIcon icon={this.state.topic_name === null ? faPlus : faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
+          <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
       {/* {this.state.topic_name === null &&
@@ -609,7 +609,9 @@ export default class Row extends React.Component {
     console.log("finishTopicName", text)
     
     this.setState({topic_name: text.replace("\\", "").replace("\n", ""), editing: false});
-    this.props.comm.send(this.props.id, {topic: this.props.topic + "/" + text});
+    let topic = this.props.topic;
+    if (this.props.isSuggestion) topic += "/__suggestions__";
+    this.props.comm.send(this.props.id, {topic: topic + "/" + text});
   }
   
   clickRow(e) {
@@ -738,7 +740,7 @@ export default class Row extends React.Component {
   addToCurrentTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("addToCurrentTopic");
+    console.log("addToCurrentTopic X", this.props.topic, this.state.topic_name);
     if (this.state.topic_name !== null) {
       this.props.comm.send(this.props.id, {topic: this.props.topic + "/" + this.state.topic_name});
     } else {
