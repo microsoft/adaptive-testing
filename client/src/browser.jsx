@@ -541,26 +541,16 @@ export default class Browser extends React.Component {
       const ids = this.state.suggestions.concat(this.state.tests);
       if (keys.length > 0) {
 
-        if (e.keyCode == 67) { // when marking 'c' for out of topic we only do this for suggestion rows
-          for (const i in keys) {
-            if (!this.state.suggestions.includes(keys[i])) {
-              return;
-            }
+        let in_suggestions = true;
+        for (const i in keys) {
+          if (!this.state.suggestions.includes(keys[i])) {
+            in_suggestions = false;
           }
         }
-        
-        // select the next test after the selected one
-        let lastId = undefined;
-        for (const i in ids) {
-          if (this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
-            newId = ids[i];
-            break;
-          }
-          lastId = ids[i];
+
+        if (e.keyCode == outKey && !in_suggestions) { // when marking for out of topic we only do this for suggestion rows
+          return;
         }
-        let selections = {};
-        if (newId !== undefined) selections[newId] = true;
-        this.setState({selections: selections});
 
         if (e.keyCode == passKey) {
           const keys = Object.keys(this.state.selections);
@@ -569,15 +559,38 @@ export default class Browser extends React.Component {
               this.rows[keys[i]].labelAsPass();
             }
           }
-        } else if (e.keyCode == failKey) { // 'x' key for marking the current IO pair as "fail"
+        } else if (e.keyCode == failKey) {
           const keys = Object.keys(this.state.selections);
           if (keys.length > 0) {
             for (const i in keys) {
               this.rows[keys[i]].labelAsFail();
             }
           }
+        } else if (e.keyCode == outKey) {
+          const keys = Object.keys(this.state.selections);
+          if (keys.length > 0) {
+            for (const i in keys) {
+              this.rows[keys[i]].labelAsOffTopic();
+            }
+          }
+        } else {
+          this.comm.send(keys, {topic: "_DELETE_"});
         }
-        this.comm.send(keys, {topic: e.keyCode == 67 ? "_OUT_OF_TOPIC_" : "_DELETE_"});
+
+        // select the next test after the selected one when appropriate
+        if (in_suggestions || e.keyCode == 8 || e.keyCode == 46) {
+          let lastId = undefined;
+          for (const i in ids) {
+            if (this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
+              newId = ids[i];
+              break;
+            }
+            lastId = ids[i];
+          }
+          let selections = {};
+          if (newId !== undefined) selections[newId] = true;
+          this.setState({selections: selections});
+        }
       }
     } else if (e.keyCode == 38 || e.keyCode == 40) {
       const keys = Object.keys(this.state.selections);

@@ -308,10 +308,10 @@ export default class Row extends React.Component {
           {this.state.labeler === "imputed" && this.state.label === "pass" ?
             <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-15px" textAnchor="middle" />
           :
-            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-15px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-15px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           }
           {this.props.isSuggestion &&
-            <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="45px" style={{color: "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+            <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="45px" style={{color: this.state.label === "off_topic" ? "rgb(0, 0, 0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           }
           <line x1="70" y1="15" x2={110} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
           <line x1="36" y1="15" x2={70} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
@@ -485,6 +485,7 @@ export default class Row extends React.Component {
 
   labelAsOffTopic(e) {
     this.props.comm.send(this.props.id, {"topic": "_DELETE_"});
+    this.setState({label: "off_topic"});
   }
 
   labelAsPass(e) {
