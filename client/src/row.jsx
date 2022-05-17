@@ -13,12 +13,12 @@ export default class Row extends React.Component {
 
     this.state = {
       editing: false,
-      type: null,
-      value1: null,
-      value2: null,
-      value3: null,
-      topic_name: null,
       topic: null,
+      input: null,
+      output: null,
+      label: null,
+      labler: null,
+      topic_name: null,
       scores: null,
       dragging: false,
       dropHighlighted: 0,
@@ -101,7 +101,7 @@ export default class Row extends React.Component {
 
   render() {
     // console.log("---- render Row ----");
-    if (this.state.type === null) return null; // only render if we have data
+    if (this.state.label === null) return null; // only render if we have data
     // console.log("real render Row");
 
     const main_score = this.props.scoreColumns ? this.props.scoreColumns[0] : undefined;
@@ -183,7 +183,7 @@ export default class Row extends React.Component {
     if (this.state.hovering) editRowClasses += " adatest-row-hide-hovering";
     if (this.state.editing) editRowClasses += " adatest-row-hide-hidden";
 
-    const test_type_parts = this.props.test_type_parts[this.state.type];
+    // const test_type_parts = this.props.test_type_parts[this.state.type];
     
     let overall_score = {};
     if (this.state.scores) {
@@ -197,18 +197,20 @@ export default class Row extends React.Component {
       }
     }
 
-    var hack_score = overall_score[this.props.scoreColumns[0]];
-    var hack_output_flip = {
-      "todo": "not todo",
-      "not todo": "todo"
-    }
-    console.log("asdfa", main_score, this.state["value1_outputs"]);
-    if (this.state["value1_outputs"]) {
-      var tmp = this.state["value1_outputs"][main_score][0][1];
-      console.log(Object.keys(tmp));
-      var hack_output_name = Object.keys(tmp).reduce((a, b) => tmp[a] > tmp[b] ? a : b);
-    }
-    var label_opacity = this.props.isSuggestion ? 0.5 : 1;
+    // console.log("overall_score", overall_score);
+
+    // var hack_score = overall_score[this.props.scoreColumns[0]];
+    // var hack_output_flip = {
+    //   "todo": "not todo",
+    //   "not todo": "todo"
+    // }
+    // console.log("asdfa", main_score, this.state["value1_outputs"]);
+    // if (this.state["value1_outputs"]) {
+    //   var tmp = this.state["value1_outputs"][main_score][0][1];
+    //   console.log("heresss65", this.state["value1_outputs"], Object.keys(tmp));
+    //   var hack_output_name = Object.keys(tmp).reduce((a, b) => tmp[a] > tmp[b] ? a : b);
+    // }
+    var label_opacity = this.state.labeler === "imputed" ? 0.5 : 1;
 
     // get the display parts for the template instantiation with the highest score
     const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
@@ -270,35 +272,24 @@ export default class Row extends React.Component {
           </React.Fragment> : (
           <div className="adatest-row">
             <div className="adatest-row-input" onClick={this.clickRow}>
-              <div onClick={this.clickValue1} style={{display: "inline-block"}}><span title={model_output_strings["value1"]} onContextMenu={this.handleValue1ContextMenu}><ContentEditable onClick={this.clickValue1} onTemplateExpand={this.templateExpandValue1} ref={el => this.value1Editable = el} text={this.state.value1} onInput={this.inputValue1} onFinish={this.finishValue1} editable={this.state.editing} defaultText={this.props.value1Default} /></span></div>
+              <div onClick={this.clickInput} style={{display: "inline-block"}}>
+                <span style={{width: "0px"}}></span>
+                <span title={model_output_strings["value1"]} onContextMenu={this.handleInputContextMenu}>
+                  <ContentEditable onClick={this.clickInput} onTemplateExpand={this.templateExpandValue1} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.value1Default} />
+                </span>
+                <span style={{width: "0px"}}></span>
+              </div>
             </div>
             <div style={{flex: "0 0 25px", color: "#999999", textAlign: "center", overflow: "hidden", display: "flex"}}>
               <div style={{alignSelf: "flex-end", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block", marginLeft: "5px"}} textAnchor="left" />
-                {/* &nbsp;<span style={{color: "#aaa"}}><select className="adatest-plain-select" style={{marginLeft: "0px", color: "#aaa"}} value={this.state.type} onChange={this.changeTestType}>
-                  {(this.props.test_types || []).map((type) => {
-                    return <option key={type} value={type}>{this.props.test_type_parts[type].text2}</option>
-                  })}
-                </select></span> */}
+                <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block", marginLeft: "5px"}} textAnchor="left" />
               </div>
             </div>
-            <div onClick={this.clickValue2} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 150px", textAlign: "left", display: "flex"}}>
+            <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 150px", textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
-                {test_type_parts.value2 === "[]" &&
-                  <React.Fragment>
-                    <span style={{color: "#aaa"}}>{display_parts.d_text2a}</span><span style={{color: "#666666"}}>{this.state.value2}</span><span style={{color: "#aaa"}}>{display_parts.d_text2b}</span><span style={{color: "#aaa", opacity: this.state.hovering ? 1 : 0, transition: "opacity 1s"}}>&nbsp;{!this.props.inFillin && "is the inversion."}</span>
-                  </React.Fragment>
-                }
-                {test_type_parts.value2 === "{}" &&
-                  <React.Fragment>
-                   <span title={model_output_strings["value2"]}><ContentEditable ref={el => this.value2Editable = el} onClick={this.clickValue2} text={hack_output_name} onInput={this.inputValue2} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} /></span>
-                  </React.Fragment>
-                }
-                {test_type_parts.value3 === "{}" &&
-                  <React.Fragment>
-                    <span style={{color: "#aaa"}}>{display_parts.d_text3a}</span><span title={model_output_strings["value3"]}><ContentEditable ref={el => this.value3Editable = el} onClick={this.clickValue3} text={this.state.value3} onInput={this.inputValue3} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value3Default} /></span><span style={{color: "#aaa"}}>{display_parts.d_text3b}</span>
-                  </React.Fragment>
-                }
+                <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
+                  <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} />
+                </span>
               </span>
             </div>
           </div>
@@ -308,9 +299,19 @@ export default class Row extends React.Component {
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
       {this.state.topic_name === null &&
-        <svg height="20" width="50" style={{marginTop: "5px", flex: "0 0 50px", display: "inline-block", marginLeft: "8px", marginRight: "25px"}}>
-          <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="15px" style={{color: hack_score > 0 ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-          <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-15px" style={{color: hack_score <= 0 ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+        <svg height="30" width="70" style={{marginTop: "0px", flex: "0 0 70px", display: "inline-block", marginLeft: "8px", marginRight: "15px"}}>
+          {this.state.labeler === "imputed" && this.state.label === "fail" ?
+            <FontAwesomeIcon icon={faTimes} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="15px" textAnchor="middle" />
+          :
+            <FontAwesomeIcon icon={faTimes} stroke="" height="17px" y="7px" x="15px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+          }
+          {this.state.labeler === "imputed" && this.state.label === "pass" ?
+            <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-15px" textAnchor="middle" />
+          :
+            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-15px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+          }
+          <line x1="36" y1="15" x2={70} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
+          <line x1="0" y1="15" x2={36} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
         </svg>
       }
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
@@ -330,21 +331,12 @@ export default class Row extends React.Component {
           {overall_score[k] > 0 ?
             <svg height="20" width="100">
               {Number.isFinite(overall_score[k]) && <React.Fragment>
-                <line x1="50" y1="10" x2={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(207, 34, 46,"+(this.props.isSuggestion ? 0.15 : 0.15)+")", strokeWidth: "20", cursor: "pointer"}}></line>
-                <line x2="50" y1="10" x1={50 + 48*scale_score(-overall_score[k])} y2="10" style={{stroke: "rgba(26, 127, 55, 0)", strokeWidth: "20", cursor: "pointer"}}></line>
-                {/* {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
-                  //console.log("scale_score(score[1])", scale_score(score[1]))
-                  return <line key={index} onMouseOver={e => this.onScoreOver(e, score[0])}
-                              onMouseOut={e => this.onScoreOut(e, score[0])}
-                              x1={50 + 48*scale_score(score[1])} y1="0"
-                              x2={50 + 48*scale_score(score[1])} y2="20"
-                              style={{stroke: score[1] <= 0 ? "rgb(26, 127, 55)" : "rgb(207, 34, 46)", strokeWidth: "2"}}
-                        ></line>
-                })} */}
+                <line x1="50" y1="10" x2={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(207, 34, 46, 0.15)", strokeWidth: "20"}}></line>
                 <line x1={50} y1="0"
-                      x2={50} y2="20" strokeDasharray="2"
-                      style={{stroke: "#bbbbbb", strokeWidth: "1"}}
+                      x2={50} y2="20"
+                      style={{stroke: "rgb(207, 34, 46)", strokeWidth: "3"}}
                 ></line>
+                <polygon points="51,0 55,10 51,20" fill="rgb(207, 34, 46)" stroke="none"></polygon>
                 {/* {this.state.topic_name !== null && 
                   <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>
                 }
@@ -380,8 +372,7 @@ export default class Row extends React.Component {
           :
             <svg height="20" width="100">
               {Number.isFinite(overall_score[k]) && <React.Fragment>
-                <line x2="50" y1="10" x1={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(26, 127, 55, 0.15)", strokeWidth: "20", cursor: "pointer"}}></line>
-                <line x1="50" y1="10" x2={50 + 48*scale_score(-overall_score[k])} y2="10" style={{stroke: "rgba(207, 34, 46, 0)", strokeWidth: "20", cursor: "pointer"}}></line>
+                <line x2="50" y1="10" x1={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(26, 127, 55, 0.15)", strokeWidth: "20"}}></line>
                 {/* {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
                   return <line key={index} onMouseOver={e => this.onScoreOver(e, score[0])}
                               onMouseOut={e => this.onScoreOut(e, score[0])}
@@ -391,9 +382,10 @@ export default class Row extends React.Component {
                         ></line>
                 })} */}
                 <line x1={50} y1="0"
-                      x2={50} y2="20" strokeDasharray="2"
-                      style={{stroke: "#bbbbbb", strokeWidth: "1"}}
+                      x2={50} y2="20"
+                      style={{stroke: "rgb(26, 127, 55)", strokeWidth: "3"}}
                 ></line>
+                <polygon points="49,0 45,10 49,20" fill="rgb(26, 127, 55)" stroke="none"></polygon>
                 {/* {this.state.topic_name !== null &&
                   <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>
                 }
@@ -445,9 +437,9 @@ export default class Row extends React.Component {
     this.setState({contextOpen: false});
   }
 
-  handleValue1ContextMenu(e) {
+  handleInputContextMenu(e) {
     e.preventDefault();
-    console.log("handleValue1ContextMenu open", e, e.pageY, e.pageX)
+    console.log("handleInputContextMenu open", e, e.pageY, e.pageX)
     this.setState({contextTop: e.pageY, contextLeft: e.pageX, contextOpen: true, contextFocus: "value1", contextRows: ["Expand into a template"]});
   }
 
@@ -479,6 +471,22 @@ export default class Row extends React.Component {
     this.setState({type: e.target.value});
   }
 
+  labelAsFail(e) {
+    this.props.comm.send(this.props.id, {"label": "fail", "labeler": this.props.user});
+    if (this.props.isSuggestion) {
+      this.props.comm.send(this.props.id, {"topic": this.props.topic});
+    }
+    this.setState({label: "fail"});
+  }
+
+  labelAsPass(e) {
+    this.props.comm.send(this.props.id, {"label": "pass", "labeler": this.props.user});
+    if (this.props.isSuggestion) {
+      this.props.comm.send(this.props.id, {"topic": this.props.topic});
+    }
+    this.setState({label: "pass"});
+  }
+
   onScoreOver(e, key) {
     this.setState({
       previewValue1: this.props.comm.data[key].value1,
@@ -500,7 +508,7 @@ export default class Row extends React.Component {
       this.setState({editing: true});
       console.log("about to edit focus")
       if (this.state.topic_name === null) {
-        defer(() => this.value1Editable.focus());
+        defer(() => this.inputEditable.focus());
       } else {
         defer(() => this.topicNameEditable.focus());
       }
@@ -562,23 +570,23 @@ export default class Row extends React.Component {
     }
   }
 
-  inputValue1(text) {
-    console.log("inputValue1", text)
-    this.setState({value1: text, scores: null});
-    this.props.comm.debouncedSend500(this.props.id, {value1: text});
+  inputInput(text) {
+    console.log("inputInput", text)
+    this.setState({input: text, scores: null});
+    this.props.comm.debouncedSend500(this.props.id, {input: text});
   }
 
-  finishValue1(text) {
-    console.log("finishValue1", text)
+  finishInput(text) {
+    console.log("finishInput", text)
     this.setState({editing: false});
     if (text.includes("/")) {
-      this.setState({value1: text, scores: null});
-      this.props.comm.send(this.props.id, {value1: text});
+      this.setState({input: text, scores: null});
+      this.props.comm.send(this.props.id, {input: text});
     }
   }
 
-  inputValue2(text) {
-    console.log("inputValue2", text)
+  inputOutput(text) {
+    console.log("inputOutput", text)
     this.setState({value2: text, scores: null});
     this.props.comm.debouncedSend500(this.props.id, {value2: text});
 
@@ -630,8 +638,8 @@ export default class Row extends React.Component {
     }
   }
 
-  clickValue1(e) {
-    console.log("clickValue1", e);
+  clickInput(e) {
+    console.log("clickInput", e);
     const modKey = e.metaKey || e.shiftKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
@@ -643,14 +651,14 @@ export default class Row extends React.Component {
       console.log("value1 editing", this.state.editing)
       e.preventDefault();
       e.stopPropagation();
-      defer(() => this.value1Editable.focus());
+      defer(() => this.inputEditable.focus());
     }
   }
 
   
 
-  clickValue2(e) {
-    console.log("clickValue2");
+  clickOutput(e) {
+    console.log("clickOutput");
     const modKey = e.metaKey || e.shiftKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();

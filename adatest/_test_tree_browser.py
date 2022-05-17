@@ -126,7 +126,7 @@ class TestTreeBrowser():
 
         # Find and cast any TestTrees in generators to TestTreeSource
         for generator_name, generator in self.generators.items():
-            if isinstance(generator, adatest._test_tree.TestTree):
+            if isinstance(generator, adatest._test_tree.TestTree): # TODO: make this autoreload friendly
                 self.generators[generator_name] = TestTreeSource(generator) 
 
         # get a reference to the active backend object
@@ -170,10 +170,10 @@ class TestTreeBrowser():
         # ensure that each scorer's score column is in the test tree dataframe
         for c in self.score_columns:
             if c not in self.test_tree.columns:
-                self.test_tree[c] = [np.nan for _ in range(self.test_tree.shape[0])]
+                self.test_tree[c] = ["" for _ in range(self.test_tree.shape[0])]
 
         # a unique identifier for this test set instance, used for UI connections
-        self._id = uuid.uuid4().hex 
+        self._id = uuid.uuid4().hex
 
         # these are all temporary state
         self._hidden_topics = {}
@@ -188,22 +188,26 @@ class TestTreeBrowser():
             "topics" # suggest new subtopics
         ]
 
-        # make sure all the tests have scores (if we have a scorer)
-        self._compute_embeddings_and_scores(self.test_tree)
+        # apply all the scorers to the test tree (this updates the test tree)
+        for k in self.scorer:
+            self.scorer[k](self.test_tree, k+" score")
 
-        # ensure any test tree based generator has embeddings calculated
-        if isinstance(self.generators, dict):
-            for name, gen in self.generators.items():
-                if gen.gen_type == "test_tree":
-                    self._compute_embeddings_and_scores(gen.source)
-        elif self.generators.gen_type == "test_tree":
-            self._compute_embeddings_and_scores(self.generators.source)
+        # # make sure all the tests have scores (if we have a scorer)
+        # self._compute_embeddings_and_scores(self.test_tree)
+
+        # # ensure any test tree based generator has embeddings calculated
+        # if isinstance(self.generators, dict):
+        #     for name, gen in self.generators.items():
+        #         if gen.gen_type == "test_tree":
+        #             self._compute_embeddings_and_scores(gen.source)
+        # elif self.generators.gen_type == "test_tree":
+        #     self._compute_embeddings_and_scores(self.generators.source)
 
         # save the current state of the test tree
         self._auto_save()
 
         # init a blank set of suggetions
-        self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+        # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
         self._suggestions_error = "" # tracks if we failed to generate suggestions
 
     def _repr_html_(self, prefix="", environment="jupyter", websocket_server=None):
@@ -269,23 +273,27 @@ class TestTreeBrowser():
                 
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
-                    if self._active_generator_obj is None:
-                        self._suggestions_error = "No AdaTest generator has been set!"
-                    else:
-                        # try:
-                        self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                        # filter suggestions to relevant types
-                        if self.mode == "topics":
-                            self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
-                        elif self.mode == "tests":
-                            self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
+                    self._clear_suggestions()
+                    self.test_tree.retrain_topic_model(self.current_topic)
+                    self._generate_suggestions(filter=msg[k].get("filter", ""))
+                    # if self._active_generator_obj is None:
+                    #     self._suggestions_error = "No AdaTest generator has been set!"
+                    # else:
+                    #     self._generate_suggestions(filter=msg[k].get("filter", ""))
+                        # # try:
+                        # self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
+                        # # filter suggestions to relevant types
+                        # if self.mode == "topics":
+                        #     self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
+                        # elif self.mode == "tests":
+                        #     self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
 
-                        # Ensure valid suggestions exist.
-                        if self.suggestions.shape[0] > 0:  
-                            self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                            self._suggestions_error = ""
-                        else:
-                            self._suggestions_error = True # Not sure if we should do this?
+                        # # Ensure valid suggestions exist.
+                        # if self.suggestions.shape[0] > 0:  
+                        #     self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                        #     self._suggestions_error = ""
+                        # else:
+                        #     self._suggestions_error = True # Not sure if we should do this?
                         # except Exception as e:
                         #     log.debug(e)
                         #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
@@ -295,14 +303,14 @@ class TestTreeBrowser():
                 # change the current topic
                 elif action == "change_topic":
                     self.current_topic = msg[k]["topic"]
-                    self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                    # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
 
                     # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
                     has_direct_tests = False
                     has_known_subtopics = False
                     for k, test in self.test_tree.iterrows():
                         if test["topic"] == self.current_topic:
-                            if test["type"] == "test":
+                            if test["label"] != "topic_marker":
                                 has_direct_tests = True
                         elif is_subtopic(self.current_topic, test["topic"]):
                             has_known_subtopics = True
@@ -315,18 +323,18 @@ class TestTreeBrowser():
                 
                 # clear the current set of suggestions
                 elif action == "clear_suggestions":
-                    self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                    self.test_tree.drop_topic(self.current_topic + "/__suggestions__")
+                    # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
                     self._refresh_interface()
 
                 # add a new empty subtopic to the current topic
                 elif action == "add_new_topic":
                     self.test_tree.loc[uuid.uuid4().hex] = {
                         "topic": self.current_topic + "/New topic",
-                        "type": "topic_marker",
-                        "value1": "",
-                        "value2": "",
-                        "value3": "",
-                        "author": self.user,
+                        "label": "topic_marker",
+                        "input": "",
+                        "output": "",
+                        "labeler": self.user,
                         "description": ""
                     }
                     self._compute_embeddings_and_scores(self.test_tree)
@@ -335,40 +343,19 @@ class TestTreeBrowser():
                 
                 # add a new empty test to the current topic
                 elif action == "add_new_test":
-                    
-                    # find the common values and type in this subtopic
-                    types = []
-                    value2s = []
-                    value3s = []
-                    for k, test in self.test_tree.iterrows():
-                        if is_subtopic(self.current_topic, test.topic) and test.type != "topic_marker":
-                            types.append(test.type)
-                            if test.value2 != "":
-                                value2s.append(test.value2)
-                            if test.value3 != "":
-                                value3s.append(test.value3)
-                    if len(types) == 0:
-                        types = ["{} should not output {}"]
-                    if len(value2s) == 0:
-                        value2s = [""]
-                    if len(value3s) == 0:
-                        value3s = [""]
 
                     # add the new test row
                     row = {
                         "topic": self.current_topic,
-                        "type": safe_mode(types),
-                        "value1": "New test", # The special value "New test" causes the interface to auto-select the text
-                        "value2": safe_mode(value2s),
-                        "value3": safe_mode(value3s),
-                        "author": self.user,
+                        "input": "New test", # The special value "New test" causes the interface to auto-select the text
+                        "output": "",
+                        "label": "",
+                        "labeler": "imputed",
                         "description": ""
                     }
                     for c in self.score_columns:
-                        row[c] = np.nan
-                        row[c[:-6] + " value1 outputs"] = "{}"
-                        row[c[:-6] + " value2 outputs"] = "{}"
-                        row[c[:-6] + " value3 outputs"] = "{}"
+                        row[c] = ""
+                        row[c[:-6] + " raw outputs"] = "{}"
                     self.test_tree.loc[uuid.uuid4().hex] = row
 
                     self._compute_embeddings_and_scores(self.test_tree)
@@ -379,12 +366,11 @@ class TestTreeBrowser():
                 elif action == "set_first_model":
                     name = msg[k]["model"]
 
-                    # move to front of score columns in data frames
-                    for df in [self.suggestions, self.test_tree]:
-                        pos = len(df.columns) - len(self.score_columns)
-                        tmp = df[name]
-                        df.drop(labels=[name], axis=1, inplace=True)
-                        df.insert(pos, name, tmp)
+                    # move to front of score columns
+                    pos = len(self.test_tree.columns) - len(self.score_columns)
+                    tmp = self.test_tree[name]
+                    self.test_tree.drop(labels=[name], axis=1, inplace=True)
+                    self.test_tree.insert(pos, name, tmp)
 
                     # update score columns list
                     self.score_columns.remove(name)
@@ -402,56 +388,42 @@ class TestTreeBrowser():
                 elif action is None and "mode" in msg[k]:
                     self.mode = msg[k]["mode"]
 
-            # if we are just updating a single row in suggestions or tests then we only recompute the scores
+            # if we are just updating a single row in tests then we only recompute the scores
             elif "topic" not in msg[k]:
-                df = None
-                if k in self.suggestions.index:
-                    df = self.suggestions
-                elif k in self.test_tree.index:
-                    df = self.test_tree
-                if df is not None:
-                    sendback_data = {"author": self.user}
+                sendback_data = {}
+                
+                # convert template expansions into a standard value update
+                if msg[k].get("action", "") == "template_expand":
+                    template_value = self.templatize(self.test_tree.loc[k, msg[k]["value"]])
+                    msg[k] = {msg[k]["value"]: template_value}
+                    sendback_data[msg[k]["value"]] = template_value
+
+                # update the row and recompute scores
+                for k2 in msg[k]:
+                    self.test_tree.loc[k, k2] = msg[k][k2]
+                self.test_tree.loc[k, self.score_columns] = ""
                     
-                    # convert template expansions into a standard value update
-                    if msg[k].get("action", "") == "template_expand":
-                        template_value = self.templatize(df.loc[k, msg[k]["value"]])
-                        msg[k] = {msg[k]["value"]: template_value}
-                        sendback_data[msg[k]["value"]] = template_value
+                self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg[k])
+                
 
-                    # update the row and recompute scores
-                    for k2 in msg[k]:
-                        df.loc[k, k2] = msg[k][k2]
-                    df.loc[k, self.score_columns] = None
-                    if k in adatest._embedding_cache:
-                        del adatest._embedding_cache[k]
-                    self._compute_embeddings_and_scores(df)
-                    self._auto_save()
-
-                    # send just the data that changed back to the frontend
-                    sendback_data["scores"] = {c: [[k, v] for v in score_parts(df.loc[k, c])] for c in self.score_columns}
-                    for value in ["value1", "value2", "value3"]:
-                        outputs = {c: [[k, json.loads(df.loc[k].get(c[:-6] + " "+value+" outputs", "{}"))]] for c in self.score_columns}
-                        sendback_data[value+"_outputs"] = outputs
-                    sendback_data.update(self.test_display_parts(df.loc[k]))
-                    self.comm.send({k: sendback_data})
+                # send just the data that changed back to the frontend
+                sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c])] for c in self.score_columns}
+                outputs = {c: [[k, json.loads(self.test_tree.loc[k].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
+                sendback_data["raw_outputs"] = outputs
+                sendback_data["output"] = self.test_tree.loc[k, "output"]
+                sendback_data["label"] = self.test_tree.loc[k, "label"]
+                sendback_data["labeler"] = self.test_tree.loc[k, "labeler"]
+                sendback_data.update(self.test_display_parts(self.test_tree.loc[k]))
+                self.comm.send({k: sendback_data})
+                
+                self._auto_save()
 
             # if we are just changing the topic
             elif "topic" in msg[k] and len(msg[k]) == 1:
-
-                # move a test that is in the suggestions list
-                if k in self.suggestions.index:
-                    self.suggestions.loc[k, "topic"] = msg[k]["topic"]
-                    self.suggestions.loc[k, "author"] = self.user
-                    self.test_tree.loc[k] = self.suggestions.loc[k]
-                    self.suggestions.drop(k, inplace=True)
                 
                 # move a test that is in the test tree
-                elif k in self.test_tree.index:
+                if k in self.test_tree.index:
                     if msg[k]["topic"] == "_DELETE_": # this means delete the test
-                        self.test_tree.drop(k, inplace=True)
-                    elif msg[k]["topic"] == "suggestion": # this means move the test back to the suggestions list
-                        self.test_tree.loc[k, "topic"] = msg[k]["topic"]
-                        self.suggestions.loc[k] = self.test_tree.loc[k]
                         self.test_tree.drop(k, inplace=True)
                     else:
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
@@ -461,33 +433,15 @@ class TestTreeBrowser():
                 else:
                     for id, test in self.test_tree.iterrows():
                         if is_subtopic(k, test.topic):
-                            if msg[k]["topic"] == "suggestion":
-                                self.test_tree.loc[id, "topic"] = msg[k]["topic"]
-                                self.suggestions.loc[id] = self.test_tree.loc[id]
-                                self.test_tree.drop(id, inplace=True)
-                            elif msg[k]["topic"] == "_DELETE_":
+                            if msg[k]["topic"] == "_DELETE_":
                                 self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
 
-                            if test.type == 'topic_marker' and test.topic == k:
-                                if id in adatest._embedding_cache:
-                                    del adatest._embedding_cache[id]
-                    # Move topic out of suggestions into tests
-                    for id, test in self.suggestions.iterrows():
-                        if is_subtopic(k, test.topic):
-                            if msg[k]["topic"] == "_DELETE_":
-                                self.suggestions.drop(id, inplace=True)
-                            elif msg[k]["topic"] != "suggestion":
-                                self.suggestions.loc[id, "topic"] = msg[k]["topic"]
-                                self.test_tree.loc[id] = self.suggestions.loc[id]
-                                self.suggestions.drop(id, inplace=True)
-
                 # Recompute any missing embeddings to handle any changes
                 self._compute_embeddings_and_scores(self.test_tree)
-                self._compute_embeddings_and_scores(self.suggestions)
-                self._auto_save()
                 self._refresh_interface()
+                self._auto_save()
 
             else:
                 log.debug(f"Unable to parse the interface message: {msg[k]}")
@@ -499,21 +453,21 @@ class TestTreeBrowser():
         # get the children of the current topic
         data = {}
 
-        def create_children(data, tests):
+        def create_children(data, tests, topic):
             children = []
             
             # add tests and topics to the data lookup structure
             for k, test in tests.iterrows():
-                if is_subtopic(self.current_topic, test.topic):
+                if is_subtopic(topic, test.topic):
                     
                     # add a topic
-                    if test.type == "topic_marker":
-                        if is_subtopic(self.current_topic, test.topic) and test.topic != self.current_topic:
-                            name = test.topic[len(self.current_topic)+1:]
+                    if test.label == "topic_marker":
+                        if is_subtopic(topic, test.topic) and test.topic != topic:
+                            name = test.topic[len(topic)+1:]
                             if "/" not in name: # only add direct children
                                 data[test.topic] = {
-                                    "type": test.type,
-                                    "author": test.author,
+                                    "label": test.label,
+                                    "labeler": test.labeler,
                                     "description": "",
                                     "scores": {c: [] for c in self.score_columns},
                                     "topic_marker_id": k,
@@ -525,24 +479,25 @@ class TestTreeBrowser():
                     # add a test
                     else:
                         data[k] = {
-                            "type": test.type,
-                            "author": test.author,
+                            "input": test.input,
+                            "output": test.output,
+                            "label": test.label,
+                            "labeler": test.labeler,
                             "description": test.description,
                             "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
-                            "editing": test.value1 == "New test"
+                            "editing": test.input == "New test"
                         }
-                        for value in ["value1", "value2", "value3"]:
-                            data[k][value] = test[value]
-                            data[k][value+"_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " "+value+" outputs", "{}"))]] for c in self.score_columns}
+
+                        data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
                         data[k].update(self.test_display_parts(test))
-                        if test.topic == self.current_topic:
+                        if test.topic == topic:
                             children.append(k)
             
             # fill in the scores for the child topics
             for k, test in tests.iterrows():
-                if is_subtopic(self.current_topic, test.topic) and test.topic != self.current_topic:
-                    child_topic = test.topic[len(self.current_topic):].split("/", 2)[1]
-                    scores = data[self.current_topic+"/"+child_topic]["scores"]
+                if "/__suggestions__" not in test.topic and is_subtopic(topic, test.topic) and test.topic != topic:
+                    child_topic = test.topic[len(topic):].split("/", 2)[1]
+                    scores = data[topic+"/"+child_topic]["scores"]
                     for c in self.score_columns:
                         scores[c].extend([[k, v] for v in score_parts(test[c])])
 
@@ -570,8 +525,8 @@ class TestTreeBrowser():
             return sorted_children
         
         # get the children of the current topic
-        children = create_children(data, self.test_tree)
-        suggestions_children = create_children(data, self.suggestions)
+        children = create_children(data, self.test_tree, self.current_topic)
+        suggestions_children = create_children(data, self.test_tree, self.current_topic + "/__suggestions__")
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
@@ -588,17 +543,18 @@ class TestTreeBrowser():
         else:
             score_filter = self.score_filter
 
-        if self.scorer is not None:
-            test_types = self.scorer[self.score_columns[0][:-6]].supported_test_types
-            test_type_parts = {t: split_test_type(t) for t in self.scorer[self.score_columns[0][:-6]].supported_test_types}
-        else:
-            test_types = []
-            test_type_parts = {}
+        # if self.scorer is not None:
+        #     test_types = self.scorer[self.score_columns[0][:-6]].supported_test_types
+        #     test_type_parts = {t: split_test_type(t) for t in self.scorer[self.score_columns[0][:-6]].supported_test_types}
+        # else:
+        #     test_types = []
+        #     test_type_parts = {}
 
         # compile the global browser state for the frontend
         data["browser"] = {
             "suggestions": suggestions_children,
             "tests": children,
+            "user": self.user,
             "topic": self.current_topic,
             "topic_description": data[self.current_topic]["description"] if self.current_topic in data else "",
             "topic_marker_id": data[self.current_topic]["topic_marker_id"] if self.current_topic in data else uuid.uuid4().hex,
@@ -611,11 +567,20 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
-            "test_types": test_types,
-            "test_type_parts": test_type_parts,
+            # "test_types": test_types,
+            # "test_type_parts": test_type_parts,
         }
 
         self.comm.send(data)
+
+    def _clear_suggestions(self):
+        """ Clear the suggestions for the current topic.
+        """
+        ids = list(self.test_tree.index)
+        for k in ids:
+            if self.test_tree.loc[k, "topic"] == self.current_topic + "/__suggestions__":
+                self.test_tree.drop(k, inplace=True)
+
 
     def _generate_suggestions(self, filter):
         """ Generate suggestions for the current topic.
@@ -631,15 +596,10 @@ class TestTreeBrowser():
         # save a lookup we can use to detect duplicate tests
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            if test.type == "topic_marker":
-                parts = test.topic.rsplit("/", 1)
-                if len(parts) == 2:
-                    value1 = parts[1]
-                else:
-                    value1 = ""
+            if test.label == "topic_marker":
+                test_map[test.topic + " __topic_marker__"] = True
             else:
-                value1 = test.value1
-            test_map[test.type + " " + value1 + " " +  test.value2 + " " +  test.value3] = True
+                test_map[test.topic + " __JOIN__ " + test.input] = True
 
         # see if we have a finite set of valid outputs
         # valid_outputs = getattr(self.scorer, "output_names", None)
@@ -687,7 +647,7 @@ class TestTreeBrowser():
         suggestion_threads = max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
         
         # generate the prompts for the backend
-        test_type, prompts = self.prompt_builder(
+        prompts = self.prompt_builder(
             test_tree=self.test_tree,
             topic=self.current_topic,
             score_column=self.score_columns[0],
@@ -698,56 +658,68 @@ class TestTreeBrowser():
         )
 
         # generate the suggestions
-        proposals = self._active_generator_obj(prompts, self.current_topic, test_type, self.scorer, num_samples=self.max_suggestions // len(prompts))
+        proposals = self._active_generator_obj(prompts, self.current_topic, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts))
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
+            assert False, "This needs to be fixed to dump into /__suggestions__"
         else:
-            suggestions = []
+            # suggestions = []
             test_map_tmp = copy.copy(test_map)
-            for value1, value2, value3 in proposals:
-                if self.mode == "topics" and ("/" in value1 or "\n" in value1):
-                    value1 = value1.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
-                    value1 = value1.replace("  ", " ").strip() # kill any double spaces we may have introduced
-                str_val = test_type + " " + value1 + " " + value2 + " " + value3
+            for input in proposals:
+                if self.mode == "topics" and ("/" in input or "\n" in input):
+                    input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
+                    input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
+                    str_val = self.current_topic + "/" + input + " __topic_marker__"
+                else:
+                    str_val = self.current_topic + " __JOIN__" + input
                 if str_val not in test_map_tmp:
-                    s = {
-                        "type": test_type,
-                        "topic": self.current_topic + ("/"+value1 if self.mode == "topics" else ""),
-                        "value1": "" if self.mode == "topics" else value1,
-                        "value2": value2,
-                        "value3": value3,
-                        "author": self._active_generator_obj.__class__.__name__ + " generator",
-                        "description": ""
-                    }
+                    id = uuid.uuid4().hex
+                    self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
+                    self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
+                    self.test_tree.loc[id, "output"] = ""
+                    self.test_tree.loc[id, "label"] = "topic_marker" if self.mode == "topics" else ""
+                    self.test_tree.loc[id, "labeler"] = "imputed"
+                    self.test_tree.loc[id, "description"] = ""
                     for c in self.score_columns:
-                        s[c] = np.nan
-                    suggestions.append(s)
+                        self.test_tree.loc[id, c] = ""
+
+                    # s = {
+                    #     "topic": self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else ""),
+                    #     "input": "" if self.mode == "topics" else input,
+                    #     "output": "",
+                    #     "label": "",
+                    #     "labeler": "imputed",
+                    #     "description": ""
+                    # }
+                    # for c in self.score_columns:
+                    #     s[c] = ""
+                    # suggestions.append(s)
                     if str_val is not None:
                         test_map_tmp[str_val] = True
 
-            suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
-            self._compute_embeddings_and_scores(suggestions)
+            # suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
+            self._compute_embeddings_and_scores(self.test_tree)
 
         # Filter invalid suggestions
-        if self.mode != "topics":
-            suggestions = suggestions.dropna(subset=[self.score_columns[0]])
+        # if self.mode != "topics":
+        #     suggestions = suggestions.dropna(subset=[self.score_columns[0]])
 
         # When we have outputs filled in by the scorer we might have more duplicates we need to remove
-        duplicates = []
-        for k,row in suggestions.iterrows():
-            # str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
-            str_val = " ".join(builtins.filter(None, (row.topic, test_type, row.value1, row.value2, row.value3))) # Safely handles None
-            if str_val in test_map:
-                duplicates.append(k)
-            test_map[str_val] = True
-        suggestions = suggestions.drop(duplicates)
+        # duplicates = []
+        # for k,row in suggestions.iterrows():
+        #     # str_val = row.topic + " " + test_type + " " + row.value1 + " " +  row.value2 + " " +  row.value3
+        #     str_val = " ".join(builtins.filter(None, (row.topic, test_type, row.value1, row.value2, row.value3))) # Safely handles None
+        #     if str_val in test_map:
+        #         duplicates.append(k)
+        #     test_map[str_val] = True
+        # suggestions = suggestions.drop(duplicates)
 
-        if self.topic_model_scale != 0:
-            self._add_topic_model_score(suggestions, topic_model_scale=self.topic_model_scale)
-        return suggestions
+        # if self.topic_model_scale != 0:
+        #     self._add_topic_model_score(suggestions, topic_model_scale=self.topic_model_scale)
+        # return suggestions
 
     def _add_topic_model_score(self, df, topic_model_scale):
         documents = []
@@ -778,8 +750,19 @@ class TestTreeBrowser():
         for i, (k, row) in enumerate(df.iterrows()):
             row["score"] = float(row["score"]) + topic_model_scale * sim_scores[i]
 
-    def _compute_embeddings_and_scores(self, tests, recompute=False):
+    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False):
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
+
+        for k in self.scorer:
+            self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs)
+        return
+        for k in self.scorer:
+
+            self.scorer[k](tests)
+
+            # run the model on all the rows without a score
+            new_ids = tests.index[tests[k+ " score"] == ""]
+            outputs = self.scorer[k].outputs(tests["input"][new_ids])
 
         if self.scorer is not None:
             self._compute_scores(tests, recompute=recompute)
@@ -826,11 +809,11 @@ class TestTreeBrowser():
             new_score_mask = np.ones(tests.shape[0], dtype=np.bool)
         else:
             new_score_mask = np.array(tests[self.score_columns[0]].isnull()) | np.array(tests[self.score_columns[0]] == "")
-        new_score_mask = new_score_mask & np.array(tests["type"] != "topic_marker", dtype=np.bool)
+        new_score_mask = new_score_mask & np.array(tests["label"] != "topic_marker", dtype=np.bool)
 
         if new_score_mask.sum() > 0:
             scores = {}
-            tests_to_score = tests.loc[new_score_mask, ["type", "value1", "value2", "value3"]]
+            tests_to_score = tests.loc[new_score_mask, ["topic", "input", "output", "label"]]
             
             # call the scorers
             blank_outputs = [{} for _ in range(tests_to_score.shape[0])]
@@ -944,57 +927,56 @@ class TestTreeBrowser():
 
     def test_display_parts(self, test):
         
-        # find which template instantiation has the highest score (and so should be displayed)
-        score_parts = test[self.score_columns[0]].split("|")
-        if len(score_parts) == 1:
-            max_score_ind = 0
-        else:
-            max_score_ind = np.argmax([float(v) for v in test[self.score_columns[0]].split("|")])
+        # # find which template instantiation has the highest score (and so should be displayed)
+        # score_parts = test[self.score_columns[0]].split("|")
+        # if len(score_parts) == 1:
+        #     max_score_ind = 0
+        # else:
+        #     max_score_ind = np.argmax([float(v) for v in test[self.score_columns[0]].split("|")])
         
-        if test.type == "{} should not be completed to become {}":
-            value1_outputs = safe_json_load(test.get(self.score_columns[0][:-6] + " value1 outputs", "{}")).get("string", [""])
-            if not isinstance(value1_outputs, list):
-                value1_outputs = [value1_outputs]
-            if len(value1_outputs) == 1:
-                value1_outputs_str = value1_outputs[0]
-            else:
-                value1_outputs_str = "{" + "|".join(value1_outputs) + "}"
+        # if test.type == "{} should not be completed to become {}":
+        #     value1_outputs = safe_json_load(test.get(self.score_columns[0][:-6] + " value1 outputs", "{}")).get("string", [""])
+        #     if not isinstance(value1_outputs, list):
+        #         value1_outputs = [value1_outputs]
+        #     if len(value1_outputs) == 1:
+        #         value1_outputs_str = value1_outputs[0]
+        #     else:
+        #         value1_outputs_str = "{" + "|".join(value1_outputs) + "}"
 
-            # hispanic / 95f08d610df74679afc1217f03b9c1b3.template[0] "this is a test of[]" should not be completed to become "toxic"
-            # {}
+        #     # hispanic / 95f08d610df74679afc1217f03b9c1b3.template[0] "this is a test of[]" should not be completed to become "toxic"
+        #     # {}
 
-            out = []
-            for i,option in enumerate(expand_template(test.value1 + "|||" + value1_outputs_str + "|||" + test.value2, keep_braces=False)):
-                value1_disp,d_text1b,value2_disp = option.split("|||")
-                out.append({
-                    "d_text1a": '"',
-                    "d_value1": "{}",
-                    "value1_disp": value1_disp,
-                    "d_text1b": d_text1b + '"',
-                    "d_text2a": '"',
-                    "d_value2": "{}",
-                    "value2_disp": value2_disp,
-                    "d_text2b": '"',
-                    "d_text3a": '',
-                    "d_value3": "",
-                    "d_text3b": ''
-                })
-        else: # this is the default two-value test format that only varies in the select value
-            out = [{
-                "d_text1a": '"',
-                "d_value1": "{}",
-                "d_text1b": '"',
-                "d_text2a": '"',
-                "d_value2": "{}",
-                "d_text2b": '"',
-                "d_text3a": '',
-                "d_value3": "",
-                "d_text3b": ''
-            }]
+        #     out = []
+        #     for i,option in enumerate(expand_template(test.value1 + "|||" + value1_outputs_str + "|||" + test.value2, keep_braces=False)):
+        #         value1_disp,d_text1b,value2_disp = option.split("|||")
+        #         out.append({
+        #             "d_text1a": '"',
+        #             "d_value1": "{}",
+        #             "value1_disp": value1_disp,
+        #             "d_text1b": d_text1b + '"',
+        #             "d_text2a": '"',
+        #             "d_value2": "{}",
+        #             "value2_disp": value2_disp,
+        #             "d_text2b": '"',
+        #             "d_text3a": '',
+        #             "d_value3": "",
+        #             "d_text3b": ''
+        #         })
+        # else: # this is the default two-value test format that only varies in the select value
+        out = [{
+            "d_text1a": '"',
+            "d_value1": "{}",
+            "d_text1b": '"',
+            "d_text2a": '"',
+            "d_value2": "{}",
+            "d_text2b": '"',
+            "d_text3a": '',
+            "d_value3": "",
+            "d_text3b": ''
+        }]
         
         return {
-            "display_parts": out,
-            "max_score_ind": int(max_score_ind)
+            "display_parts": out
         }
 
     def templatize(self, s):
@@ -1065,6 +1047,8 @@ def score_parts(s):
         return [s]
 
 def convert_float(s):
+    if s == "":
+        return np.nan
     try:
         f = float(s)
     except ValueError:

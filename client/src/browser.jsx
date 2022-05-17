@@ -21,6 +21,7 @@ export default class Browser extends React.Component {
       suggestions: [],
       tests: [],
       selections: {},
+      user: "anonymous",
       loading_suggestions: false,
       max_suggestions: 10,
       suggestions_pos: 0,
@@ -220,6 +221,7 @@ export default class Browser extends React.Component {
                   scoreColumns={this.state.score_columns}
                   test_types={this.state.test_types}
                   test_type_parts={this.state.test_type_parts}
+                  user={this.state.user}
                 />
               </React.Fragment>
             })}
@@ -234,7 +236,7 @@ export default class Browser extends React.Component {
           <div className="adatest-suggestions-box-after"></div>
           <div style={{position: "absolute", top: "10px", width: "100%"}}>
             {this.state.suggestions.length > 1 &&
-              <div onClick={this.clearSuggestions} className="adatest-row-add-button adatest-hover-opacity" style={{marginTop: "0px", left: "6px", top: "4px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
+              <div onClick={this.clearSuggestions} className="adatest-row-add-button adatest-hover-opacity" style={{marginTop: "0px", left: "6px", top: "4px", width: "11px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
                 <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
             }
@@ -308,6 +310,7 @@ export default class Browser extends React.Component {
                 scoreColumns={this.state.score_columns}
                 test_types={this.state.test_types}
                 test_type_parts={this.state.test_type_parts}
+                user={this.state.user}
               />
             </React.Fragment>
           })}

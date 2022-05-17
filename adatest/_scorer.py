@@ -105,6 +105,241 @@ class ClassifierScorer(Scorer):
         super().__init__(model)
 
         # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
+        if hasattr(self, "output_names"):
+            return # already initialized
+
+        # extract output names from the model if they are not provided directly
+        if output_names is None:
+            self.output_names = self.model.output_names
+        else:
+            self.output_names = output_names
+        
+        if not callable(self.output_names):
+            self._output_name_to_index = {v: i for i, v in enumerate(self.output_names)}
+            assert topk == 1, "topk must be 1 right now" # TODO: this is because we need to figure out topk and templates
+        self.topk = topk
+        self.method = method
+        self.dirichlet_concentration = dirichlet_concentration
+
+    def __call__(self, tests, score_column, overwrite_outputs=False, output_bias=0.5):
+        """ Score a set of tests.
+
+        Parameters
+        ----------
+        tests : pandas.DataFrame
+            A dataframe of tests.
+
+        output_bias : float
+            How much to bias the output entries in a test towards the actual output from the model.
+        """
+
+
+        
+        # determine which rows we need to evaluate
+        eval_inputs = []
+        eval_inds = []
+        for i, (id, test) in enumerate(tests.iterrows()):
+            if test[score_column] == "" and test.label != "topic_marker":
+                template_expansions = expand_template(test.input)
+                for expansion in template_expansions:
+                    eval_inputs.append(expansion)
+                    eval_inds.append(i)
+
+        # run the model on the rows we need to evaluate
+        try:
+            model_out = self.model(eval_inputs)
+        except Exception as e:
+            model_out = np.zeros((len(eval_inputs), len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
+            log.error(e)
+            log.error(eval_inputs)
+            log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
+
+        # compute the output strings for each output
+        out_strings = [[] for _ in range(tests.shape[0])]
+        out_probs = [[] for _ in range(tests.shape[0])]
+        i = 0
+        while i < len(model_out):
+            out_strings[eval_inds[i]].append(self.model.output_names[np.argmax(model_out[i])])
+            out_probs[eval_inds[i]].append(np.max(model_out[i]))
+            i += 1
+        for i in eval_inds:
+            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
+            out_probs[i] = np.min(out_probs[i]) # the probability of a set of items is the prob of the min item
+
+        # ensure the model output is represented in the tests
+        current_outputs = tests["output"]
+        current_labelers = tests["labeler"]
+        updated_ids = []
+        for i, ind in enumerate(eval_inds):
+            if current_labelers.iloc[ind] == "imputed":
+                id = tests.index[ind]
+                tests.loc[id, "output"] = out_strings[ind]
+                tests.loc[id, "label"] = ""
+                tests.loc[id, score_column] = out_probs[ind]
+                updated_ids.append(id)
+            elif not overwrite_outputs and current_outputs.iloc[ind] != out_strings[ind]:
+
+                # mark the current row as nan score (meaning the output does not match)
+                tests.loc[tests.index[ind], score_column] = np.nan
+
+                # add a new test where the model output does match
+                id = uuid.uuid4().hex
+                tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
+                tests.loc[id, "input"] = eval_inputs[i]
+                tests.loc[id, "output"] = out_strings[ind]
+                tests.loc[id, "label"] = ""
+                tests.loc[id, "labeler"] = "imputed"
+                tests.loc[id, score_column] = out_probs[ind]
+
+                updated_ids.append(id)
+            else:
+                id = tests.index[ind]
+                tests.loc[id, "output"] = out_strings[ind]
+                tests.loc[id, score_column] = out_probs[ind]
+                updated_ids.append(id)
+        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+
+        # reimpute missing labels
+        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
+
+        # set the test score sign to match the label
+        for id in updated_ids:
+            if id in tests.index and tests.loc[id, "label"] == "pass":
+                tests.loc[id, score_column] = -float(tests.loc[id, score_column])
+        
+
+
+        # out_pos = 0
+        # i = 0
+        # top_outputs = [{} for _ in range(tests.shape[0])]
+        # value2_outputs = [{} for _ in range(tests.shape[0])]
+        # while i < len(model_out):
+        #     out_pos = eval_inds[i]
+
+        #     # save the top model outputs
+        #     inds = np.argsort(-model_out[i])
+        #     shown_tmp = {}
+        #     for j in inds[:5]:
+        #         shown_tmp[self.model.output_names[j]] = float(model_out[i][j])
+        #     top_outputs[out_pos] = shown_tmp
+
+        #     out[out_pos].append(self.model.output_names[np.argmax(model_out[i])])
+
+        #     if output_string == tests.iloc[out_pos]['output']:
+        #         out[out_pos].append(float(model_out[i][top_ind]))
+
+        #     # To make sharing test trees between models slightly easier we fall back to looking for different
+        #     # capitalizations of the output if the original one doesn't exist
+        #     token_to_check = tests.iloc[out_pos]['output']
+        #     if token_to_check not in self._output_name_to_index:
+        #         if token_to_check.capitalize() in self._output_name_to_index:
+        #             token_to_check = token_to_check.capitalize()
+        #         elif token_to_check.lower() in self._output_name_to_index:
+        #             token_to_check = token_to_check.lower()
+            
+        #     # multiple tokens can be checked at the same time with templates
+        #     out_val = np.nan
+        #     ind = self._output_name_to_index.get(token_part, None)
+        #     if ind is not None and model_out[i] is not None:
+        #         sorted_values = np.argsort(model_out[i])
+        #         topk = topk_threshold_ind(ind, sorted_values, self.topk)
+
+        #         if self.method == "dirichlet":
+        #             raw_score = compute_dirichlet_score(
+        #                 ind, model_out[i], self.topk,
+        #                 concentration=self.dirichlet_concentration,
+        #                 # we treat values less than 10% of the topk value as unlikely to impact the results
+        #                 # this is used to avoid unnecessary computation
+        #                 domination_threshold=model_out[i][topk] / 10 
+        #             )
+
+        #             if test_type == "{} should output {}":
+        #                 score = raw_score
+        #             else:
+        #                 score = -raw_score
+
+        #         if np.isnan(model_out[i][ind]):
+        #             score = np.nan
+        #         elif model_out[i][ind] > model_out[i][topk]:
+        #             if self.method == "dirichlet":
+        #                 # mval = 1 / len(model_out[i]) if self.topk == 1 else 0 # minimum value possible while being at the top
+        #                 # score = (raw_score - mval) / (1 - mval) # scale from 0 to 1
+        #                 score = raw_score
+        #             else:
+        #                 score = model_out[i][ind] - model_out[i][topk]
+        #         else:
+        #             if self.method == "dirichlet":
+        #                 # mval = 1 / (self.topk + 1) # maximum value possible while not being at the top
+        #                 # score = (raw_score - 1 + mval) / (1 - mval) # scale from 0 to 1
+        #                 score = raw_score - 1
+        #             else:
+        #                 mask = (model_out[i] <= model_out[i][topk]) & (model_out[i] > model_out[i][ind])
+        #                 score = (model_out[i][ind] - model_out[i][mask]).sum()
+        #         if test_type == "{} should output {}":
+        #             score *= -1
+        #         # out_val = max(score, out_val)
+        #         out[out_pos].append(score)
+        #     # out[out_pos] = max(out[out_pos], out_val)
+        #     i += 1
+
+
+        #     # out_pos += 1
+        # return {
+        #     "scores": out,
+        #     "outputs": outputs,
+        #     "value2_outputs": value2_outputs
+        # }
+
+    def suggest_outputs(self, current, num_suggestions=20):
+        prompt = ""
+        for c in current:
+            prompt += '"'+c+'"\n'
+        prompt += '"{output}'
+        response = openai.Completion.create(
+            engine='curie-instruct-beta', prompt=[prompt.format(output=o) for o in self.output_names], max_tokens=0, # self.engine
+            temperature=0, n=1, stop='\"', logprobs=0, echo=True
+        )
+        lines = [sum(choice["logprobs"]["token_logprobs"][11:]) for choice in response["choices"]]
+        pairs = list([v for v in zip(lines, self.output_names) if v[1] not in current])
+        pairs.sort()
+        return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
+
+
+class ClassifierScorerOld(Scorer):
+    """ Wraps a model and defines a callable scorer that returns a score value for any input/output pair.
+
+    Positive scores indicate test failures, positive scores indicate tests that pass. For example if we wrap
+    a text sentiment classifer the `scorer(TestTree([("this is great!", "should be", "POSITIVE")]))` will return
+    a large positive value indicating that the model is very likely to correctly produce that output when given
+    that input.
+    """
+
+    def __init__(self, model, topk=1, output_names=None, method="dirichlet", dirichlet_concentration=10):
+        """ Create a new scorer given a model that returns a probability vector for each input string.
+        
+        Parameters:
+        -----------
+        model : callable
+            A model that is callable with a single argument (which is a list of strings) and returns a matrix of outputs.
+
+        topk : int
+            The number of top outputs to consider when scoring tests. For example topk=2 causes "should not be" tests to
+            check the top two model outputs.
+
+        output_names : list of strings
+            A list of strings that correspond to the outputs of the model. If None, model.output_names is used.
+
+        method : 'margin' or 'dirichlet'
+            The scoring method to use. Dirichlet is preferred, but margin is available for backwards compatibility.
+
+        dirichlet_concentration : float
+            The concentration parameter for the dirichlet scoring method. It is in the units o pseudo-counts where larger
+            values lead to a tighter prior centered around the model's probability outputs (so scores are more likely to
+            be -1 or +1).
+        """
+        super().__init__(model)
+
+        # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
         if hasattr(self, "supported_test_types"):
             return # already initialized
 
@@ -315,7 +550,6 @@ class ClassifierScorer(Scorer):
         pairs = list([v for v in zip(lines, self.output_names) if v[1] not in current])
         pairs.sort()
         return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
-
 
 class GeneratorScorer(Scorer):
     """ Wraps a text generation model in a scorer that can score the target model against tests.

@@ -1,6 +1,7 @@
 import pandas as pd
 import uuid
 import logging
+import random
 import os
 import io
 import time
@@ -9,6 +10,7 @@ import pandas as pd
 from ._prompt_builder import PromptBuilder
 from ._test_tree_browser import TestTreeBrowser, is_subtopic
 from ._model import Model
+from ._topic_model import TopicModel
 import adatest
 
 class TestTree():
@@ -59,10 +61,10 @@ class TestTree():
             if os.path.isfile(tests) or isinstance(tests, io.TextIOBase):
                 self._tests = pd.read_csv(tests, index_col=0, dtype=str, keep_default_na=False)
             else:
-                raise Exception(f"The provided tests file does not exist: {tests}. If you wish to create a new file use `auto_save=True`")
+                raise Exception(f"The provided tests file is not supported: {tests}")
 
-        elif isinstance(tests, tuple) and len(tests) == 2: # Dataset loader
-            column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
+        elif isinstance(tests, tuple) and len(tests) == 2: # Dataset loader TODO: fix this for topic models
+            column_names = ['topic', 'type', 'value1', 'value2', 'value3', 'author', 'description', \
             'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
 
             self._tests = pd.DataFrame(columns=column_names)
@@ -99,22 +101,21 @@ class TestTree():
             if column not in self._tests.columns:
                 self._tests[column] = ["" for _ in range(self._tests.shape[0])]
         if "labeler" not in self._tests.columns:
-            self._tests["labeler"] = ["anonymous" for _ in range(self._tests.shape[0])]
+            self._tests["labeler"] = ["imputed" for _ in range(self._tests.shape[0])]
 
         # ensure that all topics have a topic_marker entry
-        marked_topics = {t: True for t in set(self._tests.loc[self._tests["type"] == "topic_marker"]["topic"])}
+        marked_topics = {t: True for t in set(self._tests.loc[self._tests["label"] == "topic_marker"]["topic"])}
         for topic in set(self._tests["topic"]):
             parts = topic.split("/")
             for i in range(1, len(parts)+1):
                 parent_topic = "/".join(parts[:i])
                 if parent_topic not in marked_topics:
                     self._tests.loc[uuid.uuid4().hex] = {
-                        "type": "topic_marker",
+                        "label": "topic_marker",
                         "topic": parent_topic,
-                        "author": "anonymous",
-                        "value1": "",
-                        "value2": "",
-                        "value3": "",
+                        "labeler": "imputed",
+                        "input": "",
+                        "output": "",
                         "description": ""
                     }
                     marked_topics[parent_topic] = True
@@ -123,43 +124,73 @@ class TestTree():
         self._tests = self._tests.groupby(level=0).first()
 
         # drop any duplicate rows
-        self._tests.drop_duplicates(["topic", "type", "value1", "value2", "value3"], inplace=True)
+        self._tests.drop_duplicates(["topic", "input", "output", "labeler"], inplace=True)
 
         # put the columns in a consistent order
         self._tests = self._tests[column_names + [c for c in self._tests.columns if c not in column_names]]
 
         if compute_embeddings:
-            # TODO: Shared logic with TestTreeBrowser._compute_embeddings_and_scores. Refactor!
             if adatest.embedding_model is not None:
-                new_embedding_ids = [k for k in self._tests.index if k not in adatest._embedding_cache]
-                if len(new_embedding_ids) > 0:
-                    value1s = []
-                    value2s = []
-                    value3s = []
-                    for k in new_embedding_ids:
-                        if self._tests.loc[k, "type"] == "topic_marker":
-                            parts = self._tests.loc[k, "topic"].rsplit("/", 1)
-                            value1s.append(parts[1] if len(parts) == 2 else "")
-                            value2s.append("")
-                            value3s.append("")
-                        else:
-                            value1s.append(str(self._tests.loc[k, "value1"]))
-                            value2s.append(str(self._tests.loc[k, "value2"]))
-                            value3s.append(str(self._tests.loc[k, "value3"]))
-                    new_value1_embeddings = adatest.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                    new_value2_embeddings = adatest.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                    new_value3_embeddings = adatest.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                    for i,k in enumerate(new_embedding_ids):
-                        adatest._embedding_cache[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
+                self.compute_embeddings()
+
+        self._topic_models = {}
 
         # # keep track of our original state
         # if self.auto_save:
         #     self._last_saved_tests = self._tests.copy()
 
+    def compute_embeddings(self):
+        """ Compute the embeddings for all test cases in the test tree.
+
+        TODO: Shared logic with TestTreeBrowser._compute_embeddings_and_scores. Refactor! (SML: I think it will live here now)
+        """
+
+        # see what new embeddings we need to compute
+        new_strings = []
+        for id, test in self._tests.iterrows():
+            if test.label == "topic_marker":
+                parts = test.topic.rsplit("/", 1)
+                str = parts[1] if len(parts) == 2 else ""
+                if str not in adatest._embedding_cache:
+                    new_strings.append(str)
+            else:
+                for str in [test.input, test.output]:
+                    if str not in adatest._embedding_cache:
+                        new_strings.append(str)
+        new_strings = list(set(new_strings))
+
+        # suggestions topics don't have topic markers so we check for them separately
+        if "__suggestions__" not in adatest._embedding_cache:
+            new_strings.append("__suggestions__")
+
+        # compute the embeddings
+        if len(new_strings) > 0:
+            string_embeddings = adatest.embedding_model.encode(new_strings, convert_to_tensor=True, show_progress_bar=False).cpu()
+            for i,s in enumerate(new_strings):
+                adatest._embedding_cache[s] = string_embeddings[i]
+
+        # compute the embeddings
+        # if len(new_embedding_ids) > 0:
+        #     inputs = []
+        #     outputs = []
+        #     for id in new_embedding_ids:
+        #         if self._tests.loc[id, "label"] == "topic_marker":
+        #             parts = self._tests.loc[id, "topic"].rsplit("/", 1)
+        #             inputs.append(parts[1] if len(parts) == 2 else "")
+        #             outputs.append("")
+        #         else:
+        #             inputs.append(str(self._tests.loc[id, "input"]))
+        #             outputs.append(str(self._tests.loc[id, "output"]))
+        #     new_strings = list(set(new_strings))
+        #     string_embeddings = adatest.embedding_model.encode(strings, convert_to_tensor=True, show_progress_bar=False).cpu()
+        #     for i,s in enumerate(strings):
+        #         adatest._embedding_cache[s] = string_embeddings[i]
+
+
     def __getitem__(self, key):
         """ TestSets act just like a DataFrame when sliced. """
         subset = self._tests[key]
-        if hasattr(subset, 'columns') and len(set(["type", "topic", "value1", "value2", "value3"]) - set(subset.columns)) == 0:
+        if hasattr(subset, 'columns') and len(set(["topic", "input", "output", "label"]) - set(subset.columns)) == 0:
             return self.__class__(subset, index=subset.index)
         return subset
 
@@ -203,10 +234,11 @@ class TestTree():
     def __setitem__(self, key, value):
         return self._tests.__setitem__(key, value)
     def to_csv(self, file=None):
+        no_suggestions = self._tests.loc[[not topic.endswith("/__suggestions__") for topic in self._tests["topic"]]]
         if file is None:
-            self._tests.to_csv(self._tests_location)
+            no_suggestions.to_csv(self._tests_location)
         else:
-            self._tests.to_csv(file)
+            no_suggestions.to_csv(file)
 
     def topic(self, topic):
         """ Return a subset of the test tree containing only tests that match the given topic.
@@ -219,9 +251,9 @@ class TestTree():
         ids = [id for id, test in self._tests.iterrows() if is_subtopic(topic, test.topic)]
         return self.loc[ids]
 
-    def __call__(self, scorer=None, generators=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
+    def __call__(self, scorer=None, generator=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
                  max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
-                 score_filter=-1e10, topic_model_scale=0):
+                 score_filter=-1e10, topic_model_scale=0): # TODO: remove active_generator and replace with the ability to set the generator?
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
 
         Applying a test tree to a target model (wrapped by a scorer) creates a TestTreeBrowser object that can be used to
@@ -234,7 +266,7 @@ class TestTree():
             Passing a dictionary of scorers will score multiple models at the same time. Note that the models are expected to take
             a list of strings as input, and output either a classification probability vector or a string.
 
-        generators : adatest.Generator or dict[adatest.Generators]
+        generator : adatest.Generator or dict[adatest.Generators]
             A source to generate new tests from. Currently supported generator types are language models, existing test trees, or datasets.
 
         auto_save : bool
@@ -275,7 +307,7 @@ class TestTree():
         return TestTreeBrowser(
             self,
             scorer=scorer,
-            generators=generators,
+            generators=generator,
             auto_save=auto_save,
             user=user,
             recompute_scores=recompute_scores,
@@ -295,6 +327,46 @@ class TestTree():
     def _repr_html_(self):
         return self._tests._repr_html_()
 
+    def deduplicate(self):
+        """ Remove duplicate tests from the test tree.
+        
+        Note that we give precendence to the first test in a set of duplicates.
+        """
+
+        already_seen = {}
+        drop_ids = []
+        for id, test in self._tests.iterrows():
+            k = test.topic + "|_ADA_JOIN_|" + test.input + "|_ADA_JOIN_|" + test.output
+            if k in already_seen:
+                drop_ids.append(id)
+            else:
+                already_seen[k] = True
+        self._tests = self._tests.drop(drop_ids, axis=0)
+
+    def impute_labels(self):
+        """ Impute missing labels in the test tree. """
+        # TODO: this is just a random mock, it needs to implement real local topic models
+
+        self.compute_embeddings()
+
+        for id, test in self._tests.iterrows():
+            if test.label == "":
+                features = np.hstack([adatest._embedding_cache[test.input], adatest._embedding_cache[test.output]])
+                self._tests.loc[id, "label"] = self.topic_model(test.topic)(features)
+                self._tests.loc[id, "labeler"] = "imputed"
+
+    def topic_model(self, topic):
+        if topic not in self._topic_models:
+            self._topic_models[topic] = TopicModel(topic, self)
+        return self._topic_models[topic]
+
+    def retrain_topic_model(self, topic):
+        self._topic_models[topic] = TopicModel(topic, self)
+
+    def drop_topic(self, topic):
+        """ Remove a topic from the test tree. """
+        self._tests = self._tests.loc[self._tests["topic"] != topic]
+
 class TestTreeLocIndexer():
     def __init__(self, test_tree):
         self.test_tree = test_tree
@@ -307,7 +379,7 @@ class TestTreeLocIndexer():
         # If columns have been dropped, return a Pandas object
         
         subset = self.test_tree._tests.loc[key]
-        if hasattr(subset, 'columns') and len(set(["type", "topic", "value1", "value2", "value3"]) - set(subset.columns)) == 0:
+        if hasattr(subset, 'columns') and len(set(["topic", "input", "output", "label"]) - set(subset.columns)) == 0:
             test_tree_slice = TestTree(subset)
             test_tree_slice._tests_location = self.test_tree._tests_location
             return test_tree_slice
@@ -329,7 +401,7 @@ class TestTreeILocIndexer():
         # If columns have been dropped, return a Pandas object
         
         subset = self.test_tree._tests.iloc[key]
-        if hasattr(subset, 'columns') and len(set(["type", "topic", "value1", "value2", "value3"]) - set(subset.columns)) == 0:
+        if hasattr(subset, 'columns') and len(set(["topic", "input", "output", "label"]) - set(subset.columns)) == 0:
             test_tree_slice = TestTree(subset)
             test_tree_slice._tests_location = self.test_tree._tests_location
             return test_tree_slice

@@ -98,6 +98,9 @@ class PromptBuilder():
         """
 
         ids = np.array(test_tree.index)
+
+        # make sure all the embeddings are computed
+        test_tree.compute_embeddings()
         
         # if suggesting topics mark only direct subtopics as "in topic"
         # if suggest_topics:
@@ -120,10 +123,10 @@ class PromptBuilder():
         # promote direct children over subtopic descendants and filter for topics vs tests
         if suggest_topics:
             topic_scaling *= 1 + 99 * np.array([v.rsplit('/', 1)[0] == topic for v in test_tree["topic"]])
-            topic_scaling *= np.array(test_tree["type"] == "topic_marker")
+            topic_scaling *= np.array(test_tree["label"] == "topic_marker")
         else:
             topic_scaling *= 1 + 99 * np.array([v == topic for v in test_tree["topic"]])
-            topic_scaling *= np.array(test_tree["type"] != "topic_marker")
+            topic_scaling *= np.array(test_tree["label"] != "topic_marker")
 
         topic_scaling /= np.max(topic_scaling)
 
@@ -135,17 +138,15 @@ class PromptBuilder():
                 test = test_tree.loc[k]
                 if filter_compiled.search(test.test_type) is not None:
                     continue
-                if hasattr(test, "value1") and filter_compiled.search(test.value1) is not None:
+                if hasattr(test, "input") and filter_compiled.search(test.input) is not None:
                     continue
-                if hasattr(test, "value2") and filter_compiled.search(test.value2) is not None:
-                    continue
-                if hasattr(test, "value3") and filter_compiled.search(test.value3) is not None:
+                if hasattr(test, "output") and filter_compiled.search(test.output) is not None:
                     continue
                 hidden_scaling[i] = 0.0
 
         # filter down to a single test type (chosen to match the top scoring test)
         if suggest_topics:
-            test_type = "topic_marker"
+            # test_type = "topic_marker"
             scores = np.ones(len(ids)) # Scores should not influence topic suggestions
         else:
             # compute a positive single value score for each test
@@ -153,11 +154,11 @@ class PromptBuilder():
             scores -= np.nanmin(scores) - 1e-8 # the 1e-8 terms causes NaN scores to be last priority
             scores = np.nan_to_num(scores)
 
-            rank_vals = scores * topic_scaling * hidden_scaling
-            test_type = test_tree.loc[ids[np.argmax(rank_vals)], "type"]
-            for i,k in enumerate(ids):
-                if test_tree.loc[k, "type"] != test_type:
-                    hidden_scaling[i] = 0.0
+            # rank_vals = scores * topic_scaling * hidden_scaling
+            # test_type = test_tree.loc[ids[np.argmax(rank_vals)], "type"]
+            # for i,k in enumerate(ids):
+            #     if test_tree.loc[k, "type"] != test_type:
+            #         hidden_scaling[i] = 0.0
                     
 
         # filter down to just top rows we will use during the iterative scoring process
@@ -187,9 +188,20 @@ class PromptBuilder():
 
             # sim_avoidance is a vector that marks which items (and items related through similarities)
             # should be avoided (ranked lower for prompt selection)
+            null_embedding = np.zeros(next(iter(embeddings.values())).shape)
             if self.prompt_diversity:
                 sim_avoidance = np.zeros(len(ids))
-                embeddings_arr = torch.vstack([torch.tensor(embeddings[k]) for k in ids])
+                if suggest_topics:
+                    embeddings_arr = torch.vstack([
+                        torch.tensor(embeddings[test_tree.loc[id, "topic"].split("/")[-1]])
+                    for id in ids])
+                else:
+                    embeddings_arr = torch.vstack([
+                        torch.hstack([
+                            torch.tensor(embeddings[test_tree.loc[id, "input"]]),
+                            torch.tensor(embeddings[test_tree.loc[id, "output"]])
+                        ])
+                    for id in ids])
                 similarities = sentence_transformers.util.pytorch_cos_sim(embeddings_arr, embeddings_arr).numpy()
             hard_avoidance = np.zeros(len(ids))
             diversity = np.ones(len(ids))
@@ -256,12 +268,12 @@ class PromptBuilder():
                     if row["topic"] == "":
                         continue # we can't use the root to help suggest topic names
                     parents,child = row["topic"].rsplit("/", 1)
-                    prompt.append((k, parents, child, "", ""))
+                    prompt.append((k, parents, child))
                 else:
-                    prompt.append((k, row["topic"], row["value1"], row["value2"], row["value3"]))
+                    prompt.append((k, row["topic"], row["input"]))
             prompts.append(prompt)
         
-        return test_type, prompts
+        return prompts
 
 def is_subtopic(topic, candidate):
     """ Returns True if candidate is a subtopic of topic.

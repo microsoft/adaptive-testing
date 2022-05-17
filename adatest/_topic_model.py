@@ -3,6 +3,53 @@ import numpy as np
 from sklearn import multioutput
 from sklearn import preprocessing
 from sklearn.linear_model import RidgeClassifierCV
+from sklearn.svm import LinearSVC
+import adatest
+
+
+
+def is_subtopic(topic, candidate):
+    # Returns true if candidate is a subtopic of topic
+    return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
+
+
+class TopicModel:
+    def __init__(self, topic, test_tree):
+        self.topic = topic
+        self.test_tree = test_tree
+
+        # compute the weighting of samples for each test for this topic
+        # TODO: make this code shared correctly with prompt builder
+        parts = topic.split("/")
+        topic_scaling = np.ones(test_tree.shape[0])
+        for i in range(1, len(parts)):
+            prefix = "/".join(parts[:i+1])
+            topic_scaling *= 1 + 9 * np.array([v.startswith(prefix) for v in test_tree["topic"]])
+
+        # collect the embeddings
+        # TODO: like in prompt builder we should have a max of how many samples we work with
+        null_embedding = np.zeros(next(iter(adatest._embedding_cache.values())).shape[0]*2)
+        embeddings = []
+        labels = []
+        for i, (id, test) in enumerate(test_tree.iterrows()):
+            if test.labeler == "imputed" or test.label == "topic_marker":
+                topic_scaling[i] = 0
+                embeddings.append(null_embedding)
+                labels.append("pass")
+            else:
+                embeddings.append(np.hstack([adatest._embedding_cache[test.input], adatest._embedding_cache[test.output]]))
+                labels.append(test.label)
+        embeddings = np.vstack(embeddings)
+
+        # normalize the weights
+        topic_scaling /= topic_scaling.max()
+
+        # fit our topic model
+        self.model = LinearSVC()
+        self.model.fit(embeddings, labels, sample_weight=topic_scaling)
+
+    def __call__(self, embedding):
+        return self.model.predict([embedding])[0]
 
 class ChainTopicModel:
     def __init__(self, model=None):

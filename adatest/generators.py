@@ -66,43 +66,33 @@ class Generator():
         """
 
         show_topics = False
-        gen_value1 = False
-        gen_value2 = False
-        gen_value3 = False
+        # gen_value1 = False
+        # gen_value2 = False
+        # gen_value3 = False
         for prompt in prompts:
-            topics, value1s, value2s, value3s = zip(*prompt)
+            topics, inputs = zip(*prompt)
             show_topics = show_topics or len(set(list(topics) + [topic])) > 1
-            gen_value1 = gen_value1 or len(set(value1s)) > 1
-            gen_value2 = gen_value2 or len(set(value2s)) > 1
-            gen_value3 = gen_value3 or len(set(value3s)) > 1
-        return show_topics, gen_value1, gen_value2, gen_value3
+            # gen_inputs = gen_inputs or len(set(inputs)) > 1
+            # gen_value2 = False
+            # gen_value3 = False
+        return show_topics#, gen_value1, gen_value2, gen_value3
     
     def _create_prompt_strings(self, prompts, topic):
         """ Convert prompts that are lists of tuples into strings for the LM to complete.
         """
 
-        show_topics, gen_value1, gen_value2, gen_value3 = self._varying_values(prompts, topic)
+        show_topics = self._varying_values(prompts, topic)
 
         prompt_strings = []
         for prompt in prompts:
-            topics, value1s, value2s, value3s = zip(*prompt)
             prompt_string = ""
-            for p_topic, value1, value2, value3 in prompt:
+            for p_topic, input in prompt:
                 if show_topics:
                     prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
                 else:
                     prompt_string += self.quote
                 
-                if gen_value1:
-                    prompt_string += value1 + self.quote
-                if gen_value1 and (gen_value2 or gen_value3):
-                    prompt_string += self.subsep + self.quote
-                if gen_value2:
-                    prompt_string += value2 + self.quote
-                if gen_value2 and gen_value3:
-                    prompt_string += self.subsep + self.quote
-                if gen_value3:
-                    prompt_string += value3 + self.quote
+                prompt_string += input + self.quote
                 prompt_string += self.sep
             if show_topics:
                 prompt_strings.append(prompt_string + self.sep + topic + ":" + self.sep + self.quote)
@@ -115,7 +105,7 @@ class Generator():
         """
         assert len(suggestion_texts) % len(prompts) == 0, "Missing prompt completions!"
 
-        _, gen_value1, gen_value2, gen_value3 = self._varying_values(prompts, "") # note that "" is an unused topic argument
+        # _, gen_value1, gen_value2, gen_value3 = self._varying_values(prompts, "") # note that "" is an unused topic argument
         
         num_samples = len(suggestion_texts) // len(prompts)
         samples = []
@@ -123,20 +113,21 @@ class Generator():
             if self.filter_profanity:
                 suggestion_text = clean_string(suggestion_text)
             prompt_ind = i // num_samples
-            prompt = prompts[prompt_ind]
-            suggestion = suggestion_text.split(self.quote+self.subsep+self.quote)
-            # if len(self.quote) > 0: # strip any dangling quote
-            #     suggestion[-1] = suggestion[-1][:-len(self.quote)]
-            if not gen_value1:
-                suggestion = [prompt[0][0]] + suggestion
-            if not gen_value2:
-                suggestion = suggestion[:1] + [prompt[0][2]] + suggestion[1:]
-            if not gen_value3:
-                suggestion = suggestion[:2] + [prompt[0][3]]
+            # prompt = prompts[prompt_ind]
+            samples.append(suggestion_text)
+            # suggestion = suggestion_text.split(self.quote+self.subsep+self.quote)
+            # # if len(self.quote) > 0: # strip any dangling quote
+            # #     suggestion[-1] = suggestion[-1][:-len(self.quote)]
+            # if not gen_value1:
+            #     suggestion = [prompt[0][0]] + suggestion
+            # if not gen_value2:
+            #     suggestion = suggestion[:1] + [prompt[0][2]] + suggestion[1:]
+            # if not gen_value3:
+            #     suggestion = suggestion[:2] + [prompt[0][3]]
 
-            if len(suggestion) == 3:
-                samples.append(tuple(suggestion))
-        return samples
+            # if len(suggestion) == 3:
+            #     samples.append(tuple(suggestion))
+        return list(set(samples))
 
            
 class Transformers(Generator):
@@ -225,7 +216,7 @@ class OpenAI(Generator):
         # prompt_strings = self._create_prompt_strings(prompts, topic)
 
         # find out which values in the prompt have multiple values and so should be generated
-        topics_vary, gen_value1, gen_value2, gen_value3 = self._varying_values(prompts, topic)
+        topics_vary = self._varying_values(prompts, topic)
 
         # TODO: bias generation towards model failures
         # custom generation process for the "should not output" test
@@ -261,17 +252,11 @@ class OpenAI(Generator):
 
         # create prompts to generate the model input parameters of the tests
         prompt_strings = self._create_prompt_strings(prompts, topic)
-
-        # see if we can stop at the first quote or need to wait for the seperator
-        if gen_value1 + gen_value2 + gen_value3 == 1:
-            stop_string = self.quote
-        else:
-            stop_string = self.quote+self.sep
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
             engine=self.source, prompt=prompt_strings, max_tokens=max_length,
-            temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=stop_string
+            temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=self.quote
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
         
@@ -352,8 +337,8 @@ class TestTreeSource(Generator):
 
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # Find tests closest to the proposals in the embedding space
-        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in prompt_ids]) 
-        data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[k]) for k in self.source.index])
+        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for topic,input in prompts]) 
+        data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for input in self.source["input"]])
         
         max_suggestions = num_samples * len(prompts)
         method = 'distance_to_avg'
