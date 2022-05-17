@@ -1,7 +1,7 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faCheck, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faCheck, faBan, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
 import { defer } from 'lodash';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
@@ -235,7 +235,7 @@ export default class Row extends React.Component {
       }
       {this.props.isSuggestion && this.state.topic_name !== null &&
         <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
-          <FontAwesomeIcon icon={this.state.topic_name === null ? faPlus : faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
+          <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
       {/* {this.state.topic_name === null &&
@@ -299,7 +299,7 @@ export default class Row extends React.Component {
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
       {this.state.topic_name === null &&
-        <svg height="30" width="70" style={{marginTop: "0px", flex: "0 0 70px", display: "inline-block", marginLeft: "8px", marginRight: "15px"}}>
+        <svg height="30" width="110" style={{marginTop: "0px", flex: "0 0 110px", display: "inline-block", marginLeft: "8px", marginRight: "0px"}}>
           {this.state.labeler === "imputed" && this.state.label === "fail" ?
             <FontAwesomeIcon icon={faTimes} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="15px" textAnchor="middle" />
           :
@@ -308,8 +308,12 @@ export default class Row extends React.Component {
           {this.state.labeler === "imputed" && this.state.label === "pass" ?
             <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-15px" textAnchor="middle" />
           :
-            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-15px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-15px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           }
+          {this.props.isSuggestion &&
+            <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="45px" style={{color: this.state.label === "off_topic" ? "rgb(0, 0, 0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+          }
+          <line x1="70" y1="15" x2={110} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
           <line x1="36" y1="15" x2={70} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
           <line x1="0" y1="15" x2={36} y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
         </svg>
@@ -479,6 +483,11 @@ export default class Row extends React.Component {
     this.setState({label: "fail"});
   }
 
+  labelAsOffTopic(e) {
+    this.props.comm.send(this.props.id, {"topic": "_DELETE_"});
+    this.setState({label: "off_topic"});
+  }
+
   labelAsPass(e) {
     this.props.comm.send(this.props.id, {"label": "pass", "labeler": this.props.user});
     if (this.props.isSuggestion) {
@@ -609,7 +618,9 @@ export default class Row extends React.Component {
     console.log("finishTopicName", text)
     
     this.setState({topic_name: text.replace("\\", "").replace("\n", ""), editing: false});
-    this.props.comm.send(this.props.id, {topic: this.props.topic + "/" + text});
+    let topic = this.props.topic;
+    if (this.props.isSuggestion) topic += "/__suggestions__";
+    this.props.comm.send(this.props.id, {topic: topic + "/" + text});
   }
   
   clickRow(e) {
@@ -738,7 +749,7 @@ export default class Row extends React.Component {
   addToCurrentTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("addToCurrentTopic");
+    console.log("addToCurrentTopic X", this.props.topic, this.state.topic_name);
     if (this.state.topic_name !== null) {
       this.props.comm.send(this.props.id, {topic: this.props.topic + "/" + this.state.topic_name});
     } else {

@@ -128,10 +128,10 @@ export default class Browser extends React.Component {
     this.totalFailuresObjects = {};
     if (this.state.score_columns) {
       for (const k of this.state.score_columns) {
-        console.log("k", k)
-        totalPasses[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {console.log("H", k, el); this.totalPassesObjects[k] = el}} />;
-        totalFailures[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {console.log("I", k, el); this.totalFailuresObjects[k] = el}} />;
-        console.log("totalPasses", totalPasses)
+        // console.log("k", k)
+        totalPasses[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {this.totalPassesObjects[k] = el}} />;
+        totalFailures[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {this.totalFailuresObjects[k] = el}} />;
+        // console.log("totalPasses", totalPasses)
       }
     }
     let topicPath = "";
@@ -342,12 +342,12 @@ export default class Browser extends React.Component {
         {this.state.score_columns && this.state.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faCheck} style={{fontSize: "15px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
+              <FontAwesomeIcon icon={faCheck} style={{fontSize: "17px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalPasses[k]}</span>
               {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
             </div>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faTimes} style={{fontSize: "15px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
+              <FontAwesomeIcon icon={faTimes} style={{fontSize: "17px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalFailures[k]}</span>
             </div>
           </span>
@@ -532,24 +532,65 @@ export default class Browser extends React.Component {
 
   keyDownHandler(e) {
     let newId = undefined;
-    if (e.keyCode == 8 || e.keyCode == 46) { // backspace and delete
+    const passKey = 90;
+    const failKey = 88;
+    const outKey = 67;
+    console.log("keyCodeXX", e.keyCode);
+    if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == outKey) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
       const ids = this.state.suggestions.concat(this.state.tests);
       if (keys.length > 0) {
-        
-        // select the next test after the selected one
-        let lastId = undefined;
-        for (const i in ids) {
-          if (this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
-            newId = ids[i];
-            break;
+
+        let in_suggestions = true;
+        for (const i in keys) {
+          if (!this.state.suggestions.includes(keys[i])) {
+            in_suggestions = false;
           }
-          lastId = ids[i];
         }
-        let selections = {};//clone(this.state.selections);
-        if (newId !== undefined) selections[newId] = true;
-        this.setState({selections: selections});
-        this.comm.send(keys, {topic: "_DELETE_"});
+
+        if (e.keyCode == outKey && !in_suggestions) { // when marking for out of topic we only do this for suggestion rows
+          return;
+        }
+
+        if (e.keyCode == passKey) {
+          const keys = Object.keys(this.state.selections);
+          if (keys.length > 0) {
+            for (const i in keys) {
+              this.rows[keys[i]].labelAsPass();
+            }
+          }
+        } else if (e.keyCode == failKey) {
+          const keys = Object.keys(this.state.selections);
+          if (keys.length > 0) {
+            for (const i in keys) {
+              this.rows[keys[i]].labelAsFail();
+            }
+          }
+        } else if (e.keyCode == outKey) {
+          const keys = Object.keys(this.state.selections);
+          if (keys.length > 0) {
+            for (const i in keys) {
+              this.rows[keys[i]].labelAsOffTopic();
+            }
+          }
+        } else {
+          this.comm.send(keys, {topic: "_DELETE_"});
+        }
+
+        // select the next test after the selected one when appropriate
+        if (in_suggestions || e.keyCode == 8 || e.keyCode == 46) {
+          let lastId = undefined;
+          for (const i in ids) {
+            if (this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
+              newId = ids[i];
+              break;
+            }
+            lastId = ids[i];
+          }
+          let selections = {};
+          if (newId !== undefined) selections[newId] = true;
+          this.setState({selections: selections});
+        }
       }
     } else if (e.keyCode == 38 || e.keyCode == 40) {
       const keys = Object.keys(this.state.selections);
@@ -577,6 +618,7 @@ export default class Browser extends React.Component {
         }
       }
       console.log(" arrow!", keys, newId);
+
     } else {
       return;
     }
