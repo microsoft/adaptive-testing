@@ -342,12 +342,12 @@ export default class Browser extends React.Component {
         {this.state.score_columns && this.state.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faCheck} style={{fontSize: "15px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
+              <FontAwesomeIcon icon={faCheck} style={{fontSize: "17px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalPasses[k]}</span>
               {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
             </div>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
-              <FontAwesomeIcon icon={faTimes} style={{fontSize: "15px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
+              <FontAwesomeIcon icon={faTimes} style={{fontSize: "17px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalFailures[k]}</span>
             </div>
           </span>

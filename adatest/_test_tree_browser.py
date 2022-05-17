@@ -578,7 +578,7 @@ class TestTreeBrowser():
         """
         ids = list(self.test_tree.index)
         for k in ids:
-            if self.test_tree.loc[k, "topic"] == self.current_topic + "/__suggestions__":
+            if self.test_tree.loc[k, "topic"].startswith(self.current_topic + "/__suggestions__"):
                 self.test_tree.drop(k, inplace=True)
 
 
