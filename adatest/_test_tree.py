@@ -234,7 +234,7 @@ class TestTree():
     def __setitem__(self, key, value):
         return self._tests.__setitem__(key, value)
     def to_csv(self, file=None):
-        no_suggestions = self._tests.loc[[not topic.endswith("/__suggestions__") for topic in self._tests["topic"]]]
+        no_suggestions = self._tests.loc[["/__suggestions__" not in topic for topic in self._tests["topic"]]]
         if file is None:
             no_suggestions.to_csv(self._tests_location)
         else:
