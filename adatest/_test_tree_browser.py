@@ -195,13 +195,13 @@ class TestTreeBrowser():
         # # make sure all the tests have scores (if we have a scorer)
         # self._compute_embeddings_and_scores(self.test_tree)
 
-        # # ensure any test tree based generator has embeddings calculated
-        # if isinstance(self.generators, dict):
-        #     for name, gen in self.generators.items():
-        #         if gen.gen_type == "test_tree":
-        #             self._compute_embeddings_and_scores(gen.source)
-        # elif self.generators.gen_type == "test_tree":
-        #     self._compute_embeddings_and_scores(self.generators.source)
+        # ensure any test tree based generator has embeddings calculated
+        if isinstance(self.generators, dict):
+            for name, gen in self.generators.items():
+                if gen.gen_type == "test_tree":
+                    gen.source.compute_embeddings()
+        elif self.generators.gen_type == "test_tree": # HN: Probably unused code, should be safe to remove
+            self.generators.source.compute_embeddings()
 
         # save the current state of the test tree
         self._auto_save()
@@ -664,7 +664,10 @@ class TestTreeBrowser():
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
-            assert False, "This needs to be fixed to dump into /__suggestions__"
+            suggestions['topic'] = "/__suggestions__" + suggestions['topic']
+            self.test_tree.append(suggestions)
+            print("appended suggestions into self.test_tree")
+            # assert False, "This needs to be fixed to dump into /__suggestions__"
         else:
             # suggestions = []
             test_map_tmp = copy.copy(test_map)
@@ -750,7 +753,7 @@ class TestTreeBrowser():
         for i, (k, row) in enumerate(df.iterrows()):
             row["score"] = float(row["score"]) + topic_model_scale * sim_scores[i]
 
-    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False):
+    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
 
         for k in self.scorer:

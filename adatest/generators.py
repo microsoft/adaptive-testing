@@ -331,9 +331,9 @@ class TestTreeSource(Generator):
         prompts, prompt_ids = self._validate_prompts(prompts)
 
         # TODO: Currently only returns valid subtopics. Update to include similar topics based on embedding distance?
-        if test_type == "topic_marker":
+        if test_type == "topics":
             output = self.source.topic(topic) 
-            return output[output['type'] == test_type ]# return any existing valid subtopics
+            return output[output['label'] == "topic_marker" ]# return any existing valid subtopics
 
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # Find tests closest to the proposals in the embedding space

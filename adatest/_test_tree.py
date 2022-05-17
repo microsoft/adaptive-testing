@@ -229,6 +229,18 @@ class TestTree():
     @property
     def copy(self):
         return self._tests.copy
+    
+    # NOTE: Can't delegate to df.append as it is depricated in favor of pd.concat, which we can't use due to type checks 
+    def append(self, test_tree, axis=0):
+        if isinstance(test_tree, pd.DataFrame):
+            self._tests = pd.concat([self._tests, test_tree], axis=axis)
+        elif isinstance(test_tree, TestTree):
+            self._tests = pd.concat([self._tests, test_tree._tests], axis=axis)
+
+        self.deduplicate()
+        self.compute_embeddings()
+        return None # TODO: Rethink append logic -- return copy vs. in place update?
+        
     def __len__(self):
         return self._tests.__len__()
     def __setitem__(self, key, value):

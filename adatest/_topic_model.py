@@ -5,7 +5,7 @@ from sklearn import preprocessing
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.svm import LinearSVC
 import adatest
-
+import re
 
 
 def is_subtopic(topic, candidate):
