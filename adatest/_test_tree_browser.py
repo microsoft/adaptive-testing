@@ -423,7 +423,7 @@ class TestTreeBrowser():
                 
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
-                    if msg[k]["topic"] == "_DELETE_": # this means delete the test
+                    if msg[k]["topic"] == "_DELETE_" or msg[k]["topic"] == "_OUT_OF_TOPIC_": # this means delete the test
                         self.test_tree.drop(k, inplace=True)
                     else:
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
@@ -433,7 +433,7 @@ class TestTreeBrowser():
                 else:
                     for id, test in self.test_tree.iterrows():
                         if is_subtopic(k, test.topic):
-                            if msg[k]["topic"] == "_DELETE_":
+                            if msg[k]["topic"] == "_DELETE_" or msg[k]["topic"] == "_OUT_OF_TOPIC_":
                                 self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]

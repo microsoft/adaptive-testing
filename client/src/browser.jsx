@@ -532,10 +532,22 @@ export default class Browser extends React.Component {
 
   keyDownHandler(e) {
     let newId = undefined;
-    if (e.keyCode == 8 || e.keyCode == 46) { // backspace and delete
+    const passKey = 90;
+    const failKey = 88;
+    const outKey = 67;
+    console.log("keyCodeXX", e.keyCode);
+    if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == outKey) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
       const ids = this.state.suggestions.concat(this.state.tests);
       if (keys.length > 0) {
+
+        if (e.keyCode == 67) { // when marking 'c' for out of topic we only do this for suggestion rows
+          for (const i in keys) {
+            if (!this.state.suggestions.includes(keys[i])) {
+              return;
+            }
+          }
+        }
         
         // select the next test after the selected one
         let lastId = undefined;
@@ -546,10 +558,26 @@ export default class Browser extends React.Component {
           }
           lastId = ids[i];
         }
-        let selections = {};//clone(this.state.selections);
+        let selections = {};
         if (newId !== undefined) selections[newId] = true;
         this.setState({selections: selections});
-        this.comm.send(keys, {topic: "_DELETE_"});
+
+        if (e.keyCode == passKey) {
+          const keys = Object.keys(this.state.selections);
+          if (keys.length > 0) {
+            for (const i in keys) {
+              this.rows[keys[i]].labelAsPass();
+            }
+          }
+        } else if (e.keyCode == failKey) { // 'x' key for marking the current IO pair as "fail"
+          const keys = Object.keys(this.state.selections);
+          if (keys.length > 0) {
+            for (const i in keys) {
+              this.rows[keys[i]].labelAsFail();
+            }
+          }
+        }
+        this.comm.send(keys, {topic: e.keyCode == 67 ? "_OUT_OF_TOPIC_" : "_DELETE_"});
       }
     } else if (e.keyCode == 38 || e.keyCode == 40) {
       const keys = Object.keys(this.state.selections);
@@ -577,6 +605,7 @@ export default class Browser extends React.Component {
         }
       }
       console.log(" arrow!", keys, newId);
+
     } else {
       return;
     }
