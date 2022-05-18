@@ -333,10 +333,12 @@ class TestTreeSource(Generator):
 
         # TODO: Currently only returns valid subtopics. Update to include similar topics based on embedding distance?
         if test_type == "topics":
-            # check if requested topic is *direct* parent of test topic
-            ids = [id for id, test in self.source._tests.iterrows() if topic == test.topic[0:test.topic.rfind('/')]]
-            output = self.source.loc[ids]
-            return output[output['label'] == "topic_marker"] # return any existing valid subtopics
+            proposals = []
+            for id, test in self.source.iterrows():
+                # check if requested topic is *direct* parent of test topic
+                if test.label == "topic_marker" and topic == test.topic[0:test.topic.rfind('/')] and test.topic != "":
+                    proposals.append(test.topic.rsplit("/", 2)[1])
+            return proposals
 
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # Find tests closest to the proposals in the embedding space
