@@ -287,9 +287,11 @@ export default class Row extends React.Component {
             </div>
             <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 150px", textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
+                <span style={{width: "0px"}}></span>
                 <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.value2Default} />
+                  <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
                 </span>
+                <span style={{width: "0px"}}></span>
               </span>
             </div>
           </div>
@@ -595,9 +597,10 @@ export default class Row extends React.Component {
   }
 
   inputOutput(text) {
-    console.log("inputOutput", text)
-    this.setState({value2: text, scores: null});
-    this.props.comm.debouncedSend500(this.props.id, {value2: text});
+    console.log("inputOutput", text);
+    text = text.trim();
+    this.setState({output: text, scores: null});
+    this.props.comm.debouncedSend500(this.props.id, {output: text});
 
     // if (this.props.value2Edited) {
     //   this.props.value2Edited(this.props.id, this.state.value2, text);
