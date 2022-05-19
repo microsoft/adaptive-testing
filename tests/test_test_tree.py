@@ -8,5 +8,5 @@ def test_simple_init_with_file():
 
 def test_simple_init_with_list():
     tree = adatest.TestTree([
-        {"topic": "", "type": "{} should output {}", "value1": "This is good", "value2": "NEGATIVE"}
+        {"topic": "", "type": "{} should output {}", "input": "This is good", "output": "NEGATIVE", "label": "fail"}
     ])
