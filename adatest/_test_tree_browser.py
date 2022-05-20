@@ -388,6 +388,9 @@ class TestTreeBrowser():
                 elif action is None and "mode" in msg[k]:
                     self.mode = msg[k]["mode"]
 
+                elif action == 'change_description':
+                    self.test_tree.loc[msg[k]['topic_marker_id']]['description'] = msg[k]['description']
+
             # if we are just updating a single row in tests then we only recompute the scores
             elif "topic" not in msg[k]:
                 sendback_data = {}
@@ -550,14 +553,15 @@ class TestTreeBrowser():
         #     test_types = []
         #     test_type_parts = {}
 
+        topic_marker_id = self._get_topic_marker_id(self.current_topic)
         # compile the global browser state for the frontend
         data["browser"] = {
             "suggestions": suggestions_children,
             "tests": children,
             "user": self.user,
             "topic": self.current_topic,
-            "topic_description": data[self.current_topic]["description"] if self.current_topic in data else "",
-            "topic_marker_id": data[self.current_topic]["topic_marker_id"] if self.current_topic in data else uuid.uuid4().hex,
+            "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",
+            "topic_marker_id": topic_marker_id if topic_marker_id is not None else uuid.uuid4().hex,
             "score_filter": score_filter,
             "disable_suggestions": False,
             "read_only": False,
@@ -723,6 +727,15 @@ class TestTreeBrowser():
         # if self.topic_model_scale != 0:
         #     self._add_topic_model_score(suggestions, topic_model_scale=self.topic_model_scale)
         # return suggestions
+
+    def _get_topic_marker_id(self, topic):
+        """
+        Returns the id of the topic marker row for the given topic.
+        Returns None if not found.
+        """
+        topic_marker_index_df = self.test_tree.index[(self.test_tree['topic'] == topic) & (self.test_tree['label'] == 'topic_marker')]
+        topic_marker_index = topic_marker_index_df.tolist()[0] if len(topic_marker_index_df) > 0 else None
+        return topic_marker_index
 
     def _add_topic_model_score(self, df, topic_model_scale):
         documents = []
