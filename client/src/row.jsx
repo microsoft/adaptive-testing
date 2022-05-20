@@ -312,8 +312,10 @@ export default class Row extends React.Component {
           :
             <FontAwesomeIcon icon={faTimes} stroke="" height="17px" y="7px" x="0px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           }
-          {this.props.isSuggestion &&
+          {this.props.isSuggestion ?
             <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="30px" style={{color: this.state.label === "off_topic" ? "rgb(0, 0, 0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+          :
+            <span style={{width: "31px", display: "inline-block"}}></span>
           }
           <line x1="0" y1="15" x2="30" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
           <line x1="30" y1="15" x2="60" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
