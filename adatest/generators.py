@@ -340,12 +340,13 @@ class TestTreeSource(Generator):
                     proposals.append(test.topic.rsplit("/", 2)[1])
             return proposals
 
-        # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # Find tests closest to the proposals in the embedding space
-        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for topic,input in prompts]) 
+        # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
+        # TODO: Handle case when suggestion_threads>1 better than just selecting the first set of prompts as we do here
+        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for topic,input in prompts[0]]) 
         data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for input in self.source["input"]])
         
-        max_suggestions = num_samples * len(prompts)
+        max_suggestions = min(num_samples * len(prompts), len(data_embeddings))
         method = 'distance_to_avg'
         if method == 'avg_distance':
             dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
