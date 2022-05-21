@@ -29,10 +29,10 @@ generator = adatest.generators.OpenAI('davinci', api_key=OPENAI_API_KEY)
 dataset_tree = adatest.TestTree((X, y), compute_embeddings=True)
 
 # load a starting tree of tests targeted at sentiment analysis
-tests = adatest.TestTree("test_trees/sentiment_analysis/two_way_demo.csv", auto_save=True)
+tests = adatest.TestTree("test_trees/sentiment_analysis/two_way_demo.csv")
 
 # apply the tests to our model to launch a notebook-based testing interface
-tests(classifier, generators={'curie': generator, 'dataset': dataset_tree}) # wrap with adatest.serve to launch a standalone server
+tests(classifier, generators={'curie': generator, 'dataset': dataset_tree}, auto_save=True) # wrap with adatest.serve to launch a standalone server
 ```
 
 **Image showing the root and scores for the basic two way sentiment tree.**

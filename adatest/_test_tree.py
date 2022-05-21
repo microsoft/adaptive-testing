@@ -78,19 +78,19 @@ class TestTree():
                 raise Exception(f"The provided tests file is not supported: {tests}")
 
         elif isinstance(tests, tuple) and len(tests) == 2: # Dataset loader TODO: fix this for topic models
-            column_names = ['topic', 'type', 'value1', 'value2', 'value3', 'author', 'description', \
-            'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
+            # column_names = ['topic', 'type', 'value1', 'value2', 'value3', 'author', 'description', \
+            # 'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
 
             self._tests = pd.DataFrame(columns=column_names)
             self._tests_location = None
 
-            self._tests['value1'] = tests[0]
-            self._tests['type'] = "{} should output {}"
-            self._tests['value2'] = tests[1]
+            self._tests['input'] = tests[0]
+            self._tests['output'] = tests[1]
 
             # Constants
             self._tests['topic'] = ''
-            self._tests['author'] = "dataset"
+            self._tests['label'] = ''
+            self._tests['labeler'] = "dataset"
             self._tests['description'] = ''
 
         else:

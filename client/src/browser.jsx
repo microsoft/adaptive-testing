@@ -675,10 +675,10 @@ export default class Browser extends React.Component {
   }
 
   finishTopicDescription(text) {
-    console.log("finishTopicDescriptione", text)
+    console.log("finishTopicDescription", text)
     
     this.setState({topic_description: text});
-    this.comm.send(this.state.topic_data_id, {description: text});
+    this.comm.send(this.id, {action: "change_description", topic_marker_id: this.state.topic_marker_id, description: text});
   }
 
   updateTopicDescription(text) {
