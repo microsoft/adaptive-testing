@@ -3,6 +3,7 @@ import logging
 import re
 import sentence_transformers
 import torch
+import adatest
 
 log = logging.getLogger(__name__)
 
@@ -188,21 +189,17 @@ class PromptBuilder():
 
             # sim_avoidance is a vector that marks which items (and items related through similarities)
             # should be avoided (ranked lower for prompt selection)
-            null_embedding = np.zeros(next(iter(embeddings.values())).shape)
             if self.prompt_diversity:
                 sim_avoidance = np.zeros(len(ids))
                 if suggest_topics:
-                    embeddings_arr = torch.vstack([
-                        torch.tensor(embeddings[test_tree.loc[id, "topic"].split("/")[-1]])
-                    for id in ids])
+                    embeddings_arr = torch.tensor(np.vstack(adatest.embed(
+                        [test_tree.loc[id, "topic"].split("/")[-1] for id in ids]
+                    )))
                 else:
-                    embeddings_arr = torch.vstack([
-                        torch.hstack([
-                            torch.tensor(embeddings[test_tree.loc[id, "input"]]),
-                            torch.tensor(embeddings[test_tree.loc[id, "output"]])
-                        ])
-                    for id in ids])
-                similarities = sentence_transformers.util.pytorch_cos_sim(embeddings_arr, embeddings_arr).numpy()
+                    embeddings_arr = torch.tensor(np.vstack([
+                        np.hstack(adatest.embed([test_tree.loc[id, "input"], test_tree.loc[id, "output"]]))
+                    for id in ids]))
+                similarities = adatest._cos_sim(embeddings_arr, embeddings_arr).numpy()
             hard_avoidance = np.zeros(len(ids))
             diversity = np.ones(len(ids))
 

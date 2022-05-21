@@ -13,6 +13,19 @@ from ._model import Model
 from ._topic_model import TopicModel
 import adatest
 from pathlib import Path
+import torch
+
+# class TestTreeIterator():
+#     def __init__(self, test_tree):
+#         self.test_tree = test_tree
+#         self.position = 0
+
+#     def __next__(self):
+#         if self.position >= len(self.test_tree):
+#             raise StopIteration
+#         else:
+#             self.position += 1
+#             return self.test_tree.iloc[self.position - 1]
 
 class TestTree():
     """ A hierarchically organized set of tests represented as a DataFrame.
@@ -37,7 +50,7 @@ class TestTree():
             Assigns an index to underlying tests frame, or auto generates if not provided.
 
         compute_embeddings: boolean
-            If True, use the global adatest.embedding_model to build embeddings of tests in the TestTree.
+            If True, use the global adatest.embed to build embeddings of tests in the TestTree.
 
         kwargs : dict
             Additional keyword arguments are passed to the pandas DataFrame constructor.
@@ -131,8 +144,7 @@ class TestTree():
         self._tests = self._tests[column_names + [c for c in self._tests.columns if c not in column_names]]
 
         if compute_embeddings:
-            if adatest.embedding_model is not None:
-                self.compute_embeddings()
+            self.compute_embeddings()
 
         self._topic_models = {}
 
@@ -147,28 +159,27 @@ class TestTree():
         """
 
         # see what new embeddings we need to compute
-        new_strings = []
+        all_strings = []
         for id, test in self._tests.iterrows():
             if test.label == "topic_marker":
                 parts = test.topic.rsplit("/", 1)
                 str = parts[1] if len(parts) == 2 else ""
-                if str not in adatest._embedding_cache:
-                    new_strings.append(str)
+                all_strings.append(str)
             else:
                 for str in [test.input, test.output]:
-                    if str not in adatest._embedding_cache:
-                        new_strings.append(str)
-        new_strings = list(set(new_strings))
+                    all_strings.append(str)
 
         # suggestions topics don't have topic markers so we check for them separately
-        if "__suggestions__" not in adatest._embedding_cache:
-            new_strings.append("__suggestions__")
+        all_strings.append("__suggestions__")
+        
+        # we don't use the output of the embedding, just do this to get the embeddings cached
+        adatest.embed(all_strings)
 
         # compute the embeddings
-        if len(new_strings) > 0:
-            string_embeddings = adatest.embedding_model.encode(new_strings, convert_to_tensor=True, show_progress_bar=False).cpu()
-            for i,s in enumerate(new_strings):
-                adatest._embedding_cache[s] = string_embeddings[i]
+        # if len(new_strings) > 0:
+        #     string_embeddings = adatest.embed(new_strings).cpu()
+        #     for i,s in enumerate(new_strings):
+        #         adatest._embedding_cache[s] = string_embeddings[i]
 
         # compute the embeddings
         # if len(new_embedding_ids) > 0:
@@ -364,9 +375,50 @@ class TestTree():
 
         for id, test in self._tests.iterrows():
             if test.label == "":
-                features = np.hstack([adatest._embedding_cache[test.input], adatest._embedding_cache[test.output]])
+                features = np.hstack(adatest.embed([test.input, test.output]))
                 self._tests.loc[id, "label"] = self.topic_model(test.topic)(features)
                 self._tests.loc[id, "labeler"] = "imputed"
+
+    def predict_labels(self, topical_io_pairs):
+        """ Return the label probabilities for a set of input-output pairs.
+
+        Parameters
+        ----------
+        io_pairs : list[(str, str)]
+            A list of input-output pairs to score.
+
+        Returns
+        -------
+        list[float]
+            A list of label probabilities.
+        """
+
+        out = np.zeros(len(topical_io_pairs))
+
+        to_embed = []
+        topics = {}
+        for i,(topic,input,output) in enumerate(topical_io_pairs):
+            if topic not in topics:
+                topics[topic] = []
+            to_embed.append(input)
+            to_embed.append(output)
+            topics[topic].append((i, len(to_embed) - 2, len(to_embed) - 1))
+        embeddings = adatest.embed(to_embed)
+        features = [None for i in range(len(topical_io_pairs))]
+        for topic in topics:
+            features = []
+            for i,ind1,ind2 in topics[topic]:
+                features.append(np.hstack([embeddings[ind1], embeddings[ind2]]))
+            features = np.vstack(features)
+
+            label = np.array([v == "pass" for v in self.topic_model(topic)(features)], dtype=np.float32)
+            for i, (j,_,_) in enumerate(topics[topic]):
+                out[j] = label[i]
+
+        return np.array(out)
+
+
+
 
     def topic_model(self, topic):
         if topic not in self._topic_models:

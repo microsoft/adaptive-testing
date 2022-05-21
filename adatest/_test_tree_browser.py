@@ -653,8 +653,7 @@ class TestTreeBrowser():
             score_column=self.score_columns[0],
             repetitions=suggestion_threads,
             filter=filter,
-            suggest_topics=self.mode == "topics",
-            embeddings=adatest._embedding_cache
+            suggest_topics=self.mode == "topics"
         )
 
         # generate the suggestions

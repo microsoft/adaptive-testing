@@ -18,6 +18,8 @@ class TopicModel:
         self.topic = topic
         self.test_tree = test_tree
 
+        self.test_tree.compute_embeddings()
+
         # compute the weighting of samples for each test for this topic
         # TODO: make this code shared correctly with prompt builder
         parts = topic.split("/")
@@ -28,7 +30,7 @@ class TopicModel:
 
         # collect the embeddings
         # TODO: like in prompt builder we should have a max of how many samples we work with
-        null_embedding = np.zeros(next(iter(adatest._embedding_cache.values())).shape[0]*2)
+        null_embedding = np.hstack(adatest.embed(["", ""])) 
         embeddings = []
         labels = []
         for i, (id, test) in enumerate(test_tree.iterrows()):
@@ -37,7 +39,7 @@ class TopicModel:
                 embeddings.append(null_embedding)
                 labels.append("pass")
             else:
-                embeddings.append(np.hstack([adatest._embedding_cache[test.input], adatest._embedding_cache[test.output]]))
+                embeddings.append(np.hstack(adatest.embed([test.input, test.output])))
                 labels.append(test.label)
         embeddings = np.vstack(embeddings)
 
@@ -48,8 +50,10 @@ class TopicModel:
         self.model = LinearSVC()
         self.model.fit(embeddings, labels, sample_weight=topic_scaling)
 
-    def __call__(self, embedding):
-        return self.model.predict([embedding])[0]
+    def __call__(self, embeddings):
+        if not hasattr(embeddings[0], "__len__"):
+            return self.model.predict([embeddings])[0]
+        return self.model.predict(embeddings)
 
 class ChainTopicModel:
     def __init__(self, model=None):
