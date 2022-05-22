@@ -56,7 +56,7 @@ Note than in the above figure all the label indicators are hollow, this means th
   <img src="docs/images/first_suggestions.png" width="600" alt="AdaTest loops" />
 </p>
 
-Starting at the top of the list we can confirm or change the label for each suggestion and so add them to the current topic (like marking "xxx" as correct model behavior), while we reject (or just ignore) examples that don't belong in the current topic (like "xxx" which is not about a hotel's location). After we have added some new suggestions to the current topic (we normally only bother to look at the top few suggestions) we can repeat the process by clicking "Suggestions" again. Repeating the process a few times allows AdaTest to learn from our feedback and hill-climb towards generating better and better suggestions (ones that are more likely to be on-topic and reveal model failures). Doing this for a few rounds reveals lots of bugs in the model related to positive hotel location statements.
+Starting at the top of the list we can confirm or change the label for each suggestion and so add them to the current topic (like marking "very convientent for walking" -> "POSITIVE" as correct model behavior), while we reject (or just ignore) examples that don't belong in the current topic (like "Second visit" which is not about a hotel's location). After we have added some new suggestions to the current topic (we normally only bother to look at the top few suggestions) we can repeat the process by clicking "Suggestions" again. Repeating the process a few times allows AdaTest to learn from our feedback and hill-climb towards generating better and better suggestions (ones that are more likely to be on-topic and reveal model failures). Doing this for a few rounds reveals lots of bugs in the model related to positive hotel location statements.
 
 <p align="center">
   <img src="docs/images/many_bugs.png" width="600" alt="AdaTest loops" />
@@ -74,7 +74,7 @@ After we accept some of these new topic suggestions we can open them and fill th
   <img src="docs/images/zero_shot.png" width="600" alt="AdaTest loops" />
 </p>
 
-This is just a short example of how to find bugs in a sentiment analysis model, but the same process can be applied to any NLP model (even ones that generate free form text). Test trees can be adapted to new models and shared with others collaboratively (they are just CSV files). Once you have enough bugs you can fine tune your model against a mixture of your test tree and the originan training data to fix all the bugs in the test tree while retaining performance on your original training data (we will share a full demo notebook of this soon).
+This is just a short example of how to find bugs in a sentiment analysis model, but the same process can be applied to any NLP model (even ones that generate free form text). Test trees can be adapted to new models and shared with others collaboratively (they are just CSV files). Once you have enough bugs you can fine tune your model against a mixture of your test tree and the original training data to fix all the bugs in the test tree while retaining performance on your original training data (we will share a full demo notebook of this soon).
 
 
 ## Citation
