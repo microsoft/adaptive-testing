@@ -847,7 +847,7 @@ export default class Browser extends React.Component {
     console.log("onSuggestionsDrop", e, id);
     if (this.state.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
     this.setState({suggestionsDropHighlighted: 0});
-    this.onDrop(id, {topic: "suggestion"});
+    this.onDrop(id, {topic: this.state.topic + "/__suggestions__"});
   }
 
   onDrop(id, data) {
