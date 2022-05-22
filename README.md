@@ -1,8 +1,9 @@
-# AdaTest (alpha preview release)
+# AdaTest
 AdaTest uses language models against themselves to build suites of unit tests. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests with fine-tuning then leads to an iterative debugging process similar to traditional software development.
 
 <p align="center">
-  <img src="docs/images/main_loops.png" width="300" alt="AdaTest loops" />
+  <img src="docs/images/main_loops.png" width="400" alt="AdaTest loops" /><br/>
+  <smaller><i>Note, AdaTest is currently a beta release so please share any issues you encounter.</i></smaller>
 </p>
 
 ## Install
@@ -13,7 +14,7 @@ pip install adatest
 
 ## Sentiment analysis example
 
-How to test a simple two-way sentiment analysis model using AdaTest running in a Jupyter notebook (full notebook [here](here)).
+AdaTest can test any NLP model you can call with a python function, here we will test a basic open source sentiment analysis model. Since AdaTest relies on a generative language model to help you create tests, you need to specify what generative model it will use, here we use GPT-3 from OpenAI or GPT-Neo locally. Tests are organized into a tree tree that follows the DataFrame API and is organized like a file system, here we create a new empty tree, but you can also start with a previous test tree that targets a similar task. The core AdaTest testing loop starts when you call the `.adapt()` method on a test tree passing the model(s) you want to test and the backend generator you want to use. The code for all this is below:
 
 ```python
 import transformers
@@ -22,56 +23,54 @@ import adatest
 # create a HuggingFace sentiment analysis model
 classifier = transformers.pipeline("sentiment-analysis", return_all_scores=True)
 
-# set AdaTest's language model backend (HuggingFace and AI21 also supported)
-generator = adatest.generators.OpenAI('davinci', api_key=OPENAI_API_KEY)
+# specify the backend generator used to help you write tests
+generator = adatest.generators.OpenAI('curie', api_key=OPENAI_API_KEY)
 
-# optional: load tests from a dataset
-dataset_tree = adatest.TestTree((X, y), compute_embeddings=True)
+# ...or you can use an open source generator
+#neo = transformers.pipeline('text-generation', model="EleutherAI/gpt-neo-125M")
+#generator = adatest.generators.Transformers(neo.model, neo.tokenizer)
 
-# load a starting tree of tests targeted at sentiment analysis
-tests = adatest.TestTree("test_trees/sentiment_analysis/two_way_demo.csv")
+# create a new test tree
+tests = adatest.TestTree("hotel_reviews.csv")
 
-# apply the tests to our model to launch a notebook-based testing interface
-tests(classifier, generators={'curie': generator, 'dataset': dataset_tree}, auto_save=True) # wrap with adatest.serve to launch a standalone server
+# adapt the tests to our model to launch a notebook-based testing interface
+# (wrap with adatest.serve to launch a standalone server)
+tests.adapt(classifier, generator, auto_save=True)
 ```
 
 **Image showing the root and scores for the basic two way sentiment tree.**
 
-Once we have opened a test tree browser, we can navigate to specific topics of interest and then add new tests specifically targeted at our current model. Clicking 'Suggest tests` in a topic proposes a large number of new tests targeted at the current model that we can add to the test tree if we like.
+Once we have launched a test tree browser, we can use the interface to create new topics and tests. Here we create the topic "/Clear positives/Location" to test how well this model classifies clearly positive statements about a hotel's location. We then add a few starting examples of what we want to see in this topic (clearly positive statements about hotel location):
 
-**Image showing many suggestions in a topic where the current model does not fail.**
+**Image four unconfirmed inputs**
 
-After multiple rounds of test suggestions AdaTest learns to find failures of the target model within the current topic.
+Each test consists of a model input, a model output, a pass/fail label, and a score for the current target model. The input text should fall within the scope of the current topic, which here means it is a clearly positive statement about hotel locations. The output text is what the target model we are testing generated (or it can be manually specified, in which case it turns light grey to show it does not reflect the current model behavior). The label is a pass/fail indicator that denotes if the model output is correct with respect to the aspect being tested in the current topic, in our case the model was correct for all the inputs we entered. The model score represents if the testing model passes or fails and how confident the model is when producing the current output.
 
-**Image showing lots of now-failing tests.**
+Note than in the above figure all the label indicators are hollow, this means that we have not yet labeled these examples, and AdaTest is just guessing that they are correct. They are all correct so can click the checkmarks to confirm and label all these examples. By confirming we teach AdaTest more about what we want this topic to test, so it becomes better at predicting future labels, and hence automating the testing process. Once we label these examples we can then click "Suggestions" and AdaTest will attempt to write new in-topic examples for us, labeling them and sorting then by score so we can see the most likely failures at the top of the list.
 
-Once we have created enough new tests we can organize them into new topics or switch to another topic and continue the testing process. After we have found enough failed tests in the *testing loop*, we can then fine tune the model on the tests to fix the errors we have found. To prevent catastrophic forgetting we fine tune on a 50/50 mix of tests and samples from the original fine-tuning dataset of the model.
+**Image four confirms inputs and many suggestions**
 
-```python
-# create a new sentiment model that fixes the problems we found
-tensor_output_model2 = fine_tune(tensor_output_model, tests) # see sample notebook for definition
+Starting at the top of the list we can confirm or change the label for each suggestion and so add them to the current topic (like marking "xxx" as correct model behavior), while we reject (or just ignore) examples that don't belong in the current topic (like "xxx" which is not about a hotel's location). After we have added some new suggestions to the current topic (we normally only bother to look at the top few suggestions) we can repeat the process by clicking "Suggestions" again. Repeating the process a few times allows AdaTest to learn from our feedback and hill-climb towards generating better and better suggestions (ones that are more likely to be on-topic and reveal model failures). Doing this for a few rounds reveals lots of bugs in the model related to positive hotel location statements.
 
-# apply the tests to the new model
-tests(tensor_output_model2)
-```
+**Image with lots of failures**
 
-**Image showing the root and scores for the new model in the basic two way sentiment tree.**
+Once we have testing the location aspect enough we can repeat the process to test a new aspect of model behavior, for example comments about hotel swimming pools or gyms. The space of possible concepts for hotel reviews is large, so to help explore it AdaTest can suggest new topics once we have a few examples:
 
-Note that almost all tests now pass in the new model, but that does not mean the model is perfect! Since we have used our tests as training data we need to create new tests to properly evaluate our model and make sure we have not missed problems or created new problems.
+**Image with three subtopics and topic suggestions**
 
-**Image showing the root and scores for the new model in the basic two way sentiment tree with more errors after suggestions.**
+After we accept some of these new topic suggestions we can open them and fill them out without ever even writing seed examples. AdaTest can suggest new tests inside an empty topic by just using examples other topics and the current topic's name.
 
-After letting AdaTest suggest new tests we find that there are still remaining errors in the model. So we can repeat the fine tuning process to fix these new issues. This will again result in a passing set of tests. The debugging process can be repeated as long as desired, iteratively fixing bugs and so improving the target model performance for the capabilities measured in the test tree.
+**Image with zero shot**
 
-
-## Translation example
-
-AdaTest can test any machine learning model that takes text as input, even models only accessable through an API. Here we demonstrate how to test the Azure Translation API using AdaTest.
+This is just a short example of how to find bugs in a sentiment analysis model, but the same process can be applied to any NLP model (even ones that generate free form text). Test trees can be adapted to new models and shared with others collaboratively (they are just CSV files). Once you have enough bugs you can fine tune your model against a mixture of your test tree and the originan training data to fix all the bugs in the test tree while retaining performance on your original training data (we will share a full demo notebook of this soon).
 
 
 
 
+## Citation
 
+If you find AdaTest or test trees useful in your work feel free to cite our ACL paper:
+[Adaptive Testing and Debugging of NLP Models](https://aclanthology.org/2022.acl-long.230) (Ribeiro & Lundberg, ACL 2022)
 
 ## Contributing
 
