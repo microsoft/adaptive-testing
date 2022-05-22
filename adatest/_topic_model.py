@@ -12,6 +12,14 @@ def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
+class ConstantModel():
+    def __init__(self, label):
+        self.label = label
+    def predict(self, embeddings):
+        if not hasattr(embeddings[0], "__len__"):
+            return self.label
+        else:
+            return [self.label] * len(embeddings)
 
 class TopicModel:
     def __init__(self, topic, test_tree):
@@ -30,7 +38,7 @@ class TopicModel:
 
         # collect the embeddings
         # TODO: like in prompt builder we should have a max of how many samples we work with
-        null_embedding = np.hstack(adatest.embed(["", ""])) 
+        null_embedding = np.hstack(adatest.embed(["", ""]))
         embeddings = []
         labels = []
         for i, (id, test) in enumerate(test_tree.iterrows()):
@@ -46,9 +54,12 @@ class TopicModel:
         # normalize the weights
         topic_scaling /= topic_scaling.max()
 
-        # fit our topic model
-        self.model = LinearSVC()
-        self.model.fit(embeddings, labels, sample_weight=topic_scaling)
+        # fit our topic model (if we have more than one class)
+        if len(set(labels)) > 1:
+            self.model = LinearSVC()
+            self.model.fit(embeddings, labels, sample_weight=topic_scaling)
+        else:
+            self.model = ConstantModel(labels[0])
 
     def __call__(self, embeddings):
         if not hasattr(embeddings[0], "__len__"):

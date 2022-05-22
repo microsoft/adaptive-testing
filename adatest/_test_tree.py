@@ -275,9 +275,9 @@ class TestTree():
         ids = [id for id, test in self._tests.iterrows() if is_subtopic(topic, test.topic)]
         return self.loc[ids]
 
-    def __call__(self, scorer=None, generator=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
-                 max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
-                 score_filter=-1e10, topic_model_scale=0): # TODO: remove active_generator and replace with the ability to set the generator?
+    def adapt(self, scorer=None, generator=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
+              max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
+              score_filter=-1e10, topic_model_scale=0): # TODO: remove active_generator and replace with the ability to set the generator?
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
 
         Applying a test tree to a target model (wrapped by a scorer) creates a TestTreeBrowser object that can be used to
@@ -376,7 +376,11 @@ class TestTree():
         for id, test in self._tests.iterrows():
             if test.label == "":
                 features = np.hstack(adatest.embed([test.input, test.output]))
-                self._tests.loc[id, "label"] = self.topic_model(test.topic)(features)
+                topic = test.topic
+                if topic.endswith("/__suggestions__"): # predict suggestions using their parent topic model
+                    topic = topic[:-16]
+                    
+                self._tests.loc[id, "label"] = self.topic_model(topic)(features)
                 self._tests.loc[id, "labeler"] = "imputed"
 
     def predict_labels(self, topical_io_pairs):
