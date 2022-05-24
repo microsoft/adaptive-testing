@@ -6,6 +6,5 @@ numpy
 pandas
 sklearn
 openai
-sentence_transformers
 checklist
 shap

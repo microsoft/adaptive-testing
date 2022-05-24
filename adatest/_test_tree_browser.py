@@ -4,7 +4,6 @@ import openai
 import numpy as np
 import copy
 import math
-import sentence_transformers
 import pandas as pd
 import torch
 import json
@@ -661,13 +660,13 @@ class TestTreeBrowser():
         )
 
         # generate the suggestions
-        proposals = self._active_generator_obj(prompts, self.current_topic, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts))
+        proposals = self._active_generator_obj(prompts, self.current_topic, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
-            suggestions['topic'] = self.current_topic + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_topic):] if x != "" else "/")
+            suggestions['topic'] = self.current_topic + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_topic):] if x != "" else "")
             self.test_tree.append(suggestions)
             print("appended suggestions into self.test_tree")
             # assert False, "This needs to be fixed to dump into /__suggestions__"

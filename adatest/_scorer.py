@@ -3,7 +3,6 @@ import re
 import logging
 import uuid
 import itertools
-import sentence_transformers
 import openai
 import scipy.stats
 import transformers
@@ -850,7 +849,7 @@ class GeneratorScorer(Scorer):
             elif test_type == "{} should be invertable.":
                 
                 # compare embedding distances
-                score = sentence_transformers.util.pytorch_cos_sim(input_embed[i], round_trip_embed[i]).numpy()[0][0]
+                score = adatest._cos_sim(input_embed[i], round_trip_embed[i]).numpy()[0][0]
                 out[out_pos].append(self.similarity_threshold-score)
 
                 # update the output since it is always computed in inversion tests

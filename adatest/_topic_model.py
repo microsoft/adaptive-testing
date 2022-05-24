@@ -49,17 +49,21 @@ class TopicModel:
             else:
                 embeddings.append(np.hstack(adatest.embed([test.input, test.output])))
                 labels.append(test.label)
-        embeddings = np.vstack(embeddings)
 
-        # normalize the weights
-        topic_scaling /= topic_scaling.max()
-
-        # fit our topic model (if we have more than one class)
-        if len(set(labels)) > 1:
-            self.model = LinearSVC()
-            self.model.fit(embeddings, labels, sample_weight=topic_scaling)
+        if len(embeddings) == 0 and len(labels) == 0: # Handle empty testframe case
+            self.model = ConstantModel("Unknown")
         else:
-            self.model = ConstantModel(labels[0])
+            embeddings = np.vstack(embeddings)
+
+            # normalize the weights
+            topic_scaling /= topic_scaling.max()
+
+            # fit our topic model (if we have more than one class)
+            if len(set(labels)) > 1:
+                self.model = LinearSVC()
+                self.model.fit(embeddings, labels, sample_weight=topic_scaling)
+            else:
+                self.model = ConstantModel(labels[0])
 
     def __call__(self, embeddings):
         if not hasattr(embeddings[0], "__len__"):
