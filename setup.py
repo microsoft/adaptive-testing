@@ -28,5 +28,6 @@ setup(
     author_email='scott.lundberg@microsoft.com',
     description='Adaptively test and debug any natural language machine learning model.',
     packages=find_packages(exclude=['user_studies', 'notebooks', 'client']),
+    package_data={'adatest': ['client/dist/*js', 'client/dist/*png']},
     install_requires=install_requires
 )

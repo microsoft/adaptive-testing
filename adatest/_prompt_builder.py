@@ -1,7 +1,6 @@
 import numpy as np
 import logging
 import re
-import sentence_transformers
 import torch
 import adatest
 
@@ -115,6 +114,10 @@ class PromptBuilder():
         # else:
         parts = topic.split("/")
         topic_scaling = np.ones(test_tree.shape[0])
+
+        if len(topic_scaling) == 0: # Early exit for completely empty test trees
+            return []
+
         for i in range(1, len(parts)):
             prefix = "/".join(parts[:i+1])
             if suggest_topics:

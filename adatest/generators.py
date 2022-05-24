@@ -8,7 +8,6 @@ import transformers
 import openai
 import copy
 from ._filters import clean_string
-import sentence_transformers
 import pandas as pd
 import numpy as np
 import torch
@@ -158,6 +157,8 @@ class Transformers(Generator):
     
     def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
+        if len(prompts) == 0:
+            raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
         prompt_strings = self._create_prompt_strings(prompts, topic)
         
         # monkey-patch a method that prevents the use of past_key_values
@@ -213,6 +214,9 @@ class OpenAI(Generator):
             openai.api_key = api_key
 
     def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
+        if len(prompts) == 0:
+            raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
+
         prompts, prompt_ids = self._validate_prompts(prompts)
         # prompt_strings = self._create_prompt_strings(prompts, topic)
 
@@ -329,6 +333,10 @@ class TestTreeSource(Generator):
         self.assistant_generator = assistant_generator
 
     def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100): # TODO: Unify all __call__ signatures
+        if len(prompts) == 0:
+            # Randomly return instances without any prompts to go off of. TODO: Consider better alternatives like max-failure?
+            return self.source.iloc[np.random.choice(self.source.shape[0], size=min(50, self.source.shape[0]), replace=False)]
+
         prompts, prompt_ids = self._validate_prompts(prompts)
 
         # TODO: Currently only returns valid subtopics. Update to include similar topics based on embedding distance?
@@ -349,13 +357,13 @@ class TestTreeSource(Generator):
         max_suggestions = min(num_samples * len(prompts), len(data_embeddings))
         method = 'distance_to_avg'
         if method == 'avg_distance':
-            dist = sentence_transformers.util.pytorch_cos_sim(topic_embeddings, data_embeddings)
+            dist = adatest._cos_sim(topic_embeddings, data_embeddings)
             closest_indices = torch.topk(dist.mean(axis=0), k=max_suggestions).indices
             
         elif method == 'distance_to_avg':
             avg_topic_embedding = topic_embeddings.mean(axis=0)
 
-            distance = sentence_transformers.util.pytorch_cos_sim(avg_topic_embedding, data_embeddings)
+            distance = adatest._cos_sim(avg_topic_embedding, data_embeddings)
             closest_indices = torch.topk(distance, k=max_suggestions).indices
 
         output = self.source.iloc[np.array(closest_indices).squeeze()].copy()
