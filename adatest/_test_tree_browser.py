@@ -228,7 +228,7 @@ class TestTreeBrowser():
 
         # dump the client javascript to the interface
         file_path = pathlib.Path(__file__).parent.absolute()
-        with open(file_path / ".." / "client" / "dist" / "main.js", encoding="utf-8") as f:
+        with open(file_path / "client" / "dist" / "main.js", encoding="utf-8") as f:
             js_data = f.read()
         interface_html = f"""
 <div id="adatest_container_{self._id}" style="width: 100%; all: initial;"></div>
