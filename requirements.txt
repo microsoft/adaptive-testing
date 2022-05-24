@@ -8,3 +8,4 @@ sklearn
 openai
 checklist
 shap
+transformers
