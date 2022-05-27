@@ -15,10 +15,8 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
-install_requires = [
-    "nest_asyncio", "aiohttp", "aiohttp_session", "aiohttp_security", "numpy", "pandas", "scikit-learn",
-    "openai", "sentence_transformers", "checklist", "shap"
-]
+with open('requirements.txt') as f:
+    install_requires = f.read().splitlines()
 
 setup(
     name='adatest',

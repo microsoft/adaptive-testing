@@ -4,7 +4,7 @@ aiohttp_session
 aiohttp_security
 numpy
 pandas
-sklearn
+scikit-learn
 openai
 checklist
 shap
