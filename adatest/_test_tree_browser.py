@@ -71,6 +71,13 @@ def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
+def matches_filter(test, filter_text: str):
+    if filter_text is None or filter_text == "":
+        return True
+    else:
+        return filter_text in test["input"]
+
+
 special_outputs = [
     "{MAX}"
 ]
@@ -115,6 +122,7 @@ class TestTreeBrowser():
         self.current_topic = starting_path
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
+        self.filter_text = ""
 
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
@@ -390,6 +398,12 @@ class TestTreeBrowser():
                 elif action == 'change_description':
                     self.test_tree.loc[msg[k]['topic_marker_id']]['description'] = msg[k]['description']
 
+                elif action == 'change_filter':
+                    print("change_filter")
+                    self.filter_text = msg[k]['filter_text']
+                    self._refresh_interface()
+
+
             # if we are just updating a single row in tests then we only recompute the scores
             elif "topic" not in msg[k]:
                 sendback_data = {}
@@ -460,7 +474,7 @@ class TestTreeBrowser():
             
             # add tests and topics to the data lookup structure
             for k, test in tests.iterrows():
-                if is_subtopic(topic, test.topic):
+                if is_subtopic(topic, test.topic) and matches_filter(test, self.filter_text):
                     
                     # add a topic
                     if test.label == "topic_marker":
