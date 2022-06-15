@@ -75,7 +75,7 @@ def matches_filter(test, filter_text: str):
     if filter_text is None or filter_text == "":
         return True
     else:
-        return filter_text in test["input"]
+        return filter_text in test["input"] or filter_text in test["output"]
 
 
 special_outputs = [
@@ -474,7 +474,7 @@ class TestTreeBrowser():
             
             # add tests and topics to the data lookup structure
             for k, test in tests.iterrows():
-                if is_subtopic(topic, test.topic) and matches_filter(test, self.filter_text):
+                if is_subtopic(topic, test.topic):
                     
                     # add a topic
                     if test.label == "topic_marker":
@@ -493,7 +493,7 @@ class TestTreeBrowser():
                                 children.append(test.topic)
                     
                     # add a test
-                    else:
+                    elif matches_filter(test, self.filter_text):
                         data[k] = {
                             "input": test.input,
                             "output": test.output,
