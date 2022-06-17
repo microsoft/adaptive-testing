@@ -28,6 +28,7 @@ export default class Browser extends React.Component {
       suggestionsDropHighlighted: 0,
       score_filter: 0.3,
       do_score_filter: true,
+      filter_text: "",
       experiment_pos: 0,
       timerExpired: false,
       experiment_locations: [],
@@ -153,7 +154,7 @@ export default class Browser extends React.Component {
       <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
         <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
         <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
-          <ContentEditable defaultText="filter tests" text={this.state.value2Filter} onInput={this.inputValue2Filter} />
+          <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
         </span>
       </div>
       
@@ -670,9 +671,9 @@ export default class Browser extends React.Component {
     this.comm.send(this.id, {action: "add_new_test"});
   }
 
-  inputTopicDescription(text) {
-    this.setState({topic_description: text});
-  }
+  // inputTopicDescription(text) {
+  //   this.setState({topic_description: text});
+  // }
 
   finishTopicDescription(text) {
     console.log("finishTopicDescription", text)
@@ -685,25 +686,27 @@ export default class Browser extends React.Component {
     this.comm.send(this.id, {topic_description: text});
   }
 
-  inputValue2Filter(text) {
-    this.setState({value2Filter: text});
+  inputFilterText(text) {
+    console.log("inputFilterText", text)
+    this.setState({filter_text: text});
+    this.comm.send(this.id, {action: "change_filter", filter_text: text});
   }
 
-  inputSuggestionsTemplate(text) {
-    this.setState({suggestionsTemplate: text});
-  }
+  // inputSuggestionsTemplate(text) {
+  //   this.setState({suggestionsTemplate: text});
+  // }
 
-  inputValue1Filter(text) {
-    this.setState({value1Filter: text});
-  }
+  // inputValue1Filter(text) {
+  //   this.setState({value1Filter: text});
+  // }
   
-  inputComparatorFilter(text) {
-    this.setState({comparatorFilter: text});
-  }
+  // inputComparatorFilter(text) {
+  //   this.setState({comparatorFilter: text});
+  // }
 
-  inputTopicFilter(text) {
-    this.setState({topicFilter: text});
-  }
+  // inputTopicFilter(text) {
+  //   this.setState({topicFilter: text});
+  // }
 
 
 
