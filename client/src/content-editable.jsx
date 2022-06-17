@@ -6,7 +6,8 @@ import { defer } from 'lodash';
 export default class ContentEditable extends React.Component {
   static defaultProps = {
     editable: true,
-    defaultText: ""
+    defaultText: "",
+    finishOnReturn: false
   };
 
   constructor(props) {
@@ -26,7 +27,7 @@ export default class ContentEditable extends React.Component {
     return <div
       ref={(el) => this.divRef = el}
       id={this.props.id}
-      style={{opacity: emptyContent ? "0.3" : "1", display: "inline", overflowWrap: "anywhere"}}
+      style={{opacity: emptyContent ? "0.3" : "1", display: "inline", overflowWrap: "anywhere", whiteSpace: "pre-wrap"}}
       onFocus={this.onFocus}
       onInput={this.handleInput}
       onKeyPress={this.handleKeyPress}
@@ -73,10 +74,10 @@ export default class ContentEditable extends React.Component {
 
     // if (!this.props.editing) return;
     
-    if (this.props.text !== this.props.defaultText && this.divRef.innerText === this.props.defaultText) {
+    if (this.props.text !== this.props.defaultText && this.divRef.textContent === this.props.defaultText) {
       e.preventDefault();
       e.stopPropagation();
-      this.divRef.innerText = "";
+      this.divRef.textContent = "";
       if (this.props.onClick) this.props.onClick(e); // why we need this is crazy to me, seems like setting inner text kills the click event
       // defer(() => this.focus());
       console.log("clear!!", this.props.editable)
@@ -95,13 +96,13 @@ export default class ContentEditable extends React.Component {
   }
 
   getValue() {
-    const text = this.divRef.innerText;
+    const text = this.divRef.textContent;
     if (text === this.props.defaultText) return "";
     else return text;
   }
 
   shouldComponentUpdate(nextProps) {
-    return nextProps.text !== this.divRef.innerText && (nextProps.text != "" || this.divRef.innerText != this.props.defaultText) || nextProps.editable != this.lastEditable;
+    return nextProps.text !== this.divRef.textContent && (nextProps.text != "" || this.divRef.textContent != this.props.defaultText) || nextProps.editable != this.lastEditable;
   }
 
   componentDidUpdate() {
@@ -114,11 +115,11 @@ export default class ContentEditable extends React.Component {
   
   componentDidUpdateOrMount(mount) {
     // console.log("ContentEditable componentDidUpdateOrMount", mount, this.props.text, this.props.editable);
-    if (this.props.text !== this.divRef.innerText) {
+    if (this.props.text !== this.divRef.textContent) {
       if (this.props.text !== undefined && this.props.text !== null && this.props.text.length > 0) {
-        this.divRef.innerText = this.props.text;
+        this.divRef.textContent = this.props.text;
       } else {
-        if (mount) this.divRef.innerText = this.props.defaultText;
+        if (mount) this.divRef.textContent = this.props.defaultText;
       }
     }
     if (this.props.text && (this.props.text.startsWith("New topic") || this.props.text === "New test") && this.props.editable) { // hacky but works for now
@@ -130,8 +131,8 @@ export default class ContentEditable extends React.Component {
   }
       
   handleInput(e, finishing) {
-    console.log("handleInput", finishing, this.divRef.innerText)
-    const text = this.divRef.innerText;
+    console.log("handleInput", finishing, this.divRef.textContent)
+    const text = this.divRef.textContent;
     if (this.props.onInput && text !== this.lastText) {
       this.props.onInput(text);
       this.lastText = text;
@@ -146,23 +147,23 @@ export default class ContentEditable extends React.Component {
   }
 
   onBlur(e) {
-    console.log("onBlur in ContentEditable", this.divRef.innerText, this.skipBlurAction)
+    console.log("onBlur in ContentEditable", this.divRef.textContent, this.skipBlurAction)
     if (this.skipBlurAction) return;
-    // if (this.divRef.innerText.length === this.props.defaultText) {
-    //   this.divRef.innerText = "";
+    // if (this.divRef.textContent.length === this.props.defaultText) {
+    //   this.divRef.textContent = "";
     // }
     this.handleInput(e, true);
-    if (this.divRef.innerText.length === 0) {
-      this.divRef.innerText = this.props.defaultText;
+    if (this.divRef.textContent.length === 0) {
+      this.divRef.textContent = this.props.defaultText;
       this.divRef.style.opacity = 0.3;
     }
   }
 
   handleKeyPress(e) {
 
-    console.log("handleKeyPress", e.charCode)
+    console.log("handleKeyPress", e.charCode, this.props.finishOnReturn)
     e.stopPropagation();
-    if (e.charCode == 13) {
+    if (e.charCode == 13 && this.props.finishOnReturn) {
       e.preventDefault();
 
       this.handleInput(e, true);
@@ -170,9 +171,9 @@ export default class ContentEditable extends React.Component {
   }
 
   handleKeyDown(e) {
-    console.log("handleKeyDown", e.charCode)
+    console.log("handleKeyDown", e.charCode, this.props.finishOnReturn)
     // only let the enter/return key go through
-    if (e.charCode != 13) e.stopPropagation();
+    if (e.charCode != 13 || !this.props.finishOnReturn) e.stopPropagation();
   }
 }
 
