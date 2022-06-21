@@ -249,7 +249,7 @@ export default class Row extends React.Component {
         {this.state.topic_name !== null ? <React.Fragment>
           <div style={{display: "flex", marginTop: "3px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "adatest-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
-              <ContentEditable onClick={this.clickTopicName} ref={el => this.topicNameEditable = el} text={this.state.topic_name} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
+              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={this.state.topic_name} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
             </div>
           </div>
           <div className="adatest-row" style={{opacity: 0.6, marginTop: "-16px", display: this.state.previewValue1 ? 'flex' : 'none'}}>
@@ -264,7 +264,7 @@ export default class Row extends React.Component {
                 <span style={{color: "#aaa"}}>should not be</span> {/* TODO: fix this for varying comparators */}
               </div>
             </div>
-            <div style={{flex: "0 0 150px", textAlign: "left"}}>
+            <div style={{flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left"}}>
             <span style={{color: "#aaa"}}>"</span>{this.state.previewValue2}<span style={{color: "#aaa"}}>"</span>
             </div>
           </div>
@@ -280,12 +280,10 @@ export default class Row extends React.Component {
                 <span style={{width: "0px"}}></span>
               </div>
             </div>
-            <div style={{flex: "0 0 25px", color: "#999999", textAlign: "center", overflow: "hidden", display: "flex"}}>
-              <div style={{alignSelf: "flex-end", display: "inline-block"}}>
-                <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block", marginLeft: "5px"}} textAnchor="left" />
-              </div>
+            <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden", display: "flex"}}>
+              <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
-            <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 150px", textAlign: "left", display: "flex"}}>
+            <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
                 <span style={{width: "0px"}}></span>
                 <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
