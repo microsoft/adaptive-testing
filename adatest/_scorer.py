@@ -70,7 +70,7 @@ class DummyScorer(Scorer):
         return np.array(out)
 
 class ClassifierScorer(Scorer):
-    """ Wraps a model and defines a callable scorer that returns a score value for any input/output pair.
+    """ Wraps a text classification model and defines a callable scorer that returns a score value for any input/output pair.
 
     Positive scores indicate test failures, positive scores indicate tests that pass. For example if we wrap
     a text sentiment classifer the `scorer(TestTree([("this is great!", "should be", "POSITIVE")]))` will return
@@ -131,7 +131,6 @@ class ClassifierScorer(Scorer):
         output_bias : float
             How much to bias the output entries in a test towards the actual output from the model.
         """
-
 
         
         # determine which rows we need to evaluate
@@ -302,6 +301,123 @@ class ClassifierScorer(Scorer):
         pairs = list([v for v in zip(lines, self.output_names) if v[1] not in current])
         pairs.sort()
         return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
+
+class GeneratorScorer(Scorer):
+    """ Wraps a text generation model as a callable scorer that can be applied to a test tree.
+    """
+
+    def __init__(self, model, topk=1, output_names=None, method="dirichlet", dirichlet_concentration=10):
+        """ Create a new scorer given a model that returns a probability vector for each input string.
+        
+        Parameters:
+        -----------
+        model : callable
+            A model that is callable with a single argument (which is a list of strings) and returns a matrix of outputs.
+
+        topk : int
+            The number of top outputs to consider when scoring tests. For example topk=2 causes "should not be" tests to
+            check the top two model outputs.
+
+        output_names : list of strings
+            A list of strings that correspond to the outputs of the model. If None, model.output_names is used.
+
+        method : 'margin' or 'dirichlet'
+            The scoring method to use. Dirichlet is preferred, but margin is available for backwards compatibility.
+
+        dirichlet_concentration : float
+            The concentration parameter for the dirichlet scoring method. It is in the units o pseudo-counts where larger
+            values lead to a tighter prior centered around the model's probability outputs (so scores are more likely to
+            be -1 or +1).
+        """
+        super().__init__(model)
+
+        # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
+        if hasattr(self, "topk"):
+            return # already initialized
+
+        self.topk = topk
+        self.method = method
+
+    def __call__(self, tests, score_column, overwrite_outputs=False, output_bias=0.5):
+        """ Score a set of tests.
+
+        Parameters
+        ----------
+        tests : pandas.DataFrame
+            A dataframe of tests.
+
+        output_bias : float
+            How much to bias the output entries in a test towards the actual output from the model.
+        """
+
+        # determine which rows we need to evaluate
+        eval_inputs = []
+        eval_inds = []
+        for i, (id, test) in enumerate(tests.iterrows()):
+            if test[score_column] == "" and test.label != "topic_marker":
+                template_expansions = expand_template(test.input)
+                for expansion in template_expansions:
+                    eval_inputs.append(expansion)
+                    eval_inds.append(i)
+
+        # run the model on the rows we need to evaluate
+        try:
+            model_out = self.model(eval_inputs)
+        except Exception as e:
+            model_out = [""] * len(eval_inputs) # TODO: remove this hack after the user study
+            log.error(e)
+            log.error(eval_inputs)
+            log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
+
+        # compute the output strings for each output
+        out_strings = [[] for _ in range(tests.shape[0])]
+        i = 0
+        while i < len(model_out):
+            out_strings[eval_inds[i]].append(model_out[i])
+            i += 1
+        for i in eval_inds:
+            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
+
+        # ensure the model output is represented in the tests
+        current_outputs = tests["output"]
+        current_labelers = tests["labeler"]
+        updated_ids = []
+        for i, ind in enumerate(eval_inds):
+            if current_labelers.iloc[ind] == "imputed":
+                id = tests.index[ind]
+                tests.loc[id, "output"] = out_strings[ind]
+                tests.loc[id, "label"] = ""
+                tests.loc[id, score_column] = 1.0
+                updated_ids.append(id)
+            elif not overwrite_outputs and current_outputs.iloc[ind] != out_strings[ind]:
+
+                # mark the current row as nan score (meaning the output does not match)
+                tests.loc[tests.index[ind], score_column] = np.nan
+
+                # add a new test where the model output does match
+                id = uuid.uuid4().hex
+                tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
+                tests.loc[id, "input"] = eval_inputs[i]
+                tests.loc[id, "output"] = out_strings[ind]
+                tests.loc[id, "label"] = ""
+                tests.loc[id, "labeler"] = "imputed"
+                tests.loc[id, score_column] = 1.0
+
+                updated_ids.append(id)
+            else:
+                id = tests.index[ind]
+                tests.loc[id, "output"] = out_strings[ind]
+                tests.loc[id, score_column] = 1.0
+                updated_ids.append(id)
+        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+
+        # reimpute missing labels
+        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
+
+        # set the test score sign to match the label
+        for id in updated_ids:
+            if id in tests.index and tests.loc[id, "label"] == "pass":
+                tests.loc[id, score_column] = -float(tests.loc[id, score_column])
 
 
 class ClassifierScorerOld(Scorer):
@@ -550,7 +666,7 @@ class ClassifierScorerOld(Scorer):
         pairs.sort()
         return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
 
-class GeneratorScorer(Scorer):
+class GeneratorScorerOld(Scorer):
     """ Wraps a text generation model in a scorer that can score the target model against tests.
     """
 

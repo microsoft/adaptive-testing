@@ -235,7 +235,7 @@ class TestTreeBrowser():
 
         # dump the client javascript to the interface
         file_path = pathlib.Path(__file__).parent.absolute()
-        with open(file_path / "client" / "dist" / "main.js", encoding="utf-8") as f:
+        with open(file_path / "resources" / "main.js", encoding="utf-8") as f:
             js_data = f.read()
         interface_html = f"""
 <div id="adatest_container_{self._id}" style="width: 100%; all: initial;"></div>
@@ -417,10 +417,12 @@ class TestTreeBrowser():
                 # update the row and recompute scores
                 for k2 in msg[k]:
                     self.test_tree.loc[k, k2] = msg[k][k2]
-                self.test_tree.loc[k, self.score_columns] = ""
-                    
-                self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg[k])
-                
+                if "input" in msg[k]:
+                    self.test_tree.loc[k, self.score_columns] = ""
+                    self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg[k])
+                elif "label" in msg[k]:
+                    sign = -1 if msg[k]["label"] == "pass" else 1
+                    self.test_tree.loc[k, self.score_columns] = abs(float(self.test_tree.loc[k, self.score_columns])) * sign
 
                 # send just the data that changed back to the frontend
                 sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c])] for c in self.score_columns}

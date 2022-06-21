@@ -75,12 +75,9 @@ class TransformersTextGenerationPipeline():
         self._inner_model = pipeline
         self.output_names = None
 
-    def __call__(self, strings, completions=1):
-        full_out = []
-        for c in range(completions):
-            inner_out = self._inner_model(strings)
-            out = []
-            for s, data in zip(strings, inner_out):
-                out.append(data[0]["generated_text"][len(s):]) # remove the input text from the output
-            full_out.append(out)
-        return np.array(full_out).T
+    def __call__(self, strings):
+        inner_out = self._inner_model(strings)
+        out = []
+        for s, data in zip(strings, inner_out):
+            out.append(data[0]["generated_text"][len(s):]) # remove the input text from the output
+        return out

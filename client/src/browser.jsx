@@ -113,11 +113,22 @@ export default class Browser extends React.Component {
       // text2 is the part of the test shown in the select, +7 is for spaces on either side
       selectWidths[type] = this.calculateTextWidth(this.state.test_type_parts[type].text2); 
     }
-    let maxSelectWidth = Math.max(
-      ...this.state.suggestions.map(id => this.comm.data[id] ? get(selectWidths, this.comm.data[id].type, 40) : 40),
-      ...this.state.tests.map(id => this.comm.data[id] ? get(selectWidths, this.comm.data[id].type, 40) : 40)
+    // let maxInputLength = Math.max(
+    //   ...this.state.suggestions.map(id => this.comm.data[id] ? this.comm.data[id].input.length : 1),
+    //   ...this.state.tests.map(id => this.comm.data[id] ? this.comm.data[id].input.length : 1)
+    // );
+    let maxOutputLength = Math.max(
+      ...this.state.suggestions.map(id => this.comm.data[id] && this.comm.data[id].output ? this.comm.data[id].output.length : 1),
+      ...this.state.tests.map(id => this.comm.data[id] && this.comm.data[id].output ? this.comm.data[id].output.length : 1)
     );
-    // console.log("maxSelectWidth", maxSelectWidth)
+    let outputColumnWidth = "45%";
+    if (maxOutputLength < 25) {
+      outputColumnWidth = "150px";
+    } else if (maxOutputLength < 40) {
+      outputColumnWidth = "250px";
+    }
+
+    let maxSelectWidth = 40;
 
     const inFillin = this.state.topic.startsWith("/Fill-ins");
 
@@ -223,6 +234,7 @@ export default class Browser extends React.Component {
                   test_types={this.state.test_types}
                   test_type_parts={this.state.test_type_parts}
                   user={this.state.user}
+                  outputColumnWidth={outputColumnWidth}
                 />
               </React.Fragment>
             })}
@@ -312,6 +324,7 @@ export default class Browser extends React.Component {
                 test_types={this.state.test_types}
                 test_type_parts={this.state.test_type_parts}
                 user={this.state.user}
+                outputColumnWidth={outputColumnWidth}
               />
             </React.Fragment>
           })}
