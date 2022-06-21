@@ -35,5 +35,5 @@ module.exports = {
     filename: 'main.js',
   },
   mode: "production"
-  //mode: "development"
+  // mode: "development"
 };
