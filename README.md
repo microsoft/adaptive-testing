@@ -1,5 +1,5 @@
 # AdaTest
-AdaTest uses language models against themselves to build suites of unit tests. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests with fine-tuning then leads to an iterative debugging process similar to traditional software development.
+AdaTest uses language models against themselves to build suites of unit tests. It is an interative (and fun!) process between a user and a language model that results in a tree of unit tests specifically adapted to the model you are testing. Fixing any failed tests with fine-tuning then leads to an iterative debugging process similar to traditional software development. See <a href="https://aclanthology.org/2022.acl-long.230">paper</a> for details.
 
 <p align="center">
   <img src="docs/images/main_loops.png" width="400" alt="AdaTest loops" /><br/>
