@@ -3,6 +3,7 @@ import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
+import { FinishTopicDescriptionAction } from './CommData';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
 import Row from './row';
@@ -692,6 +693,8 @@ export default class Browser extends React.Component {
     console.log("finishTopicDescription", text)
     
     this.setState({topic_description: text});
+    const action = new FinishTopicDescriptionAction(this.state.topic_marker_id, text);
+    this.comm.send(this.id, action);
     this.comm.send(this.id, {action: "change_description", topic_marker_id: this.state.topic_marker_id, description: text});
   }
 
