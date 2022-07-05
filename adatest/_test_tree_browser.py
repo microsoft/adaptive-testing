@@ -270,199 +270,200 @@ class TestTreeBrowser():
         log.debug(f"interface_event({msg})")
 
         # loop over each event message
-        for k in msg:
-            if k == "browser":
-                action = msg[k].get("action", None)
-                
-                # rewdraw the entire interface
-                if action == "redraw":
-                    self._refresh_interface()
-                
-                # generate a new set of suggested tests/topics
-                elif action == "generate_suggestions":
-                    self._clear_suggestions()
-                    self.test_tree.retrain_topic_model(self.current_topic)
-                    self._generate_suggestions(filter=msg[k].get("filter", ""))
-                    # if self._active_generator_obj is None:
-                    #     self._suggestions_error = "No AdaTest generator has been set!"
-                    # else:
-                    #     self._generate_suggestions(filter=msg[k].get("filter", ""))
-                        # # try:
-                        # self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
-                        # # filter suggestions to relevant types
-                        # if self.mode == "topics":
-                        #     self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
-                        # elif self.mode == "tests":
-                        #     self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
-
-                        # # Ensure valid suggestions exist.
-                        # if self.suggestions.shape[0] > 0:  
-                        #     self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
-                        #     self._suggestions_error = ""
-                        # else:
-                        #     self._suggestions_error = True # Not sure if we should do this?
-                        # except Exception as e:
-                        #     log.debug(e)
-                        #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-                        #     self._suggestions_error = True
-                    self._refresh_interface()
-                
-                # change the current topic
-                elif action == "change_topic":
-                    self.current_topic = msg[k]["topic"]
-                    # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-
-                    # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
-                    has_direct_tests = False
-                    has_known_subtopics = False
-                    for k, test in self.test_tree.iterrows():
-                        if test["topic"] == self.current_topic:
-                            if test["label"] != "topic_marker":
-                                has_direct_tests = True
-                        elif is_subtopic(self.current_topic, test["topic"]):
-                            has_known_subtopics = True
-                    if not has_direct_tests and has_known_subtopics:
-                        self.mode = "topics"
-                    else:
-                        self.mode = "tests"
-
-                    self._refresh_interface()
-                
-                # clear the current set of suggestions
-                elif action == "clear_suggestions":
-                    self._clear_suggestions()
-                    # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-                    self._refresh_interface()
-
-                # add a new empty subtopic to the current topic
-                elif action == "add_new_topic":
-                    self.test_tree.loc[uuid.uuid4().hex] = {
-                        "topic": self.current_topic + "/New topic",
-                        "label": "topic_marker",
-                        "input": "",
-                        "output": "",
-                        "labeler": self.user,
-                        "description": ""
-                    }
-                    self._compute_embeddings_and_scores(self.test_tree)
-                    self._auto_save()
-                    self._refresh_interface()
-                
-                # add a new empty test to the current topic
-                elif action == "add_new_test":
-
-                    # add the new test row
-                    row = {
-                        "topic": self.current_topic,
-                        "input": "New test", # The special value "New test" causes the interface to auto-select the text
-                        "output": "",
-                        "label": "",
-                        "labeler": "imputed",
-                        "description": ""
-                    }
-                    for c in self.score_columns:
-                        row[c] = ""
-                        row[c[:-6] + " raw outputs"] = "{}"
-                    self.test_tree.loc[uuid.uuid4().hex] = row
-
-                    self._compute_embeddings_and_scores(self.test_tree)
-                    self._auto_save()
-                    self._refresh_interface()
-
-                # change which scorer/model is used for sorting tests
-                elif action == "set_first_model":
-                    name = msg[k]["model"]
-
-                    # move to front of score columns
-                    pos = len(self.test_tree.columns) - len(self.score_columns)
-                    tmp = self.test_tree[name]
-                    self.test_tree.drop(labels=[name], axis=1, inplace=True)
-                    self.test_tree.insert(pos, name, tmp)
-
-                    # update score columns list
-                    self.score_columns.remove(name)
-                    self.score_columns.insert(0, name)
-
-                    self._auto_save()
-                    self._refresh_interface()
-
-                # change which generator is active
-                elif action is None and "active_generator" in msg[k]:
-                    self.active_generator = msg[k]["active_generator"]
-                    self._active_generator_obj = self.generators[self.active_generator]
-
-                # change which generator is active
-                elif action is None and "mode" in msg[k]:
-                    self.mode = msg[k]["mode"]
-
-                elif action == 'change_description':
-                    self.test_tree.loc[msg[k]['topic_marker_id']]['description'] = msg[k]['description']
-
-                elif action == 'change_filter':
-                    print("change_filter")
-                    self.filter_text = msg[k]['filter_text']
-                    self._refresh_interface()
-
-
-            # if we are just updating a single row in tests then we only recompute the scores
-            elif "topic" not in msg[k]:
-                sendback_data = {}
-                
-                # convert template expansions into a standard value update
-                if msg[k].get("action", "") == "template_expand":
-                    template_value = self.templatize(self.test_tree.loc[k, msg[k]["value"]])
-                    msg[k] = {msg[k]["value"]: template_value}
-                    sendback_data[msg[k]["value"]] = template_value
-
-                # update the row and recompute scores
-                for k2 in msg[k]:
-                    self.test_tree.loc[k, k2] = msg[k][k2]
-                if "input" in msg[k]:
-                    self.test_tree.loc[k, self.score_columns] = ""
-                    self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg[k])
-                elif "label" in msg[k]:
-                    sign = -1 if msg[k]["label"] == "pass" else 1
-                    self.test_tree.loc[k, self.score_columns] = abs(float(self.test_tree.loc[k, self.score_columns])) * sign
-
-                # send just the data that changed back to the frontend
-                sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c])] for c in self.score_columns}
-                outputs = {c: [[k, json.loads(self.test_tree.loc[k].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
-                sendback_data["raw_outputs"] = outputs
-                sendback_data["output"] = self.test_tree.loc[k, "output"]
-                sendback_data["label"] = self.test_tree.loc[k, "label"]
-                sendback_data["labeler"] = self.test_tree.loc[k, "labeler"]
-                sendback_data.update(self.test_display_parts(self.test_tree.loc[k]))
-                self.comm.send({k: sendback_data})
-                
-                self._auto_save()
-
-            # if we are just changing the topic
-            elif "topic" in msg[k] and len(msg[k]) == 1:
-                
-                # move a test that is in the test tree
-                if k in self.test_tree.index:
-                    if msg[k]["topic"] == "_DELETE_" or msg[k]["topic"] == "_OUT_OF_TOPIC_": # this means delete the test
-                        self.test_tree.drop(k, inplace=True)
-                    else:
-                        self.test_tree.loc[k, "topic"] = msg[k]["topic"]
-                        self.test_tree.loc[k, "author"] = self.user
-                
-                # move a whole topic around
-                else:
-                    for id, test in self.test_tree.iterrows():
-                        if is_subtopic(k, test.topic):
-                            if msg[k]["topic"] == "_DELETE_" or msg[k]["topic"] == "_OUT_OF_TOPIC_":
-                                self.test_tree.drop(id, inplace=True)
-                            else:
-                                self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
-
-                # Recompute any missing embeddings to handle any changes
-                self._compute_embeddings_and_scores(self.test_tree)
+        event_id = msg["event_id"]
+        msg_data = msg["data"]
+        if event_id == "browser":
+            action = msg_data.get("action", None)
+            
+            # rewdraw the entire interface
+            if action == "redraw":
                 self._refresh_interface()
-                self._auto_save()
+            
+            # generate a new set of suggested tests/topics
+            elif action == "generate_suggestions":
+                self._clear_suggestions()
+                self.test_tree.retrain_topic_model(self.current_topic)
+                self._generate_suggestions(filter=msg_data.get("filter", ""))
+                # if self._active_generator_obj is None:
+                #     self._suggestions_error = "No AdaTest generator has been set!"
+                # else:
+                #     self._generate_suggestions(filter=msg[k].get("filter", ""))
+                    # # try:
+                    # self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
+                    # # filter suggestions to relevant types
+                    # if self.mode == "topics":
+                    #     self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
+                    # elif self.mode == "tests":
+                    #     self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
 
+                    # # Ensure valid suggestions exist.
+                    # if self.suggestions.shape[0] > 0:  
+                    #     self.suggestions.sort_values(self.score_columns[0], inplace=True, ascending=False, key=np.vectorize(score_max))
+                    #     self._suggestions_error = ""
+                    # else:
+                    #     self._suggestions_error = True # Not sure if we should do this?
+                    # except Exception as e:
+                    #     log.debug(e)
+                    #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                    #     self._suggestions_error = True
+                self._refresh_interface()
+            
+            # change the current topic
+            elif action == "change_topic":
+                self.current_topic = msg_data["topic"]
+                # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+
+                # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
+                has_direct_tests = False
+                has_known_subtopics = False
+                for event_id, test in self.test_tree.iterrows():
+                    if test["topic"] == self.current_topic:
+                        if test["label"] != "topic_marker":
+                            has_direct_tests = True
+                    elif is_subtopic(self.current_topic, test["topic"]):
+                        has_known_subtopics = True
+                if not has_direct_tests and has_known_subtopics:
+                    self.mode = "topics"
+                else:
+                    self.mode = "tests"
+
+                self._refresh_interface()
+            
+            # clear the current set of suggestions
+            elif action == "clear_suggestions":
+                self._clear_suggestions()
+                # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+                self._refresh_interface()
+
+            # add a new empty subtopic to the current topic
+            elif action == "add_new_topic":
+                self.test_tree.loc[uuid.uuid4().hex] = {
+                    "topic": self.current_topic + "/New topic",
+                    "label": "topic_marker",
+                    "input": "",
+                    "output": "",
+                    "labeler": self.user,
+                    "description": ""
+                }
+                self._compute_embeddings_and_scores(self.test_tree)
+                self._auto_save()
+                self._refresh_interface()
+            
+            # add a new empty test to the current topic
+            elif action == "add_new_test":
+
+                # add the new test row
+                row = {
+                    "topic": self.current_topic,
+                    "input": "New test", # The special value "New test" causes the interface to auto-select the text
+                    "output": "",
+                    "label": "",
+                    "labeler": "imputed",
+                    "description": ""
+                }
+                for c in self.score_columns:
+                    row[c] = ""
+                    row[c[:-6] + " raw outputs"] = "{}"
+                self.test_tree.loc[uuid.uuid4().hex] = row
+
+                self._compute_embeddings_and_scores(self.test_tree)
+                self._auto_save()
+                self._refresh_interface()
+
+            # change which scorer/model is used for sorting tests
+            elif action == "set_first_model":
+                name = msg_data["model"]
+
+                # move to front of score columns
+                pos = len(self.test_tree.columns) - len(self.score_columns)
+                tmp = self.test_tree[name]
+                self.test_tree.drop(labels=[name], axis=1, inplace=True)
+                self.test_tree.insert(pos, name, tmp)
+
+                # update score columns list
+                self.score_columns.remove(name)
+                self.score_columns.insert(0, name)
+
+                self._auto_save()
+                self._refresh_interface()
+
+            # change which generator is active
+            elif action is None and "active_generator" in msg_data:
+                self.active_generator = msg_data["active_generator"]
+                self._active_generator_obj = self.generators[self.active_generator]
+
+            # change which generator is active
+            elif action is None and "mode" in msg_data:
+                self.mode = msg_data["mode"]
+
+            elif action == 'change_description':
+                self.test_tree.loc[msg_data['topic_marker_id']]['description'] = msg_data['description']
+
+            elif action == 'change_filter':
+                print("change_filter")
+                self.filter_text = msg_data['filter_text']
+                self._refresh_interface()
+
+
+        # if we are just updating a single row in tests then we only recompute the scores
+        elif "topic" not in msg_data:
+            sendback_data = {}
+            
+            # convert template expansions into a standard value update
+            if msg_data.get("action", "") == "template_expand":
+                template_value = self.templatize(self.test_tree.loc[event_id, msg_data["value"]])
+                msg_data = {msg_data["value"]: template_value}
+                sendback_data[msg_data["value"]] = template_value
+
+            # update the row and recompute scores
+            for k2 in msg_data:
+                self.test_tree.loc[event_id, k2] = msg_data[k2]
+            if "input" in msg_data:
+                self.test_tree.loc[event_id, self.score_columns] = ""
+                self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg_data)
+            elif "label" in msg_data:
+                sign = -1 if msg_data["label"] == "pass" else 1
+                self.test_tree.loc[event_id, self.score_columns] = abs(float(self.test_tree.loc[event_id, self.score_columns])) * sign
+
+            # send just the data that changed back to the frontend
+            sendback_data["scores"] = {c: [[event_id, v] for v in score_parts(self.test_tree.loc[event_id, c])] for c in self.score_columns}
+            outputs = {c: [[event_id, json.loads(self.test_tree.loc[event_id].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
+            sendback_data["raw_outputs"] = outputs
+            sendback_data["output"] = self.test_tree.loc[event_id, "output"]
+            sendback_data["label"] = self.test_tree.loc[event_id, "label"]
+            sendback_data["labeler"] = self.test_tree.loc[event_id, "labeler"]
+            sendback_data.update(self.test_display_parts(self.test_tree.loc[event_id]))
+            self.comm.send({event_id: sendback_data})
+            
+            self._auto_save()
+
+        # if we are just changing the topic
+        elif "topic" in msg_data and len(msg_data) == 1:
+            
+            # move a test that is in the test tree
+            if event_id in self.test_tree.index:
+                if msg_data["topic"] == "_DELETE_" or msg_data["topic"] == "_OUT_OF_TOPIC_": # this means delete the test
+                    self.test_tree.drop(event_id, inplace=True)
+                else:
+                    self.test_tree.loc[event_id, "topic"] = msg_data["topic"]
+                    self.test_tree.loc[event_id, "author"] = self.user
+            
+            # move a whole topic around
             else:
-                log.debug(f"Unable to parse the interface message: {msg[k]}")
+                for id, test in self.test_tree.iterrows():
+                    if is_subtopic(event_id, test.topic):
+                        if msg_data["topic"] == "_DELETE_" or msg_data["topic"] == "_OUT_OF_TOPIC_":
+                            self.test_tree.drop(id, inplace=True)
+                        else:
+                            self.test_tree.loc[id, "topic"] = msg_data["topic"] + test.topic[len(event_id):]
+
+            # Recompute any missing embeddings to handle any changes
+            self._compute_embeddings_and_scores(self.test_tree)
+            self._refresh_interface()
+            self._auto_save()
+
+        else:
+            log.debug(f"Unable to parse the interface message: {msg_data}")
 
     def _refresh_interface(self):
         """ Send our entire current state to the frontend interface.

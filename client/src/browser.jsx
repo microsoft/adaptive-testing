@@ -3,7 +3,7 @@ import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
-import { FinishTopicDescriptionAction } from './CommData';
+import { BrowserEvent, FinishTopicDescriptionAction, GenerateSuggestionsAction, RedrawAction, ClearSuggestionsAction, SetFirstModelAction, ChangeGeneratorAction, ChangeModeAction, AddTopicAction, AddTestAction, ChangeFilterAction, ChangeTopicAction } from './CommData';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
 import Row from './row';
@@ -76,7 +76,8 @@ export default class Browser extends React.Component {
     }
     this.props.history.listen(this.locationChanged);
 
-    defer(() => this.comm.send(this.id, {action: "redraw"}));
+    const action = new RedrawAction();
+    defer(() => this.sendBrowserAction(action));
   }
 
   stripPrefix(path) {
@@ -388,7 +389,7 @@ export default class Browser extends React.Component {
 
   clickModel(modelName, e) {
     if (modelName !== this.state.score_columns[0]) {
-      this.comm.send(this.id, {action: "set_first_model", model: modelName});
+      this.sendBrowserAction(new SetFirstModelAction(modelName));
     }
   }
 
@@ -454,12 +455,12 @@ export default class Browser extends React.Component {
   }
 
   changeGenerator(e) {
-    this.comm.send(this.id, {"active_generator": e.target.value})
+    this.sendBrowserAction(new ChangeGeneratorAction(e.target.value));
     this.setState({active_generator: e.target.value})
   }
 
   changeMode(e) {
-    this.comm.send(this.id, {"mode": e.target.value});
+    this.sendBrowserAction(new ChangeModeAction(e.target.value));
     this.setState({mode: e.target.value});
   }
 
@@ -674,15 +675,13 @@ export default class Browser extends React.Component {
   addNewTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-
-    this.comm.send(this.id, {action: "add_new_topic"});
+    this.sendBrowserAction(new AddTopicAction())
   }
 
   addNewTest(e) {
     e.preventDefault();
     e.stopPropagation();
-
-    this.comm.send(this.id, {action: "add_new_test"});
+    this.sendBrowserAction(new AddTestAction())
   }
 
   // inputTopicDescription(text) {
@@ -694,18 +693,13 @@ export default class Browser extends React.Component {
     
     this.setState({topic_description: text});
     const action = new FinishTopicDescriptionAction(this.state.topic_marker_id, text);
-    this.comm.send(this.id, action);
-    this.comm.send(this.id, {action: "change_description", topic_marker_id: this.state.topic_marker_id, description: text});
-  }
-
-  updateTopicDescription(text) {
-    this.comm.send(this.id, {topic_description: text});
+    this.sendBrowserAction(action);
   }
 
   inputFilterText(text) {
     console.log("inputFilterText", text)
     this.setState({filter_text: text});
-    this.comm.send(this.id, {action: "change_filter", filter_text: text});
+    this.sendBrowserAction(new ChangeFilterAction(text));
   }
 
   // inputSuggestionsTemplate(text) {
@@ -725,7 +719,6 @@ export default class Browser extends React.Component {
   // }
 
 
-
   refreshSuggestions(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -737,14 +730,15 @@ export default class Browser extends React.Component {
       }
     }
     this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
-    this.comm.send(this.id, {
-      action: "generate_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
+    const action = new GenerateSuggestionsAction({
+      value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
       suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
       suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow
     });
+    this.sendBrowserAction(action);
   }
 
   clearSuggestions(e) {
@@ -752,7 +746,7 @@ export default class Browser extends React.Component {
     e.stopPropagation();
     console.log("clearSuggestions");
     this.setState({suggestions_pos: 0, suggestions: []});
-    this.comm.send(this.id, {action: "clear_suggestions"});
+    this.sendBrowserAction(new ClearSuggestionsAction());
   }
 
   pageSuggestions(e, direction) {
@@ -884,7 +878,12 @@ export default class Browser extends React.Component {
     if (this.suggestionsTemplateRow) {
       this.suggestionsTemplateRow.setState({value2: null});
     }
-    this.comm.send(this.id, {action: "change_topic", topic: stripSlash(topic)});
+    this.sendBrowserAction(new ChangeTopicAction(topic))
+  }
+
+  sendBrowserAction(action) { // action is BrowserAction
+    const commData = new BrowserEvent(action);
+    this.comm.sendCommData(commData);
   }
 }
 
