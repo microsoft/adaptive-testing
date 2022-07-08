@@ -3,7 +3,7 @@ import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
-import { BrowserEvent, FinishTopicDescriptionAction, GenerateSuggestionsAction, RedrawAction, ClearSuggestionsAction, SetFirstModelAction, ChangeGeneratorAction, ChangeModeAction, AddTopicAction, AddTestAction, ChangeFilterAction, ChangeTopicAction } from './CommData';
+import { finishTopicDescription, generateSuggestions, redraw, clearSuggestions, setFirstModel, changeGenerator, changeMode, addTopic, addTest, changeFilter, changeTopic, moveTest, deleteTest } from './CommEvent';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
 import Row from './row';
@@ -76,8 +76,7 @@ export default class Browser extends React.Component {
     }
     this.props.history.listen(this.locationChanged);
 
-    const action = new RedrawAction();
-    defer(() => this.sendBrowserAction(action));
+    defer(() => this.comm.sendEvent(redraw()));
   }
 
   stripPrefix(path) {
@@ -389,7 +388,7 @@ export default class Browser extends React.Component {
 
   clickModel(modelName, e) {
     if (modelName !== this.state.score_columns[0]) {
-      this.sendBrowserAction(new SetFirstModelAction(modelName));
+      this.sendEvent(setFirstModel(modelName));
     }
   }
 
@@ -455,12 +454,12 @@ export default class Browser extends React.Component {
   }
 
   changeGenerator(e) {
-    this.sendBrowserAction(new ChangeGeneratorAction(e.target.value));
+    this.comm.sendEvent(changeGenerator(e.target.value));
     this.setState({active_generator: e.target.value})
   }
 
   changeMode(e) {
-    this.sendBrowserAction(new ChangeModeAction(e.target.value));
+    this.comm.sendEvent(changeMode(e.target.value));
     this.setState({mode: e.target.value});
   }
 
@@ -590,7 +589,7 @@ export default class Browser extends React.Component {
             }
           }
         } else {
-          this.comm.send(keys, {topic: "_DELETE_"});
+          this.comm.sendEvent(deleteTest(keys));
         }
 
         // select the next test after the selected one when appropriate
@@ -675,13 +674,13 @@ export default class Browser extends React.Component {
   addNewTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.sendBrowserAction(new AddTopicAction())
+    this.comm.sendEvent(addTopic())
   }
 
   addNewTest(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.sendBrowserAction(new AddTestAction())
+    this.comm.sendEvent(addTest())
   }
 
   // inputTopicDescription(text) {
@@ -692,14 +691,13 @@ export default class Browser extends React.Component {
     console.log("finishTopicDescription", text)
     
     this.setState({topic_description: text});
-    const action = new FinishTopicDescriptionAction(this.state.topic_marker_id, text);
-    this.sendBrowserAction(action);
+    this.comm.sendEvent(finishTopicDescription(this.state.topic_marker_id, text));
   }
 
   inputFilterText(text) {
     console.log("inputFilterText", text)
     this.setState({filter_text: text});
-    this.sendBrowserAction(new ChangeFilterAction(text));
+    this.comm.sendEvent(changeFilter(text));
   }
 
   // inputSuggestionsTemplate(text) {
@@ -730,15 +728,14 @@ export default class Browser extends React.Component {
       }
     }
     this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
-    const action = new GenerateSuggestionsAction({
+    this.comm.sendEvent(generateSuggestions({
       value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
       suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
       suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow
-    });
-    this.sendBrowserAction(action);
+    }))
   }
 
   clearSuggestions(e) {
@@ -746,7 +743,7 @@ export default class Browser extends React.Component {
     e.stopPropagation();
     console.log("clearSuggestions");
     this.setState({suggestions_pos: 0, suggestions: []});
-    this.sendBrowserAction(new ClearSuggestionsAction());
+    this.comm.sendEvent(clearSuggestions());
   }
 
   pageSuggestions(e, direction) {
@@ -860,17 +857,17 @@ export default class Browser extends React.Component {
     console.log("onSuggestionsDrop", e, id);
     if (this.state.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
     this.setState({suggestionsDropHighlighted: 0});
-    this.onDrop(id, {topic: this.state.topic + "/__suggestions__"});
+    this.onDrop(id, this.state.topic + "/__suggestions__");
   }
 
-  onDrop(id, data) {
-    console.log("onDrop", id, data)
+  onDrop(id, topic) {
+    console.log("onDrop", id, topic)
     let ids;
     if (this.state.selections[id]) {
       ids = Object.keys(this.state.selections);
       this.setState({selections: {}});
     } else ids = id;
-    this.comm.send(ids, data);
+    this.comm.sendEvent(moveTest(ids, topic));
   }
 
   goToTopic(topic) {
@@ -878,13 +875,9 @@ export default class Browser extends React.Component {
     if (this.suggestionsTemplateRow) {
       this.suggestionsTemplateRow.setState({value2: null});
     }
-    this.sendBrowserAction(new ChangeTopicAction(topic))
+    this.comm.sendEvent(changeTopic(topic))
   }
 
-  sendBrowserAction(action) { // action is BrowserAction
-    const commData = new BrowserEvent(action);
-    this.comm.sendCommData(commData);
-  }
 }
 
 //const red_blue_100 = ["rgb(0.0,138.56128015770724,250.76166088685727,255.0)","rgb(0.0,137.4991163711455,250.4914687565557,255.0)","rgb(0.0,135.89085862817228,250.03922790292606,255.0)","rgb(0.0,134.80461722068503,249.69422979450337,255.0)","rgb(0.0,133.15912944070257,249.12764143629818,255.0)","rgb(0.0,132.04779673175938,248.70683279399356,255.0)","rgb(0.0,130.3634759186023,248.02444138814778,255.0)","rgb(0.0,128.65565323564863,247.27367576741693,255.0)","rgb(0.0,127.50110843874282,246.72753679433836,255.0)","rgb(0.0,125.75168029462561,245.85912208200173,255.0)","rgb(0.0,124.56903652403216,245.23521693285122,255.0)","rgb(0.0,122.77608206265468,244.24829742509777,255.0)","rgb(0.0,120.95599474876376,243.18984596934288,255.0)","rgb(0.0,119.72546791225868,242.44012441018438,255.0)","rgb(0.0,117.8591797836317,241.26416165478395,255.0)","rgb(0.0,116.59613419778282,240.4339311004283,255.0)","rgb(0.0,114.68050681628627,239.1383865197414,255.0)","rgb(0.0,113.3839993210777,238.2294590645131,255.0)","rgb(0.0,111.41634894068424,236.81437229328455,255.0)","rgb(24.588663906345325,109.41632410184977,235.32817682974928,255.0)","rgb(35.44735081278475,108.06183480151708,234.29254074792976,255.0)","rgb(48.051717444228224,106.00540836596966,232.68863110680456,255.0)","rgb(54.58382033054716,104.61144706132748,231.57374376885096,255.0)","rgb(63.262053865061056,102.49432802815242,229.85160463157354,255.0)","rgb(70.76957320138267,100.33771880021955,228.05703474246997,255.0)","rgb(75.30021073284686,98.87675486589102,226.81988465865538,255.0)","rgb(81.62949947778507,96.6540104818813,224.91180462302458,255.0)","rgb(85.51695933372014,95.1445958160281,223.59546445853985,255.0)","rgb(91.05223198159915,92.84880956154888,221.57285170783555,255.0)","rgb(94.50489166579793,91.28823726624896,220.18077895318467,255.0)","rgb(99.4583420952925,88.91232187683374,218.04471819705824,255.0)","rgb(104.12179041241362,86.48354864452708,215.84022539728738,255.0)","rgb(107.08110644040013,84.83182437240492,214.33114916353256,255.0)","rgb(111.35380618049061,82.31139742285828,212.01929775886506,255.0)","rgb(114.06578608562516,80.5910630456271,210.4357328916578,255.0)","rgb(118.00136409704606,77.96485213886614,208.016034988954,255.0)","rgb(121.74766173376136,75.26429120233696,205.5295010169315,255.0)","rgb(124.15338187699085,73.42230736362347,203.83759830570943,255.0)","rgb(127.6354972896637,70.59265795441205,201.2503012002821,255.0)","rgb(129.8659364639127,68.65218238542003,199.48871459726595,255.0)","rgb(133.10804101178616,65.66976521198737,196.80305057967465,255.0)","rgb(136.20117312715468,62.56838858187191,194.0535664536312,255.0)","rgb(138.1973647491704,60.43984691426682,192.1917348903892,255.0)","rgb(141.0812080782349,57.12602871008347,189.34981967460325,255.0)","rgb(142.93497217316724,54.83018307067161,187.42427995933073,255.0)","rgb(145.62183484149273,51.24379487478906,184.4934665197036,255.0)","rgb(147.34120668891256,48.72446502544426,182.50692554291248,255.0)","rgb(149.83882553726863,44.76410333626281,179.49010263854294,255.0)","rgb(152.21629692400205,40.46878966316789,176.41890349035555,255.0)","rgb(153.74537831964477,37.405899634336166,174.3463167526223,255.0)","rgb(156.8946867035305,33.63427487751921,172.10689873421705,255.0)","rgb(159.57052897508228,31.76356558772026,171.1904317530127,255.0)","rgb(163.51569605559672,28.753894553429824,169.77296032725718,255.0)","rgb(167.36700142841255,25.389234485648817,168.29649352383,255.0)","rgb(169.8939277417104,22.949167366394107,167.28653276271265,255.0)","rgb(173.60751889004476,18.751898233902914,165.72304707948427,255.0)","rgb(176.04037452587522,15.53349266017855,164.65367757038166,255.0)","rgb(179.62227517307235,9.586956240670718,163.00736797488793,255.0)","rgb(181.96398047712216,5.039485831605471,161.88104419124014,255.0)","rgb(185.4175817560734,0.0,160.1552802934102,255.0)","rgb(188.7866522134373,0.0,158.37821514882566,255.0)","rgb(190.99545744496794,0.0,157.1712500750526,255.0)","rgb(194.23939479374397,0.0,155.32022934668817,255.0)","rgb(196.3613372562259,0.0,154.06279982720955,255.0)","rgb(199.48227089890267,0.0,152.14184153517203,255.0)","rgb(202.52395205893734,0.0,150.17747004313574,255.0)","rgb(204.51720731357923,0.0,148.84941784048203,255.0)","rgb(207.43415034062437,0.0,146.8195255831636,255.0)","rgb(209.34227187082465,0.0,145.447819126977,255.0)","rgb(212.1382144344341,0.0,143.35790157156467,255.0)","rgb(214.85836244585704,0.0,141.23222265886395,255.0)","rgb(216.63670670950123,0.0,139.79905843731933,255.0)","rgb(219.23301240468484,0.0,137.6179798879229,255.0)","rgb(220.92924595032096,0.0,136.14914842114652,255.0)","rgb(223.4023955123896,0.0,133.91677798534914,255.0)","rgb(225.0139515716111,0.0,132.41381956928373,255.0)","rgb(227.36646430400836,0.0,130.13484833504174,255.0)","rgb(229.64256707387395,0.0,127.82818117110327,255.0)","rgb(231.1250651865189,0.0,126.27823065434256,255.0)","rgb(233.27714151990378,0.0,123.9294477401314,255.0)","rgb(234.676703289514,0.0,122.35230960074493,255.0)","rgb(236.70590614401792,0.0,119.96514396719735,255.0)","rgb(238.66106706741957,0.0,117.55637241505875,255.0)","rgb(239.92865207922344,0.0,115.94046512913654,255.0)","rgb(241.75947067582808,0.0,113.49767303291209,255.0)","rgb(242.94521123855867,0.0,111.86012465750336,255.0)","rgb(244.6516179552062,0.0,109.38587603007474,255.0)","rgb(245.75354715682175,0.0,107.72779565577645,255.0)","rgb(247.33745729848604,0.0,105.22467948947163,255.0)","rgb(248.84659658395643,0.0,102.70475812439781,255.0)","rgb(249.8170331745849,0.0,101.01697337568197,255.0)","rgb(251.20184136638093,0.0,98.47001746051721,255.0)","rgb(252.09049986637743,0.0,96.76466947151692,255.0)","rgb(253.35113135488535,0.0,94.19124565826175,255.0)","rgb(254.475785780405,0.0,91.60224197581371,255.0)","rgb(255.0,0.0,89.86831280400678,255.0)","rgb(255.0,0.0,87.25188871633031,255.0)","rgb(255.0,0.0,85.49944591423251,255.0)","rgb(255.0,0.0,82.8535189165512,255.0)","rgb(255.0,0.0,81.08083606031792,255.0)"]

@@ -57,7 +57,7 @@ export default class BreadCrum extends React.Component {
       if (id.includes("/")) {
         suffix = "/" + id.split("/").pop();
       }
-      this.props.onDrop(id, {topic: this.props.topic + (this.props.name === "" ? "" : "/" + this.props.name) + suffix});
+      this.props.onDrop(id, this.props.topic + (this.props.name === "" ? "" : "/" + this.props.name) + suffix);
     }
   }
 }
