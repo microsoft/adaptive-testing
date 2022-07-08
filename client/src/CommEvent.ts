@@ -5,8 +5,10 @@ export class CommEvent {
   readonly event_id: string;
   constructor(event_id: string, data?: object) {
     this.event_id = event_id;
-    for (const k of Object.keys(data)) {
-      this[k] = data[k];
+    if (data) {
+      for (const k of Object.keys(data)) {
+        this[k] = data[k];
+      }
     }
   }
 }
@@ -82,3 +84,17 @@ export function deleteTest(test_ids: string[] | string) {
   return new CommEvent("delete_test", { "test_ids": test_ids });
 }
 
+
+export function changeLabel(test_id: string, label: string, labeler: string) {
+  return new CommEvent("change_label", { "test_ids": [test_id], "label": label, "labeler": labeler });
+}
+
+
+export function changeInput(test_id: string, input: string) {
+  return new CommEvent("change_input", { "test_ids": [test_id], "input": input });
+}
+
+
+export function changeOutput(test_id: string, output: string) {
+  return new CommEvent("change_output", { "test_ids": [test_id], "output": output });
+}

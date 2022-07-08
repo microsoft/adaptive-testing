@@ -31,12 +31,19 @@ export default class WebSocketComm {
     this.sendPendingData();
   }
 
+  debouncedSendEvent500(commEvent) {
+    for (const k of Object.keys(commEvent)) {
+      this.addPendingData(k, commEvent[k]);
+    }
+    this.debouncedSendPendingData500();
+  }
+
   debouncedSend500(keys, data) {
     this.addPendingData(keys, data);
     this.debouncedSendPendingData500();
   }
 
-  debouncedSend500(keys, data) {
+  debouncedSend1000(keys, data) {
     this.addPendingData(keys, data);
     this.debouncedSendPendingData1000();
   }

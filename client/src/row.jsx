@@ -3,7 +3,7 @@ import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faCheck, faBan, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
 import { defer } from 'lodash';
-import { deleteTest, moveTest, moveTopic } from './CommEvent';
+import { changeInput, changeLabel, changeOutput, deleteTest, moveTest } from './CommEvent';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
 
@@ -476,16 +476,13 @@ export default class Row extends React.Component {
   }
 
   changeTestType(e) {
+    // Still used?
     this.props.comm.send(this.props.id, {"type": e.target.value});
     this.setState({type: e.target.value});
   }
 
   labelAsFail(e) {
-    this.props.comm.send(this.props.id, {"label": "fail", "labeler": this.props.user});
-    if (this.props.isSuggestion) {
-      this.props.comm.send(this.props.id, {"topic": this.props.topic});
-    }
-    this.setState({label: "fail"});
+    this.setLabel("fail");
   }
 
   labelAsOffTopic(e) {
@@ -494,11 +491,15 @@ export default class Row extends React.Component {
   }
 
   labelAsPass(e) {
-    this.props.comm.send(this.props.id, {"label": "pass", "labeler": this.props.user});
+    this.setLabel("pass");
+  }
+
+  setLabel(label) {
+    this.props.comm.sendEvent(changeLabel(this.props.id, label, this.props.user));
     if (this.props.isSuggestion) {
-      this.props.comm.send(this.props.id, {"topic": this.props.topic});
+      this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
     }
-    this.setState({label: "pass"});
+    this.setState({label: label});
   }
 
   onScoreOver(e, key) {
@@ -532,6 +533,7 @@ export default class Row extends React.Component {
   }
 
   toggleHideTopic(e) {
+    // Still used?
     e.preventDefault();
     e.stopPropagation();
 
@@ -587,7 +589,7 @@ export default class Row extends React.Component {
   inputInput(text) {
     console.log("inputInput", text)
     this.setState({input: text, scores: null});
-    this.props.comm.debouncedSend500(this.props.id, {input: text});
+    this.props.comm.debouncedSendEvent500(changeInput(this.props.id, text));
   }
 
   finishInput(text) {
@@ -595,7 +597,7 @@ export default class Row extends React.Component {
     this.setState({editing: false});
     if (text.includes("/")) {
       this.setState({input: text, scores: null});
-      this.props.comm.send(this.props.id, {input: text});
+      this.props.comm.sendEvent(changeInput(this.props.id, text));
     }
   }
 
@@ -603,7 +605,7 @@ export default class Row extends React.Component {
     console.log("inputOutput", text);
     text = text.trim();
     this.setState({output: text, scores: null});
-    this.props.comm.debouncedSend500(this.props.id, {output: text});
+    this.props.comm.debouncedSendEvent500(changeOutput(this.props.id, text));
 
     // if (this.props.value2Edited) {
     //   this.props.value2Edited(this.props.id, this.state.value2, text);
@@ -612,6 +614,7 @@ export default class Row extends React.Component {
   }
 
   setValue2(text) {
+    // Still used?
     this.setState({value2: text, scores: null});
     this.props.comm.debouncedSend500(this.props.id, {value2: text});
   }
@@ -626,7 +629,7 @@ export default class Row extends React.Component {
     this.setState({topic_name: text.replace("\\", "").replace("\n", ""), editing: false});
     let topic = this.props.topic;
     if (this.props.isSuggestion) topic += "/__suggestions__";
-    this.props.comm.sendEvent(moveTopic(this.props.id, topic + "/" + text));
+    this.props.comm.sendEvent(moveTest(this.props.id, topic + "/" + text));
   }
   
   clickRow(e) {

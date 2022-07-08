@@ -875,6 +875,9 @@ export default class Browser extends React.Component {
     if (this.suggestionsTemplateRow) {
       this.suggestionsTemplateRow.setState({value2: null});
     }
+    if (topic === "/") {
+      topic = ""
+    }
     this.comm.sendEvent(changeTopic(topic))
   }
 
