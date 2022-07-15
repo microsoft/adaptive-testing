@@ -1,6 +1,7 @@
 gadfly.egg-info
 __pycache__
 *.pyc
+*.log
 .vscode
 node_modules
 .jekyll-cache
@@ -11,4 +12,8 @@ dist/gadfly-*
 local_scratch*
 wandb
 local_data
-notebooks/TDD/data
+/notebooks/TDD/data
+/notebooks/PPT
+/build
+/dist
+/test_trainer/runs

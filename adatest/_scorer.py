@@ -201,9 +201,9 @@ class ClassifierScorer(Scorer):
         tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
 
         # set the test score sign to match the label
-        for id in updated_ids:
-            if id in tests.index and tests.loc[id, "label"] == "pass":
-                tests.loc[id, score_column] = -float(tests.loc[id, score_column])
+        # for id in updated_ids:
+        #     if id in tests.index and tests.loc[id, "label"] == "pass":
+        #         tests.loc[id, score_column] = -float(tests.loc[id, score_column])
         
 
 

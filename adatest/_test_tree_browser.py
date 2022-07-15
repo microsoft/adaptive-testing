@@ -29,6 +29,7 @@ from ._scorer import expand_template, clean_template, ClassifierScorer, Generato
 from ._prompt_builder import PromptBuilder
 import builtins
 import adatest # Need to import like this to prevent circular dependencies
+import urllib.parse
 
 # from https://gist.github.com/walkermatt/2871026
 def throttle(interval):
@@ -391,7 +392,7 @@ class TestTreeBrowser():
                     self.active_generator = msg[k]["active_generator"]
                     self._active_generator_obj = self.generators[self.active_generator]
 
-                # change which generator is active
+                # change between topics and tests
                 elif action is None and "mode" in msg[k]:
                     self.mode = msg[k]["mode"]
 
@@ -417,15 +418,15 @@ class TestTreeBrowser():
                 # update the row and recompute scores
                 for k2 in msg[k]:
                     self.test_tree.loc[k, k2] = msg[k][k2]
-                if "input" in msg[k]:
+                if "input" in msg[k] or "output" in msg[k]:
                     self.test_tree.loc[k, self.score_columns] = ""
-                    self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg[k])
+                    self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
                 elif "label" in msg[k]:
-                    sign = -1 if msg[k]["label"] == "pass" else 1
-                    self.test_tree.loc[k, self.score_columns] = abs(float(self.test_tree.loc[k, self.score_columns])) * sign
+                    # sign = -1 if msg[k]["label"] == "pass" else 1
+                    self.test_tree.loc[k, self.score_columns] = abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
 
                 # send just the data that changed back to the frontend
-                sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c])] for c in self.score_columns}
+                sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c], self.test_tree.loc[k, "label"])] for c in self.score_columns}
                 outputs = {c: [[k, json.loads(self.test_tree.loc[k].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
                 sendback_data["raw_outputs"] = outputs
                 sendback_data["output"] = self.test_tree.loc[k, "output"]
@@ -502,7 +503,7 @@ class TestTreeBrowser():
                             "label": test.label,
                             "labeler": test.labeler,
                             "description": test.description,
-                            "scores": {c: [[k, v] for v in score_parts(test[c])] for c in self.score_columns},
+                            "scores": {c: [[k, v] for v in score_parts(test[c], test.label)] for c in self.score_columns},
                             "editing": test.input == "New test"
                         }
 
@@ -517,17 +518,18 @@ class TestTreeBrowser():
                     child_topic = test.topic[len(topic):].split("/", 2)[1]
                     scores = data[topic+"/"+child_topic]["scores"]
                     for c in self.score_columns:
-                        scores[c].extend([[k, v] for v in score_parts(test[c])])
+                        scores[c].extend([[k, v] for v in score_parts(test[c], test.label)])
 
             # sort by score and always put new topics first
             def sort_key(id):
                 try:
                     total = 0
                     count = 0
+                    sign = 1 #if data[id]["label"] == "fail" else -1
                     for s in data[id]["scores"][self.score_columns[0]]:
                         val = score_max(s[1], nan_val=np.nan)
                         if not np.isnan(val) and val is not None:
-                            total += val
+                            total += val * sign
                             count += 1
                     if count == 0:
                         return 1e3
@@ -538,7 +540,9 @@ class TestTreeBrowser():
                     print(id)
                     print(val)
             sorted_children = sorted(children, key=sort_key)
-            sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id].get("value1", "") == "New test" else 1)
+            sorted_children = sorted(sorted_children, key=lambda id: 0 if data[id].get("label", "") == "topic_marker" else 1) # put folders first
+            sorted_children = sorted(sorted_children, key=lambda id: 1 if data[id].get("label", "") == "off_topic" else 0) # off topic last
+            sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id].get("value1", "") == "New test" else 1) # put new items first
 
             return sorted_children
         
@@ -1070,11 +1074,17 @@ def score_max(s, nan_val=-1e3):
     else:
         return np.max(s)
 
-def score_parts(s):
-    if isinstance(s, str):
-        return [convert_float(v) for v in s.split("|")]
+def score_parts(s, label):
+    if label == "pass":
+        sign = -1
+    elif label == "fail":
+        sign = 1
     else:
-        return [s]
+        sign = np.nan
+    if isinstance(s, str):
+        return [convert_float(v)*sign for v in s.split("|")]
+    else:
+        return [s*sign]
 
 def convert_float(s):
     if s == "":

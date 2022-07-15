@@ -192,7 +192,7 @@ export default class Row extends React.Component {
         overall_score[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
       }
     } else {
-      for (let k in this.state.scores) {
+      for (let k in overall_score) {
         overall_score[k] = NaN;
       }
     }
@@ -221,6 +221,12 @@ export default class Row extends React.Component {
       return null;
     }
     // console.log("real render Row3");
+    
+    // compute the confidence score for the row
+    let bar_width = 0;
+    if (Number.isFinite(overall_score[main_score])) {
+      bar_width = Math.abs(100*scale_score(overall_score[main_score]));
+    }
 
     return <div className={outerClasses} draggable onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut} onMouseDown={this.onMouseDown}
                 onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} onDragOver={this.onDragOver}
@@ -234,7 +240,7 @@ export default class Row extends React.Component {
         </div>
       }
       {this.props.isSuggestion && this.state.topic_name !== null &&
-        <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
+        <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer", marginRight: "3px"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
           <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
@@ -245,11 +251,11 @@ export default class Row extends React.Component {
         </svg>
       } */}
       
-      <div style={{padding: "5px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
+      <div style={{padding: "0px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
         {this.state.topic_name !== null ? <React.Fragment>
-          <div style={{display: "flex", marginTop: "3px", fontSize: "14px"}}> 
+          <div style={{display: "flex", marginTop: "7px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "adatest-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
-              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={this.state.topic_name} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
+              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.state.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
             </div>
           </div>
           <div className="adatest-row" style={{opacity: 0.6, marginTop: "-16px", display: this.state.previewValue1 ? 'flex' : 'none'}}>
@@ -283,7 +289,7 @@ export default class Row extends React.Component {
             <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden", display: "flex"}}>
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
-            <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
+            <div onClick={this.clickOutput} style={{opacity: this.state.label === "off_topic" ? 0 : 1, maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.04) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
                 <span style={{width: "0px"}}></span>
                 <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
@@ -298,7 +304,7 @@ export default class Row extends React.Component {
       {/* <div className="adatest-row-score-text-box">
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
-      {this.state.topic_name === null &&
+      {/* {this.state.topic_name === null &&
         <svg height="30" width="90" style={{marginTop: "0px", flex: "0 0 90px", textAling: "left", display: "inline-block", marginLeft: "8px", marginRight: "0px"}}>
           {this.state.labeler === "imputed" && this.state.label === "pass" ?
             <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-30px" textAnchor="middle" />
@@ -319,7 +325,7 @@ export default class Row extends React.Component {
           <line x1="30" y1="15" x2="60" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
           <line x1="60" y1="15" x2="90" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
         </svg>
-      }
+      } */}
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
 
         let total_pass = 0;
@@ -330,95 +336,43 @@ export default class Row extends React.Component {
         if (this.state.topic_name !== null) {
           total_fail = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         }
+
+        let label_opacity = isNaN(overall_score[k]) ? 0.5 : 1;
         
         // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
         // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         return <div key={k} className="adatest-row-score-plot-box">
-          {overall_score[k] > 0 ?
-            <svg height="20" width="100">
-              {Number.isFinite(overall_score[k]) && <React.Fragment>
-                <line x1="50" y1="10" x2={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(207, 34, 46, 0.15)", strokeWidth: "20"}}></line>
-                <line x1={50} y1="0"
-                      x2={50} y2="20"
-                      style={{stroke: "rgb(207, 34, 46)", strokeWidth: "3"}}
-                ></line>
-                <polygon points="51,0 55,10 51,20" fill="rgb(207, 34, 46)" stroke="none"></polygon>
-                {/* {this.state.topic_name !== null && 
-                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>
+          {/* {overall_score[k] > 0 ? */}
+          <svg height="30" width="150">
+            {this.state.topic_name === null &&
+              <React.Fragment>
+                {this.state.labeler === "imputed" && this.state.label === "pass" ?
+                  <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                :
+                  <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.state.topic_name !== null &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)}</text>
-                } */}
-                {this.state.topic_name !== null && total_pass > 0 &&
-                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "normal", fontSize: "14px"}}>{total_pass}</text>
+                {this.state.labeler === "imputed" && this.state.label === "fail" ?
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                :
+                  <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.state.topic_name !== null && total_fail > 0 &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "normal", fontSize: "14px"}}>{total_fail}</text>
+                {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
+                  <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 140, 34)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                :
+                  <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {/* {this.state.topic_name === null &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                } */}
-                {/* {this.state.topic_name === null &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s", fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "rgb(207, 34, 46)", fontSize: "11px", opacity: 1}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                } */}
-                {/* {this.state.topic_name === null &&
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="25px" style={{color: "rgba(207, 34, 46,"+(this.props.isSuggestion ? 0.5 : 1)+")", cursor: "pointer"}} textAnchor="middle" />
-                }
-                {this.state.topic_name === null &&
-                  <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-25px" style={{color: "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-                } */}
-                {/* {
-                  <path class="fa" fill="rgb(207, 34, 46)" d={faTimes.icon[4]} />
-                } */}
-                {this.state.topic_name === 3324 && !isNaN(overall_score[k]) &&
-                  <text x={(48*scale_score(overall_score[k]) > 3000 ? 50 + 5 : 50 + 48*scale_score(overall_score[k]) + 5)} y="11" dominantBaseline="middle" textAnchor="start" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(207, 34, 46)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                }
-              </React.Fragment>}
-            </svg>
-          :
-            <svg height="20" width="100">
-              {Number.isFinite(overall_score[k]) && <React.Fragment>
-                <line x2="50" y1="10" x1={50 + 48*scale_score(overall_score[k])} y2="10" style={{stroke: "rgba(26, 127, 55, 0.15)", strokeWidth: "20"}}></line>
-                {/* {this.state.scores[k].filter(x => Number.isFinite(x[1])).map((score, index) => {
-                  return <line key={index} onMouseOver={e => this.onScoreOver(e, score[0])}
-                              onMouseOut={e => this.onScoreOut(e, score[0])}
-                              x1={50 + 48*scale_score(score[1])} y1="0"
-                              x2={50 + 48*scale_score(score[1])} y2="20"
-                              style={{stroke: score[1] <= 0 ? "rgb(26, 127, 55)" : "rgb(207, 34, 46)", strokeWidth: "2"}}
-                        ></line>
-                })} */}
-                <line x1={50} y1="0"
-                      x2={50} y2="20"
-                      style={{stroke: "rgb(26, 127, 55)", strokeWidth: "3"}}
-                ></line>
-                <polygon points="49,0 45,10 49,20" fill="rgb(26, 127, 55)" stroke="none"></polygon>
-                {/* {this.state.topic_name !== null &&
-                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0)}</text>
-                }
-                {this.state.topic_name !== null &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(207, 34, 46)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)}</text>
-                } */}
-                {this.state.topic_name !== null && total_pass > 0 &&
-                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "normal", fontSize: "14px"}}>{total_pass}</text>
-                }
-                {this.state.topic_name !== null && total_fail > 0 &&
-                  <text x="75" y="11" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "normal", fontSize: "14px"}}>{total_fail}</text>
-                }
-                {/* {this.state.topic_name === null &&
-                  <text x="25" y="11" dominantBaseline="middle" textAnchor="middle" style={{transition: "fill-opacity 1s, stroke-opacity 1s", strokeOpacity: this.state.hovering*1, fillOpacity: this.state.hovering*1, pointerEvents: "none", fill: "#ffffff", fontSize: "11px", strokeWidth: "3px", stroke: "rgb(26, 127, 55)", opacity: 1, strokeLinecap: "butt", strokeLinejoin: "miter", paintOrder: "stroke fill"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                } */}
-                {/* {this.state.topic_name === null &&
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="25px" style={{color: "rgb(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-                }
-                {this.state.topic_name === null &&
-                  <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-25px" style={{color: "rgb(26, 127, 55)", cursor: "pointer"}} textAnchor="middle" />
-                } */}
-                {this.state.topic_name === 2342 && !isNaN(overall_score[k]) &&
-                  <text x={(48*scale_score(overall_score[k]) < -3000 ? 50 - 5 : 50 + 48*scale_score(overall_score[k]) - 5)} y="11" dominantBaseline="middle" textAnchor="end" style={{pointerEvents: "none", fontSize: "11px", opacity: 0.7, fill: "rgb(26, 127, 55)"}}>{overall_score[k].toFixed(3).replace(/\.?0*$/, '')}</text>
-                }
-              </React.Fragment>}
-            </svg>
-          }
+                <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
+                <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
+                <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
+              </React.Fragment>
+            }
+            {this.state.topic_name !== null && total_pass > 0 &&
+              <text x="75" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "bold", fontSize: "14px"}}>{total_pass}</text>
+            }
+            {this.state.topic_name !== null && total_fail > 0 &&
+              <text x="125" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "bold", fontSize: "14px"}}>{total_fail}</text>
+            }
+          </svg>
         </div>
       })}
     </div>
@@ -486,7 +440,10 @@ export default class Row extends React.Component {
   }
 
   labelAsOffTopic(e) {
-    this.props.comm.send(this.props.id, {"topic": "_DELETE_"});
+    this.props.comm.send(this.props.id, {"label": "off_topic", "labeler": this.props.user});
+    if (this.props.isSuggestion) {
+      this.props.comm.send(this.props.id, {"topic": this.props.topic});
+    }
     this.setState({label: "off_topic"});
   }
 
@@ -577,7 +534,7 @@ export default class Row extends React.Component {
     e.stopPropagation();
     console.log("Row.onOpen(", e, ")");
     if (this.state.topic_name !== null && this.props.onOpen) {
-      this.props.onOpen(this.props.topic + "/" + this.state.topic_name);
+      this.props.onOpen(this.props.topic + "/" + encodeURIComponent(this.state.topic_name));
     }
   }
 
@@ -614,13 +571,14 @@ export default class Row extends React.Component {
   }
 
   inputTopicName(text) {
-    this.setState({topic_name: text.replace("\\", "").replace("\n", "")});
+    text = encodeURIComponent(text.replace("\\", "").replace("\n", ""));
+    this.setState({topic_name: text});
   }
 
   finishTopicName(text) {
     console.log("finishTopicName", text)
-    
-    this.setState({topic_name: text.replace("\\", "").replace("\n", ""), editing: false});
+    text = encodeURIComponent(text.replace("\\", "").replace("\n", ""));
+    this.setState({topic_name: text, editing: false});
     let topic = this.props.topic;
     if (this.props.isSuggestion) topic += "/__suggestions__";
     this.props.comm.send(this.props.id, {topic: topic + "/" + text});
