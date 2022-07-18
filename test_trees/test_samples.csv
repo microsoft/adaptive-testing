@@ -1,0 +1,27 @@
+,topic,input,output,label,labeler,description,model score,test_ids,author
+e1c1bc98b21a4958b2f01a909fba6765,/Colors,,,topic_marker,anonymous,,,,
+95d65512b76b456582a9527163040d2e,/Books,,,topic_marker,anonymous,,,,
+f48a193f5aab455d8d71e36fa1152901,/Books,"This book is very interesting.
+",POSITIVE,pass,imputed,,-0.9998513460159302,['f48a193f5aab455d8d71e36fa1152901'],
+3cdb731d4f6548f3a02aa4b00234b814,/Books/Nonfiction/History,,,topic_marker,anonymous,,,,
+82ade57ba2a3439180cc18f27d16772c,/Books/Fiction,,,topic_marker,anonymous,,,,
+0bd21c4b16db452fa37e610109c812bf,/Books/Nonfiction,,,topic_marker,anonymous,,,,
+b2ba952efcf843e9bc51e3bb2d7fdd9f,/Books/Fiction/Fantasy,,,topic_marker,anonymous,,,,
+ea84fd700483466389dacad2a0b96394,/Books/Nonfiction/Biography,,,topic_marker,anonymous,,,,
+ccd8bbf0b0a94099982c75730a804d37,/Books/Nonfiction/Biography,"A fascinating story of Henry Ford and his clash with the auto industry, his obsession with wages and workers and his refusal to unionize his workers.
+",POSITIVE,pass,anonymous,,-0.9996695518493652,['ccd8bbf0b0a94099982c75730a804d37'],anonymous
+5c40ad6cb8f340aca580495214d43437,/Books/Nonfiction/Biography,"This is a biography on Richard Wagner.
+",POSITIVE,pass,anonymous,,-0.998121440410614,['5c40ad6cb8f340aca580495214d43437'],anonymous
+3968ba582cea41a8ac12f7d5f445d750,/Books/Nonfiction/Biography,"Learn the truth behind The Beatles!
+",POSITIVE,pass,anonymous,,-0.998982846736908,['3968ba582cea41a8ac12f7d5f445d750'],anonymous
+672d0f6d2f5d4b71b58968099eeb2889,/Books/Nonfiction/Biography,"This book was written by the son of Winston Churchill and was put together with interviews with the late elder Churchill and other people who knew him. It's a very interesting look at Winston Churchill both as a public figure and a private person.
+",POSITIVE,pass,anonymous,,-0.9993419051170349,['672d0f6d2f5d4b71b58968099eeb2889'],anonymous
+579daa9360864ba39c60114d2dc8967e,/Books/Nonfiction/Biography,"Out of History by Elizabeth Norman is also a very interesting look at what happened to the Ottoman Empire.
+",POSITIVE,pass,anonymous,,-0.9994741082191467,['579daa9360864ba39c60114d2dc8967e'],anonymous
+542724c9d6ab45f2aefabedcac988b4c,/Books/Nonfiction/Biography,"George Washington Carver is one of the most talented
+people in the history of the world,
+a great inventor and scientist, and a true pioneer
+in the fields of agriculture, industrial chemistry,
+and, most importantly, good communication
+leadership.
+",POSITIVE,pass,anonymous,,-0.9998435974121094,['542724c9d6ab45f2aefabedcac988b4c'],anonymous

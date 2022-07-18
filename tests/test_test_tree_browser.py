@@ -26,7 +26,7 @@ def test_tree_browser():
     s = adatest.Scorer(lambda x: [f"{i}" for i in range(len(x))])
     gen1 = DummyGenerator()
     gen2 = DummyGenerator()
-    tree = adatest.TestTree(r"test_trees/animals.csv")
+    tree = adatest.TestTree(r"test_trees/test_samples.csv")
     browser = adatest.TestTreeBrowser(
       test_tree=tree,
       scorer=s,
@@ -39,7 +39,7 @@ def test_tree_browser():
       suggestion_thread_budget=0.5,
       prompt_builder=PromptBuilder(),
       active_generator="gen1",
-      starting_path="/Mammals/Cats",
+      starting_path="/Books/Nonfiction/Biography",
       score_filter=-1e10,
       topic_model_scale=0)
     browser.comm = DummyComm()
@@ -62,10 +62,10 @@ def test_generate_suggestions_filter(test_tree_browser):
     assert len(test_tree_browser.comm.data['browser']['suggestions']) == 0
 
 def test_change_topic(test_tree_browser):
-    test_tree_browser.interface_event({"event_id": "change_topic", "topic": "/Mammals/Pigs"})
+    test_tree_browser.interface_event({"event_id": "change_topic", "topic": "/Books/Nonfiction/History"})
     assert 'browser' in test_tree_browser.comm.data
     assert 'topic' in test_tree_browser.comm.data['browser']
-    assert test_tree_browser.comm.data['browser']['topic'] == "/Mammals/Pigs"
+    assert test_tree_browser.comm.data['browser']['topic'] == "/Books/Nonfiction/History"
 
 def test_clear_suggestions(test_tree_browser):
     # Generate suggestions, then clear them
@@ -83,7 +83,7 @@ def test_add_new_topic(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "add_new_topic"})
     assert 'browser' in test_tree_browser.comm.data
     assert 'tests' in test_tree_browser.comm.data['browser']
-    assert '/Mammals/Cats/New topic' in test_tree_browser.comm.data['browser']['tests']
+    assert '/Books/Nonfiction/Biography/New topic' in test_tree_browser.comm.data['browser']['tests']
 
 def test_add_new_test(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "redraw"})
