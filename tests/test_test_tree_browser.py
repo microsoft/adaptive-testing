@@ -51,18 +51,15 @@ def test_redraw(test_tree_browser):
 
 def test_generate_suggestions(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "generate_suggestions"})
-    logger.info(test_tree_browser.comm.data)
     assert 'browser' in test_tree_browser.comm.data
     assert 'suggestions' in test_tree_browser.comm.data['browser']
     assert len(test_tree_browser.comm.data['browser']['suggestions']) > 0
 
-# def test_generate_suggestions_filter(test_tree_browser):
-#     # TODO: Review with Harsha, is this supposed to work?
-#     test_tree_browser.interface_event({"event_id": "generate_suggestions", "filter": "filter"})
-#     logger.info(test_tree_browser.comm.data)
-#     assert 'browser' in test_tree_browser.comm.data
-#     assert 'suggestions' in test_tree_browser.comm.data['browser']
-#     assert len(test_tree_browser.comm.data['browser']['suggestions']) == 0
+def test_generate_suggestions_filter(test_tree_browser):
+    test_tree_browser.interface_event({"event_id": "generate_suggestions", "filter": "filter"})
+    assert 'browser' in test_tree_browser.comm.data
+    assert 'suggestions' in test_tree_browser.comm.data['browser']
+    assert len(test_tree_browser.comm.data['browser']['suggestions']) == 0
 
 def test_change_topic(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "change_topic", "topic": "/Mammals/Pigs"})
@@ -167,5 +164,3 @@ def test_change_output(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "change_output", "test_ids": [orig_test], "output": "testoutput"})
     test_tree_browser.interface_event({"event_id": "redraw"})
     assert test_tree_browser.comm.data[orig_test]['output'] == "testoutput"
-
-# test_change_label(test_tree_browser=test_tree_browser())
