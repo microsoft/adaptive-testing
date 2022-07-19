@@ -213,7 +213,7 @@ class OpenAI(Generator):
         if api_key is not None:
             openai.api_key = api_key
 
-    def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
         if len(prompts) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
