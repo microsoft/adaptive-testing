@@ -532,9 +532,9 @@ export default class Row extends React.Component {
   onOpen(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Row.onOpen(", e, ")");
+    console.log("this.state.topic_name XXXXXXXXXXXX", this.state.topic_name)//, "Row.onOpen(", e, ")");
     if (this.state.topic_name !== null && this.props.onOpen) {
-      this.props.onOpen(this.props.topic + "/" + encodeURIComponent(this.state.topic_name));
+      this.props.onOpen(this.props.topic + "/" + this.state.topic_name);
     }
   }
 

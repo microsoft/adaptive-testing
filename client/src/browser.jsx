@@ -488,7 +488,7 @@ export default class Browser extends React.Component {
 
   setLocation(pathname) {
     console.log("setLocation", pathname);
-    this.props.history.push(this.props.prefix + pathname);
+    this.props.history.push(encodeURIComponent(this.props.prefix + pathname)); // SML: encodeURIComponent is because the history object seems to decode the encoding
     this.setState({selections: {}});
   }
 
