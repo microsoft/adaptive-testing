@@ -68,11 +68,11 @@ def file_log(*args):
     f.flush()
     f.close()
 
-def is_subtopic(topic, candidate):
+def is_subtopic(topic: str, candidate: str) -> bool:
     # Returns true if candidate is a subtopic of topic
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
-def matches_filter(test, filter_text: str):
+def matches_filter(test, filter_text: str) -> bool:
     if filter_text is None or filter_text == "":
         return True
     else:
