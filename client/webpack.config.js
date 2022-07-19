@@ -1,6 +1,7 @@
 const path = require('path');
 
 const isDevelopment = process.env.NODE_ENV === 'dev';
+const ASSET_PATH = process.env.ASSET_PATH || '/';
 
 module.exports = {
   entry: path.resolve(__dirname, './src/adatest.jsx'),
@@ -38,6 +39,14 @@ module.exports = {
         enforce: "pre",
         test: /\.js$/,
         loader: "source-map-loader"
+      },
+      {
+        test: /\.(png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+          },
+        ],
       }
     ],
   },
@@ -50,6 +59,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, '../adatest/resources'),
+    publicPath: ASSET_PATH,
     filename: 'main.js',
   },
   mode: isDevelopment ? "development" : "production"

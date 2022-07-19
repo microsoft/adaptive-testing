@@ -29,6 +29,7 @@ export default class AdaTest extends React.Component {
               interfaceId={this.props.interfaceId} environment={this.props.environment}
               websocket_server={this.props.websocket_server} enabled={this.state.enabled}
               startingTopic={this.props.startingTopic} prefix={this.props.prefix}
+              outputMode={this.props.outputMode}
             />
           </Router>
         </div>

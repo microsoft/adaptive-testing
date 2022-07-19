@@ -7,6 +7,8 @@ import { changeInput, changeLabel, changeOutput, deleteTest, moveTest } from './
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
 
+import placeholder from "./placeholder.png";
+
 export default class Row extends React.Component {
   constructor(props) {
     super(props);
@@ -285,13 +287,19 @@ export default class Row extends React.Component {
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
             <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
-              <span style={{alignSelf: "flex-end"}}>
-                <span style={{width: "0px"}}></span>
-                <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
-                </span>
-                <span style={{width: "0px"}}></span>
-              </span>
+              { 
+                this.props.outputMode === "image" ? (
+                  <img src={placeholder} style={{width: "100%", height: "100%"}} />
+                ) : (
+                  <span style={{alignSelf: "flex-end"}}>
+                    <span style={{width: "0px"}}></span>
+                    <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
+                      <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
+                    </span>
+                    <span style={{width: "0px"}}></span>
+                  </span>
+                )
+              }
             </div>
           </div>
         )}

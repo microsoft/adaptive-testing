@@ -326,6 +326,7 @@ export default class Browser extends React.Component {
                 test_type_parts={this.state.test_type_parts}
                 user={this.state.user}
                 outputColumnWidth={outputColumnWidth}
+                outputMode={this.props.outputMode}
               />
             </React.Fragment>
           })}

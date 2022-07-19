@@ -102,7 +102,7 @@ class TestTreeBrowser():
 
     def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
                  max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
-                 score_filter, topic_model_scale):
+                 score_filter, topic_model_scale, output_mode):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -123,6 +123,7 @@ class TestTreeBrowser():
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
+        self.output_mode = output_mode
 
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
@@ -245,6 +246,7 @@ class TestTreeBrowser():
     AdaTestReact.createElement(AdaTest, {{
       interfaceId: "{self._id}", environment: "{environment}", startingTopic: "{self.current_topic}", prefix: "{prefix}",
       websocket_server: {"undefined" if websocket_server is None else '"'+websocket_server+'"'},\
+      outputMode: "{self.output_mode}",
     }}, null),
     document.getElementById('adatest_container_{self._id}')
   );
@@ -362,7 +364,8 @@ class TestTreeBrowser():
             for c in self.score_columns:
                 row[c] = ""
                 row[c[:-6] + " raw outputs"] = "{}"
-            self.test_tree.loc[uuid.uuid4().hex] = row
+            new_test_id = uuid.uuid4().hex
+            self.test_tree.loc[new_test_id] = row
 
             self._recompute_embeddings_and_save()
 
@@ -593,6 +596,7 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
+            "output_mode": self.output_mode,
             # "test_types": test_types,
             # "test_type_parts": test_type_parts,
         }
