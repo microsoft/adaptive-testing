@@ -35,7 +35,7 @@ class Generator():
         # value1_comparator_format = '"{value1}" {comparator} "{value2}"'
         # comparator_value2_format = '"{value1}" {comparator} "{value2}"'
 
-    def __call__(self, prompts, max_length=None):
+    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
         """ This should be overridden by concrete subclasses.
 
         Parameters:
