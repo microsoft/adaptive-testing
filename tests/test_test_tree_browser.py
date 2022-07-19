@@ -1,50 +1,3 @@
-import adatest
-from adatest._prompt_builder import PromptBuilder
-import pytest
-
-import logging
-logger = logging.getLogger("testlogger")
-
-class DummyGenerator(adatest.generators.Generator):
-    def __init__(self):
-        super().__init__(self)
-        self.gen_type = "model"
-
-    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
-        logger.info("DummyGenerator called with arguments %s", locals())
-        return ["generation" for _ in range(len(prompts))]
-
-class DummyComm():
-    def __init__(self):
-        self.data = None
-    
-    def send(self, data):
-        self.data = data
-
-@pytest.fixture
-def test_tree_browser():
-    s = adatest.Scorer(lambda x: [f"{i}" for i in range(len(x))])
-    gen1 = DummyGenerator()
-    gen2 = DummyGenerator()
-    tree = adatest.TestTree(r"test_trees/test_samples.csv")
-    browser = adatest.TestTreeBrowser(
-      test_tree=tree,
-      scorer=s,
-      generators={"gen1": gen1, "gen2": gen2},
-      auto_save=False,
-      user="testuser",
-      recompute_scores=False,
-      drop_inactive_score_columns=False,
-      max_suggestions=10,
-      suggestion_thread_budget=0.5,
-      prompt_builder=PromptBuilder(),
-      active_generator="gen1",
-      starting_path="/Books/Nonfiction/Biography",
-      score_filter=-1e10,
-      topic_model_scale=0)
-    browser.comm = DummyComm()
-    return browser
-
 def test_redraw(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "redraw"})
     assert 'browser' in test_tree_browser.comm.data
@@ -54,12 +7,14 @@ def test_generate_suggestions(test_tree_browser):
     assert 'browser' in test_tree_browser.comm.data
     assert 'suggestions' in test_tree_browser.comm.data['browser']
     assert len(test_tree_browser.comm.data['browser']['suggestions']) > 0
+    assert test_tree_browser.generators["gen1"].call_count == 1
 
 def test_generate_suggestions_filter(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "generate_suggestions", "filter": "filter"})
     assert 'browser' in test_tree_browser.comm.data
     assert 'suggestions' in test_tree_browser.comm.data['browser']
     assert len(test_tree_browser.comm.data['browser']['suggestions']) == 0
+    assert test_tree_browser.generators["gen1"].call_count == 1
 
 def test_change_topic(test_tree_browser):
     test_tree_browser.interface_event({"event_id": "change_topic", "topic": "/Books/Nonfiction/History"})
