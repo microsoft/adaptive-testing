@@ -239,11 +239,11 @@ export default class Browser extends React.Component {
                 />
               </React.Fragment>
             })}
-            {this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions &&
+            {/* {this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions &&
               <div onClick={e => this.removeScoreFilter(e)} className="adatest-row-add-button adatest-hover-opacity" style={{lineHeight: "25px", display: "inline-block",}}>
                 <FontAwesomeIcon icon={faChevronDown} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
-            }
+            } */}
             <div style={{height: "15px"}}></div>
           </div>
           

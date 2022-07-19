@@ -375,16 +375,15 @@ class TestTree():
 
         for id, test in self._tests.iterrows():
             if test.label == "":
-                features = np.hstack(adatest.embed([test.input, test.output]))
                 topic = test.topic
                 if topic.endswith("/__suggestions__"): # predict suggestions using their parent topic model
                     topic = topic[:-16]
                     
-                self._tests.loc[id, "label"] = self.topic_model(topic)(features)
+                self._tests.loc[id, "label"] = self.topic_model(topic)(test.input, test.output)
                 self._tests.loc[id, "labeler"] = "imputed"
 
     def predict_labels(self, topical_io_pairs):
-        """ Return the label probabilities for a set of input-output pairs.
+        """ Return the label probabilities for a set of input-output pairs. [NOT USED RIGHT NOW]
 
         Parameters
         ----------

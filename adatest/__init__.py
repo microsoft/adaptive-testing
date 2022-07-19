@@ -8,6 +8,7 @@ from . import generators
 import transformers
 import torch
 from transformers import AutoTokenizer, AutoModel
+import numpy as np
 
 __version__ = '0.2.3'
 
@@ -16,7 +17,7 @@ embedding_model = None
 _embedding_cache = {}
 
 
-def embed(strings):
+def embed(strings, normalize=True):
     global embedding_model
 
     # this is from the sentence_transformers documentation
@@ -54,7 +55,10 @@ def embed(strings):
     if len(new_strings) > 0:
         new_embeds = embedding_model(new_strings)
         for i,s in enumerate(new_strings):
-            _embedding_cache[s] = new_embeds[i]
+            if normalize:
+                _embedding_cache[s] = new_embeds[i] / np.linalg.norm(new_embeds[i])
+            else:
+                _embedding_cache[s] = new_embeds[i]
     
     return [_embedding_cache[s] for s in strings]
 

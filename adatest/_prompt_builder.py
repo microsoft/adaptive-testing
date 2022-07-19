@@ -127,7 +127,7 @@ class PromptBuilder():
         # promote direct children over subtopic descendants and filter for topics vs tests
         if suggest_topics:
             topic_scaling *= 1 + 99 * np.array([v.rsplit('/', 1)[0] == topic for v in test_tree["topic"]])
-            topic_scaling *= np.array(test_tree["label"] == "topic_marker")
+            topic_scaling *= np.array(test_tree["label"] == "topic_marker") * np.array(["__suggestions__" not in t for t in test_tree["topic"]])
         else:
             topic_scaling *= 1 + 99 * np.array([v == topic for v in test_tree["topic"]])
             topic_scaling *= np.array(test_tree["label"] != "topic_marker")

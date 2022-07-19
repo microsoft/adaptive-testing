@@ -120,13 +120,19 @@ class ClassifierScorer(Scorer):
         self.method = method
         self.dirichlet_concentration = dirichlet_concentration
 
-    def __call__(self, tests, score_column, overwrite_outputs=False, output_bias=0.5):
-        """ Score a set of tests.
+    def __call__(self, tests, score_column, overwrite_outputs=False, save_outputs=False, output_bias=0.5):
+        """ Fill in the given score column in a test tree.
 
         Parameters
         ----------
-        tests : pandas.DataFrame
-            A dataframe of tests.
+        tests : TestTree
+            A test tree that will be modified in place to fill in any missing scores for the given score_column.
+
+        score_column : string
+            The name of the column in the test tree that will be filled in with the scores.
+
+        overwrite_outputs : bool
+            If True, the outputs of the model already in the test tree will be overwritten with the model's predictions.
 
         output_bias : float
             How much to bias the output entries in a test towards the actual output from the model.
@@ -169,25 +175,28 @@ class ClassifierScorer(Scorer):
         current_labelers = tests["labeler"]
         updated_ids = []
         for i, ind in enumerate(eval_inds):
-            if current_labelers.iloc[ind] == "imputed":
-                id = tests.index[ind]
-                tests.loc[id, "output"] = out_strings[ind]
-                tests.loc[id, "label"] = ""
-                tests.loc[id, score_column] = out_probs[ind]
-                updated_ids.append(id)
-            elif not overwrite_outputs and current_outputs.iloc[ind] != out_strings[ind]:
+            # if current_labelers.iloc[ind] == "imputed":
+            #     id = tests.index[ind]
+            #     if overwrite_outputs:
+            #         tests.loc[id, "output"] = out_strings[ind]
+            #     tests.loc[id, "label"] = ""
+            #     tests.loc[id, score_column] = out_probs[ind]
+            #     updated_ids.append(id)
+            # el
+            if not overwrite_outputs and current_outputs.iloc[ind] != "" and current_outputs.iloc[ind] != out_strings[ind]:
 
                 # mark the current row as nan score (meaning the output does not match)
                 tests.loc[tests.index[ind], score_column] = np.nan
 
-                # add a new test where the model output does match
-                id = uuid.uuid4().hex
-                tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
-                tests.loc[id, "input"] = eval_inputs[i]
-                tests.loc[id, "output"] = out_strings[ind]
-                tests.loc[id, "label"] = ""
-                tests.loc[id, "labeler"] = "imputed"
-                tests.loc[id, score_column] = out_probs[ind]
+                # add a new test where the model output does match if we are saving outputs
+                if save_outputs:
+                    id = uuid.uuid4().hex
+                    tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
+                    tests.loc[id, "input"] = eval_inputs[i]
+                    tests.loc[id, "output"] = out_strings[ind]
+                    tests.loc[id, "label"] = ""
+                    tests.loc[id, "labeler"] = "imputed"
+                    tests.loc[id, score_column] = out_probs[ind]
 
                 updated_ids.append(id)
             else:
