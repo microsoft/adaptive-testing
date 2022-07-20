@@ -36,7 +36,7 @@ class TestTree():
     webserver. A TestTree object also conforms to most of the standard pandas DataFrame API.
     """
 
-    def __init__(self, tests=None, index=None, compute_embeddings=False, **kwargs):
+    def __init__(self, tests=None, index=None, compute_embeddings=False, ensure_topic_markers=True, **kwargs):
         """ Create a new test tree.
 
         Parameters
@@ -118,21 +118,8 @@ class TestTree():
             self._tests["labeler"] = ["imputed" for _ in range(self._tests.shape[0])]
 
         # ensure that all topics have a topic_marker entry
-        marked_topics = {t: True for t in set(self._tests.loc[self._tests["label"] == "topic_marker"]["topic"])}
-        for topic in set(self._tests["topic"]):
-            parts = topic.split("/")
-            for i in range(1, len(parts)+1):
-                parent_topic = "/".join(parts[:i])
-                if parent_topic not in marked_topics:
-                    self._tests.loc[uuid.uuid4().hex] = {
-                        "label": "topic_marker",
-                        "topic": parent_topic,
-                        "labeler": "imputed",
-                        "input": "",
-                        "output": "",
-                        "description": ""
-                    }
-                    marked_topics[parent_topic] = True
+        if ensure_topic_markers:
+            self.ensure_topic_markers()
 
         # drop any duplicate index values
         self._tests = self._tests.groupby(level=0).first()
@@ -151,6 +138,23 @@ class TestTree():
         # # keep track of our original state
         # if self.auto_save:
         #     self._last_saved_tests = self._tests.copy()
+
+    def ensure_topic_markers(self):
+        marked_topics = {t: True for t in set(self._tests.loc[self._tests["label"] == "topic_marker"]["topic"])}
+        for topic in set(self._tests["topic"]):
+            parts = topic.split("/")
+            for i in range(1, len(parts)+1):
+                parent_topic = "/".join(parts[:i])
+                if parent_topic not in marked_topics:
+                    self._tests.loc[uuid.uuid4().hex] = {
+                        "label": "topic_marker",
+                        "topic": parent_topic,
+                        "labeler": "imputed",
+                        "input": "",
+                        "output": "",
+                        "description": ""
+                    }
+                    marked_topics[parent_topic] = True
 
     def compute_embeddings(self):
         """ Compute the embeddings for all test cases in the test tree.
@@ -375,11 +379,7 @@ class TestTree():
 
         for id, test in self._tests.iterrows():
             if test.label == "":
-                topic = test.topic
-                if topic.endswith("/__suggestions__"): # predict suggestions using their parent topic model
-                    topic = topic[:-16]
-                    
-                self._tests.loc[id, "label"] = self.topic_model(topic)(test.input, test.output)
+                self._tests.loc[id, "label"] = self.topic_model(test.topic)(test.input, test.output)
                 self._tests.loc[id, "labeler"] = "imputed"
 
     def predict_labels(self, topical_io_pairs):
@@ -420,10 +420,8 @@ class TestTree():
 
         return np.array(out)
 
-
-
-
     def topic_model(self, topic):
+        topic = topic.replace("/__suggestions__", "") # predict suggestions using their parent topic model
         if topic not in self._topic_models:
             self._topic_models[topic] = TopicModel(topic, self)
         return self._topic_models[topic]
@@ -448,7 +446,7 @@ class TestTreeLocIndexer():
         
         subset = self.test_tree._tests.loc[key]
         if hasattr(subset, 'columns') and len(set(["topic", "input", "output", "label"]) - set(subset.columns)) == 0:
-            test_tree_slice = TestTree(subset)
+            test_tree_slice = TestTree(subset, index=subset.index, ensure_topic_markers=False)
             test_tree_slice._tests_location = self.test_tree._tests_location
             return test_tree_slice
         else:
@@ -470,7 +468,7 @@ class TestTreeILocIndexer():
         
         subset = self.test_tree._tests.iloc[key]
         if hasattr(subset, 'columns') and len(set(["topic", "input", "output", "label"]) - set(subset.columns)) == 0:
-            test_tree_slice = TestTree(subset)
+            test_tree_slice = TestTree(subset, ensure_topic_markers=False)
             test_tree_slice._tests_location = self.test_tree._tests_location
             return test_tree_slice
         else:

@@ -120,7 +120,7 @@ class ClassifierScorer(Scorer):
         self.method = method
         self.dirichlet_concentration = dirichlet_concentration
 
-    def __call__(self, tests, score_column, overwrite_outputs=False, save_outputs=False, output_bias=0.5):
+    def __call__(self, tests, eval_ids):#, score_column, overwrite_outputs=False, save_outputs=False, output_bias=0.5):
         """ Fill in the given score column in a test tree.
 
         Parameters
@@ -137,19 +137,19 @@ class ClassifierScorer(Scorer):
         output_bias : float
             How much to bias the output entries in a test towards the actual output from the model.
         """
-
         
-        # determine which rows we need to evaluate
+        # expand templates in the test tree
         eval_inputs = []
         eval_inds = []
-        for i, (id, test) in enumerate(tests.iterrows()):
-            if test[score_column] == "" and test.label != "topic_marker":
-                template_expansions = expand_template(test.input)
-                for expansion in template_expansions:
-                    eval_inputs.append(expansion)
-                    eval_inds.append(i)
 
-        # run the model on the rows we need to evaluate
+        for i, id in enumerate(eval_ids):
+            test = tests.loc[id]
+            template_expansions = expand_template(test.input)
+            for expansion in template_expansions:
+                eval_inputs.append(expansion)
+                eval_inds.append(i)
+
+        # run the model
         try:
             model_out = self.model(eval_inputs)
         except Exception as e:
@@ -158,23 +158,29 @@ class ClassifierScorer(Scorer):
             log.error(eval_inputs)
             log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
 
-        # compute the output strings for each output
-        out_strings = [[] for _ in range(tests.shape[0])]
-        out_probs = [[] for _ in range(tests.shape[0])]
+        # compute the output strings and probabilites for each output in template form
+        out_strings = [[] for _ in range(len(eval_ids))]
+        out_probs = [[] for _ in range(len(eval_ids))]
         i = 0
         while i < len(model_out):
             out_strings[eval_inds[i]].append(self.model.output_names[np.argmax(model_out[i])])
-            out_probs[eval_inds[i]].append(np.max(model_out[i]))
+            out_probs[eval_inds[i]].append(model_out[i])
             i += 1
         for i in eval_inds:
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
-            out_probs[i] = np.min(out_probs[i]) # the probability of a set of items is the prob of the min item
+            out_probs[i] = np.column_stack(out_probs[i]) # the probability of a set of items is the prob of the min item
 
         # ensure the model output is represented in the tests
-        current_outputs = tests["output"]
-        current_labelers = tests["labeler"]
+        # current_outputs = tests["output"]
+        # current_labelers = tests["labeler"]
         updated_ids = []
+        scores = []
+        outputs = []
         for i, ind in enumerate(eval_inds):
+            outputs.append(out_strings[ind])
+            scores.append(self._score_test(tests, eval_ids[ind], out_probs[ind]))
+
+        return outputs,scores
             # if current_labelers.iloc[ind] == "imputed":
             #     id = tests.index[ind]
             #     if overwrite_outputs:
@@ -183,31 +189,60 @@ class ClassifierScorer(Scorer):
             #     tests.loc[id, score_column] = out_probs[ind]
             #     updated_ids.append(id)
             # el
-            if not overwrite_outputs and current_outputs.iloc[ind] != "" and current_outputs.iloc[ind] != out_strings[ind]:
+        #     if not overwrite_outputs and current_outputs.iloc[ind] != "" and current_outputs.iloc[ind] != out_strings[ind]:
 
-                # mark the current row as nan score (meaning the output does not match)
-                tests.loc[tests.index[ind], score_column] = np.nan
+        #         # mark the current row as nan score (meaning the output does not match)
+        #         tests.loc[tests.index[ind], score_column] = np.nan
 
-                # add a new test where the model output does match if we are saving outputs
-                if save_outputs:
-                    id = uuid.uuid4().hex
-                    tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
-                    tests.loc[id, "input"] = eval_inputs[i]
-                    tests.loc[id, "output"] = out_strings[ind]
-                    tests.loc[id, "label"] = ""
-                    tests.loc[id, "labeler"] = "imputed"
-                    tests.loc[id, score_column] = out_probs[ind]
+        #         # add a new test where the model output does match if we are saving outputs
+        #         if save_outputs:
+        #             id = uuid.uuid4().hex
+        #             tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
+        #             tests.loc[id, "input"] = eval_inputs[i]
+        #             tests.loc[id, "output"] = out_strings[ind]
+        #             tests.loc[id, "labeler"] = "imputed"
+        #             tests.loc[id, "label"] = ""
+        #             tests.loc[id, score_column] = self._score_test(tests, id, out_probs[ind])
 
-                updated_ids.append(id)
-            else:
-                id = tests.index[ind]
-                tests.loc[id, "output"] = out_strings[ind]
-                tests.loc[id, score_column] = out_probs[ind]
-                updated_ids.append(id)
-        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+        #         updated_ids.append(id)
+        #     else:
+        #         id = tests.index[ind]
+        #         tests.loc[id, "output"] = out_strings[ind]
+        #         tests.loc[id, score_column] = self._score_test(tests, id, out_probs[ind])
+        #         updated_ids.append(id)
+        # tests.deduplicate() # make sure any duplicates we may have introduced are removed
 
-        # reimpute missing labels
-        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
+        # # reimpute missing labels
+        # tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
+
+    def _score_test(self, tests, id, probs, topk=20):
+        test = tests.loc[id]
+        fail_prob = 0
+        pass_prob = 0
+
+        # if this is not a templated test
+        if probs.shape[1] == 1:
+            inds = np.argsort(probs[:,0])[::-1]
+            for ind in inds[:topk]:
+
+                # SML: we could use any manually given labels when possible, but then that would make the score depend on the label 
+                # and so we would either need to save the full output of the model or recompute every time
+                # if self.model.output_names[ind] == test["output"] and test["labeler"] != "imputed":
+                #     label = test["label"]
+                
+                # # otherwise we use the local topic model to predict the label
+                # else:
+                label = tests.topic_model(test.topic)(test.input, self.model.output_names[ind])
+                if label == "fail":
+                    fail_prob += probs[ind, 0]
+                elif label == "pass":
+                    pass_prob += probs[ind, 0]
+
+            assert fail_prob + pass_prob > 0, "The model outputed probabilities that are all zero, and hence can't be scored!"
+            return fail_prob / (pass_prob + fail_prob)
+        else:
+            raise NotImplementedError("TODO: implement classifer scoring for templated tests")
+
 
         # set the test score sign to match the label
         # for id in updated_ids:
@@ -347,27 +382,26 @@ class GeneratorScorer(Scorer):
         self.topk = topk
         self.method = method
 
-    def __call__(self, tests, score_column, overwrite_outputs=False, output_bias=0.5):
+    def __call__(self, tests, eval_ids):
         """ Score a set of tests.
 
         Parameters
         ----------
-        tests : pandas.DataFrame
+        tests : TestTree or DataFrame
             A dataframe of tests.
 
-        output_bias : float
-            How much to bias the output entries in a test towards the actual output from the model.
+        eval_ids : list of strings
+            The evaluation IDs to use.
         """
 
         # determine which rows we need to evaluate
         eval_inputs = []
         eval_inds = []
-        for i, (id, test) in enumerate(tests.iterrows()):
-            if test[score_column] == "" and test.label != "topic_marker":
-                template_expansions = expand_template(test.input)
-                for expansion in template_expansions:
-                    eval_inputs.append(expansion)
-                    eval_inds.append(i)
+        for i, id in enumerate(eval_ids):
+            template_expansions = expand_template(tests.loc[id, "input"])
+            for expansion in template_expansions:
+                eval_inputs.append(expansion)
+                eval_inds.append(i)
 
         # run the model on the rows we need to evaluate
         try:
@@ -379,7 +413,7 @@ class GeneratorScorer(Scorer):
             log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
 
         # compute the output strings for each output
-        out_strings = [[] for _ in range(tests.shape[0])]
+        out_strings = [[] for _ in range(len(eval_ids))]
         i = 0
         while i < len(model_out):
             out_strings[eval_inds[i]].append(model_out[i])
@@ -387,46 +421,89 @@ class GeneratorScorer(Scorer):
         for i in eval_inds:
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
 
-        # ensure the model output is represented in the tests
-        current_outputs = tests["output"]
-        current_labelers = tests["labeler"]
-        updated_ids = []
+        scores = []
+        outputs = []
         for i, ind in enumerate(eval_inds):
-            if current_labelers.iloc[ind] == "imputed":
-                id = tests.index[ind]
-                tests.loc[id, "output"] = out_strings[ind]
-                tests.loc[id, "label"] = ""
-                tests.loc[id, score_column] = 1.0
-                updated_ids.append(id)
-            elif not overwrite_outputs and current_outputs.iloc[ind] != out_strings[ind]:
+            outputs.append(out_strings[ind])
+            scores.append(self._score_test(tests, eval_ids[ind], out_strings[ind]))
 
-                # mark the current row as nan score (meaning the output does not match)
-                tests.loc[tests.index[ind], score_column] = np.nan
+        return outputs,scores
 
-                # add a new test where the model output does match
-                id = uuid.uuid4().hex
-                tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
-                tests.loc[id, "input"] = eval_inputs[i]
-                tests.loc[id, "output"] = out_strings[ind]
-                tests.loc[id, "label"] = ""
-                tests.loc[id, "labeler"] = "imputed"
-                tests.loc[id, score_column] = 1.0
+        # # ensure the model output is represented in the tests
+        # current_outputs = tests["output"]
+        # current_labelers = tests["labeler"]
+        # updated_ids = []
+        # new_outputs = []
+        # scores = []
+        # for i, ind in enumerate(eval_inds):
+        #     if current_labelers.iloc[ind] == "imputed":
+        #         id = tests.index[ind]
+        #         tests.loc[id, "output"] = out_strings[ind]
+        #         tests.loc[id, "label"] = ""
+        #         tests.loc[id, score_column] = 1.0
+        #         updated_ids.append(id)
+        #     elif not overwrite_outputs and current_outputs.iloc[ind] != out_strings[ind]:
 
-                updated_ids.append(id)
-            else:
-                id = tests.index[ind]
-                tests.loc[id, "output"] = out_strings[ind]
-                tests.loc[id, score_column] = 1.0
-                updated_ids.append(id)
-        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+        #         # mark the current row as nan score (meaning the output does not match)
+        #         tests.loc[tests.index[ind], score_column] = np.nan
 
-        # reimpute missing labels
-        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
+        #         # add a new test where the model output does match
+        #         id = uuid.uuid4().hex
+        #         tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
+        #         tests.loc[id, "input"] = eval_inputs[i]
+        #         tests.loc[id, "output"] = out_strings[ind]
+        #         tests.loc[id, "label"] = ""
+        #         tests.loc[id, "labeler"] = "imputed"
+        #         tests.loc[id, score_column] = 1.0
 
-        # set the test score sign to match the label
-        for id in updated_ids:
-            if id in tests.index and tests.loc[id, "label"] == "pass":
-                tests.loc[id, score_column] = -float(tests.loc[id, score_column])
+        #         updated_ids.append(id)
+        #     else:
+        #         id = tests.index[ind]
+        #         tests.loc[id, "output"] = out_strings[ind]
+        #         tests.loc[id, score_column] = 1.0
+        #         updated_ids.append(id)
+        # tests.deduplicate() # make sure any duplicates we may have introduced are removed
+
+        # # reimpute missing labels
+        # tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
+
+        # # set the test score sign to match the label
+        # for id in updated_ids:
+        #     if id in tests.index and tests.loc[id, "label"] == "pass":
+        #         tests.loc[id, score_column] = -float(tests.loc[id, score_column])
+
+    def _score_test(self, tests, id, output):
+        test = tests.loc[id]
+
+        label = tests.topic_model(test.topic)(test.input, output)
+
+        if label == "pass":
+            return 0.0
+        else:
+            return 1.0
+
+        # # if this is not a templated test
+        # if probs.shape[1] == 1:
+        #     inds = np.argsort(probs[:,0])[::-1]
+        #     for ind in inds[:topk]:
+
+        #         # SML: we could use any manually given labels when possible, but then that would make the score depend on the label 
+        #         # and so we would either need to save the full output of the model or recompute every time
+        #         # if self.model.output_names[ind] == test["output"] and test["labeler"] != "imputed":
+        #         #     label = test["label"]
+                
+        #         # # otherwise we use the local topic model to predict the label
+        #         # else:
+        #         label = tests.topic_model(test.topic)(test.input, self.model.output_names[ind])
+        #         if label == "fail":
+        #             fail_prob += probs[ind, 0]
+        #         elif label == "pass":
+        #             pass_prob += probs[ind, 0]
+
+        #     assert fail_prob + pass_prob > 0, "The model outputed probabilities that are all zero, and hence can't be scored!"
+        #     return fail_prob / (pass_prob + fail_prob)
+        # else:
+        #     raise NotImplementedError("TODO: implement classifer scoring for templated tests")
 
 
 class ClassifierScorerOld(Scorer):

@@ -28,7 +28,7 @@ class PromptBuilder():
     """ A class to build prompts for the model.
     """
     
-    def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=1.0, skip_randomization=0.25, prompt_diversity=True,
+    def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=0.25, skip_randomization=0.25, prompt_diversity=True,
                  subtopic_diversity=True):
         """ Initialize the prompt builder.
         
@@ -41,8 +41,7 @@ class PromptBuilder():
             The proportion of slots to make fully random (within the current topic).
 
         score_randomization : float
-            An additive randomization factor for the scores. 0 mean no randomization, 1 means add one standard
-            deviation of Gaussian noise.
+            The standard deviation of an additive Gaussian randomization factor for the scores.
 
         skip_randomization : float
             The proportion of times we skip over top ranking tests when building the prompt.
@@ -154,9 +153,9 @@ class PromptBuilder():
             scores = np.ones(len(ids)) # Scores should not influence topic suggestions
         else:
             # compute a positive single value score for each test
-            scores = np.array([score_max(test_tree.loc[k, score_column]) for k in ids])
-            scores -= np.nanmin(scores) - 1e-8 # the 1e-8 terms causes NaN scores to be last priority
-            scores = np.nan_to_num(scores)
+            scores = np.array([score_max(test_tree.loc[k, score_column], test_tree.loc[k, "label"]) for k in ids])
+            # scores -= np.nanmin(scores) - 1e-8 # the 1e-8 terms causes NaN scores to be last priority
+            # scores = np.nan_to_num(scores)
 
             # rank_vals = scores * topic_scaling * hidden_scaling
             # test_type = test_tree.loc[ids[np.argmax(rank_vals)], "type"]
@@ -181,14 +180,16 @@ class PromptBuilder():
             scores_curr = scores.copy()
             topic_scaling_curr = topic_scaling.copy()
 
-            # score randomization TODO: Scott look into scores_curr > 1
-            score_weights = topic_scaling * (scores_curr > 1)
-            if np.sum(score_weights) > 0:
-                std_dev = np.sqrt(np.cov(scores_curr, aweights=score_weights)) + 1e-6
-            else:
-                std_dev = 1e-6
-            if not np.isnan(std_dev):
-                scores_curr += self.score_randomization * std_dev * np.random.rand(len(ids))
+            # score randomization
+            scores_curr += self.score_randomization * np.random.rand(len(ids))
+            # score_weights = topic_scaling * (scores_curr > 1e-2) # (scores_curr > 1e-2) is to not compute noise std based on the very low nan scores
+            # if np.sum(score_weights) > 0:
+            #     std_dev = np.sqrt(np.cov(scores_curr, aweights=score_weights)) + 1e-6
+            # else:
+            #     std_dev = 1e-6
+            # if not np.isnan(std_dev):
+            #     scores_curr += self.score_randomization * std_dev * np.random.rand(len(ids))
+                
 
             # sim_avoidance is a vector that marks which items (and items related through similarities)
             # should be avoided (ranked lower for prompt selection)
@@ -215,14 +216,14 @@ class PromptBuilder():
             outside_topics_used = np.ones(len(ids))
             while len(prompt_ids) < num_greedy + num_random:
 
-                # once we get to the random part of the process we forget what topics we have visited and scramble the scores
+                # once we get to the random part of the process we scramble the scores
                 if len(prompt_ids) == num_greedy:
-                    scores = 1 + np.random.rand(len(ids))*0.1
+                    scores_curr = 1 + np.random.rand(len(ids))*0.1
 
                 # find the next bext index
                 if self.prompt_diversity:
                     diversity = 1 - (similarities * sim_avoidance).max(1)
-                rank_vals = scores * topic_scaling_curr * diversity * (1 - hard_avoidance) * hidden_scaling * outside_topics_used
+                rank_vals = scores_curr * topic_scaling_curr * diversity * (1 - hard_avoidance) * hidden_scaling * outside_topics_used
 
                 if np.nanmax(rank_vals) <= 0 and len(prompt_ids) > 0: # stop if we have run out of the current subtree
                     break
@@ -280,13 +281,13 @@ def is_subtopic(topic, candidate):
     """
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
-def score_max(s):
+def score_max(s, label):
     if s == "" or s is None:
-        return -1e3
+        return 1 if label == "fail" else 0
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])
     elif np.isnan(s):
-        return -1e3
+        return 1 if label == "fail" else 0
     else:
         return np.max(s)
 

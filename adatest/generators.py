@@ -77,25 +77,33 @@ class Generator():
             # gen_value3 = False
         return show_topics#, gen_value1, gen_value2, gen_value3
     
-    def _create_prompt_strings(self, prompts, topic):
+    def _create_prompt_strings(self, prompts, topic, content_type):
         """ Convert prompts that are lists of tuples into strings for the LM to complete.
         """
 
-        show_topics = self._varying_values(prompts, topic)
+        assert content_type in ["tests", "topics"], "Invalid mode: {}".format(content_type)
+
+        show_topics = self._varying_values(prompts, topic) or content_type == "topic"
 
         prompt_strings = []
         for prompt in prompts:
             prompt_string = ""
             for p_topic, input in prompt:
                 if show_topics:
-                    prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
+                    if content_type == "tests":
+                        prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
+                    elif content_type == "topics":
+                        prompt_string += "A subtopic of " + self.quote + p_topic + self.quote + " is " + self.quote
                 else:
                     prompt_string += self.quote
                 
                 prompt_string += input + self.quote
                 prompt_string += self.sep
             if show_topics:
-                prompt_strings.append(prompt_string + self.sep + topic + ":" + self.sep + self.quote)
+                if content_type == "tests":
+                    prompt_strings.append(prompt_string + self.sep + topic + ":" + self.sep + self.quote)
+                elif content_type == "topics":
+                    prompt_strings.append(prompt_string + "A subtopic of " + self.quote + topic + self.quote + " is " + self.quote)
             else:
                 prompt_strings.append(prompt_string + self.quote)
         return prompt_strings
@@ -155,11 +163,11 @@ class Transformers(Generator):
 
         self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
     
-    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, mode, scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
         if len(prompts) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
-        prompt_strings = self._create_prompt_strings(prompts, topic)
+        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
         
         # monkey-patch a method that prevents the use of past_key_values
         saved_func = self.source.prepare_inputs_for_generation
@@ -213,7 +221,7 @@ class OpenAI(Generator):
         if api_key is not None:
             openai.api_key = api_key
 
-    def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, mode, scorer, num_samples=1, max_length=100):
         if len(prompts) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
@@ -256,7 +264,7 @@ class OpenAI(Generator):
 
 
         # create prompts to generate the model input parameters of the tests
-        prompt_strings = self._create_prompt_strings(prompts, topic)
+        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
@@ -295,9 +303,9 @@ class AI21(Generator):
         self.temperature = temperature
         self.event_loop = asyncio.get_event_loop()
     
-    def __call__(self, prompts, topic, test_type=None, scorer=None, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, mode, scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
-        prompt_strings = self._create_prompt_strings(prompts, topic)
+        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
         
         # define an async call to the API
         async def http_call(prompt_string):

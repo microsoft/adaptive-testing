@@ -197,8 +197,7 @@ class TestTreeBrowser():
         ]
 
         # apply all the scorers to the test tree (this updates the test tree)
-        for k in self.scorer:
-            self.scorer[k](self.test_tree, k+" score")
+        self._compute_embeddings_and_scores(self.test_tree, self.recompute_scores, overwrite_outputs=False, save_outputs=True)
 
         # # make sure all the tests have scores (if we have a scorer)
         # self._compute_embeddings_and_scores(self.test_tree)
@@ -422,8 +421,11 @@ class TestTreeBrowser():
                     self.test_tree.loc[k, self.score_columns] = ""
                     self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
                 elif "label" in msg[k]:
+                    #self.test_tree.retrain_topic_model(self.current_topic)
+                    pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
                     # sign = -1 if msg[k]["label"] == "pass" else 1
-                    self.test_tree.loc[k, self.score_columns] = abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
+                    # self.test_tree.loc[k, self.score_columns] = ""#abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
+                    # self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs=False)
 
                 # send just the data that changed back to the frontend
                 sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c], self.test_tree.loc[k, "label"])] for c in self.score_columns}
@@ -525,11 +527,11 @@ class TestTreeBrowser():
                 try:
                     total = 0
                     count = 0
-                    sign = 1 #if data[id]["label"] == "fail" else -1
+                    # sign = 1 #if data[id]["label"] == "fail" else -1
                     for s in data[id]["scores"][self.score_columns[0]]:
                         val = score_max(s[1], nan_val=np.nan)
                         if not np.isnan(val) and val is not None:
-                            total += val * sign
+                            total += val# * sign
                             count += 1
                     if count == 0:
                         return 1e3
@@ -784,11 +786,46 @@ class TestTreeBrowser():
         for i, (k, row) in enumerate(df.iterrows()):
             row["score"] = float(row["score"]) + topic_model_scale * sim_scores[i]
 
-    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
+    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False, save_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
 
         for k in self.scorer:
-            self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs)
+            # determine which rows we need to evaluate
+            eval_ids = []
+            for i, (id, test) in enumerate(tests.iterrows()):
+                if test[k+" score"] == "" and test.label != "topic_marker" and test.label != "off_topic":
+                    eval_ids.append(id)
+
+            # run the scorer
+            new_outputs,scores = self.scorer[k](tests, eval_ids)
+
+            # update the scores in the test tree
+            current_outputs = tests["output"]
+            for i,id in enumerate(eval_ids):
+                # tests.loc[id, k+" score"] = scores[i]
+
+                if not overwrite_outputs and current_outputs.loc[id] != "" and current_outputs.loc[id] != new_outputs[i]:
+
+                    # mark the current row as nan score (meaning the output does not match)
+                    tests.loc[id, k+" score"] = np.nan
+
+                    # add a new test where the model output does match if we are saving outputs
+                    if save_outputs:
+                        id_new = uuid.uuid4().hex
+                        tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
+                        tests.loc[id_new, "input"] = tests.loc[id, "input"]
+                        tests.loc[id_new, "output"] = new_outputs[i]
+                        tests.loc[id_new, "labeler"] = "imputed"
+                        tests.loc[id_new, "label"] = ""
+                        tests.loc[id_new, k+" score"] = scores[i]
+                else:
+                    tests.loc[id, "output"] = new_outputs[i]
+                    tests.loc[id, k+" score"] = scores[i]
+
+        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+
+        # reimpute missing labels
+        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
         return
         for k in self.scorer:
 
@@ -1076,7 +1113,7 @@ def score_max(s, nan_val=-1e3):
 
 def score_parts(s, label):
     if label == "pass":
-        sign = -1
+        sign = 1
     elif label == "fail":
         sign = 1
     else:
