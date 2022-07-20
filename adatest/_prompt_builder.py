@@ -251,15 +251,12 @@ class PromptBuilder():
                 # lower the weight of the subtopic we just picked from
                 if self.subtopic_diversity:
                     new_topic = test_tree.loc[ids[new_ind], "topic"]
-                    if topic == new_topic:
-                        subtopic_scaling = np.ones(len(ids))
-                        subtopic_scaling[new_ind] = 0.0001
-                    else:
+                    if topic != new_topic and is_subtopic(topic, new_topic):
                         subtopic = topic + "/" + new_topic[(len(topic)+1):].split("/")[0]
                         # print(subtopic)
                         # subtopic_scaling = np.array([0.0001 if test_tree.loc[k, "topic"].startswith(subtopic) else 1 for k in ids])
-                        subtopic_scaling = np.array([0.0001 if is_subtopic(subtopic, test_tree.loc[k, "topic"]) else 1 for k in ids])
-                    topic_scaling_curr *= subtopic_scaling
+                        subtopic_scaling = np.array([0.001 if is_subtopic(subtopic, test_tree.loc[k, "topic"]) else 1 for k in ids])
+                        topic_scaling_curr *= subtopic_scaling
 
             # create the prompt as a list of tuples
             prompt = []
