@@ -494,7 +494,7 @@ export default class Browser extends React.Component {
 
   locationChanged(location, action) {
     console.log("locationChanged", location, action);
-    this.goToTopic(this.stripPrefix(location.pathname.replace(" ", "%20")));
+    this.goToTopic(this.stripPrefix(location.pathname));
   }
 
   newData(data) {
@@ -905,7 +905,7 @@ export default class Browser extends React.Component {
     if (this.suggestionsTemplateRow) {
       this.suggestionsTemplateRow.setState({value2: null});
     }
-    this.comm.send(this.id, {action: "change_topic", topic: stripSlash(topic)});
+    this.comm.send(this.id, {action: "change_topic", topic: stripSlash(topic).replaceAll(" ", "%20")});
   }
 }
 

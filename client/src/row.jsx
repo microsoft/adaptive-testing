@@ -571,13 +571,13 @@ export default class Row extends React.Component {
   }
 
   inputTopicName(text) {
-    text = encodeURIComponent(text.replace("\\", "").replace("\n", ""));
+    text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
     this.setState({topic_name: text});
   }
 
   finishTopicName(text) {
     console.log("finishTopicName", text)
-    text = encodeURIComponent(text.replace("\\", "").replace("\n", ""));
+    text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
     this.setState({topic_name: text, editing: false});
     let topic = this.props.topic;
     if (this.props.isSuggestion) topic += "/__suggestions__";
