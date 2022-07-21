@@ -338,20 +338,28 @@ export default class Row extends React.Component {
         }
 
         let label_opacity = isNaN(overall_score[k]) ? 0.5 : 1;
+
+        let scaled_score = scale_score(overall_score[k]);
         
         // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
         // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         return <div key={k} className="adatest-row-score-plot-box">
           {/* {overall_score[k] > 0 ? */}
-          <svg height="30" width="150">
+          <svg height="30" width="150">(total_pass / (total_pass + total_fail))
+            {scaled_score < 0 &&
+              <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
+            }
+            {scaled_score > 0 &&
+              <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
+            }
             {this.state.topic_name === null &&
               <React.Fragment>
-                {this.state.label == "pass" &&
+                {/* {this.state.label == "pass" &&
                   <line x1="100" y1="15" x2={100 - (100-bar_width)/2} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
                 }
                 {this.state.label == "fail" &&
                   <line x1="100" y1="15" x2={100 + bar_width/2} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
-                }
+                } */}
                 {this.state.labeler === "imputed" && this.state.label === "pass" ?
                   <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
@@ -772,8 +780,8 @@ function scrollParentToChild(parent, child) {
 
 }
 
-const score_min = -1;
-const score_max = 1;
+// const score_min = -1;
+// const score_max = 1;
 function scale_score(score) {
-  return Math.max(Math.min(score, score_max), score_min) ///(score_max - score_min)
+  return score; //Math.max(Math.min(score, score_max), score_min) ///(score_max - score_min)
 }
