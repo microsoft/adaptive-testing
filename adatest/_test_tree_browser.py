@@ -711,7 +711,7 @@ class TestTreeBrowser():
                     self.test_tree.loc[id, "labeler"] = "imputed"
                     self.test_tree.loc[id, "description"] = ""
                     for c in self.score_columns:
-                        self.test_tree.loc[id, c] = ""
+                        self.test_tree.loc[id, c] = "__TOEVAL__"
 
                     # s = {
                     #     "topic": self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else ""),

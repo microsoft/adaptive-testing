@@ -10,7 +10,7 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 import numpy as np
 
-__version__ = '0.2.3'
+__version__ = '0.3.0'
 
 default_generators = {"abstract": TestTree(r"test_trees/abstract_capabilities.csv")}
 embedding_model = None
