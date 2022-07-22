@@ -280,8 +280,8 @@ export default class Row extends React.Component {
             <div className="adatest-row-input" onClick={this.clickRow}>
               <div onClick={this.clickInput} style={{display: "inline-block"}}>
                 <span style={{width: "0px"}}></span>
-                <span title={model_output_strings["value1"]} onContextMenu={this.handleInputContextMenu}>
-                  <ContentEditable onClick={this.clickInput} onTemplateExpand={this.templateExpandValue1} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.value1Default} />
+                <span onContextMenu={this.handleInputContextMenu}>
+                  <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </div>
@@ -292,8 +292,8 @@ export default class Row extends React.Component {
             <div onClick={this.clickOutput} style={{opacity: this.state.label === "off_topic" ? 0 : 1, maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
                 <span style={{width: "0px"}}></span>
-                <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
+                <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
+                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </span>
@@ -301,7 +301,7 @@ export default class Row extends React.Component {
           </div>
         )}
       </div>
-      {/* <div className="adatest-row-score-text-box">
+      {/* <div className="adatest-row-score-text-box"> 
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
       {/* {this.state.topic_name === null &&
@@ -366,12 +366,12 @@ export default class Row extends React.Component {
                   <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.labeler === "imputed" && this.state.label === "fail" ?
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
-                  <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 140, 34)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 140, 34,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
@@ -561,15 +561,16 @@ export default class Row extends React.Component {
   finishInput(text) {
     console.log("finishInput", text)
     this.setState({editing: false});
-    if (text.includes("/")) {
-      this.setState({input: text, scores: null});
-      this.props.comm.send(this.props.id, {input: text});
-    }
+    // if (text.includes("/")) {
+    //   this.setState({input: text, scores: null});
+    //   this.props.comm.send(this.props.id, {input: text});
+    // }
   }
 
   inputOutput(text) {
+    // return;
     console.log("inputOutput", text);
-    text = text.trim();
+    // text = text.trim(); // SML: causes the cursor to jump when editing because the text is updated
     this.setState({output: text, scores: null});
     this.props.comm.debouncedSend500(this.props.id, {output: text});
 
@@ -577,11 +578,6 @@ export default class Row extends React.Component {
     //   this.props.value2Edited(this.props.id, this.state.value2, text);
     // }
     // this.setValue2(text);
-  }
-
-  setValue2(text) {
-    this.setState({value2: text, scores: null});
-    this.props.comm.debouncedSend500(this.props.id, {value2: text});
   }
 
   inputTopicName(text) {
@@ -655,7 +651,7 @@ export default class Row extends React.Component {
       this.setState({editing: true});
       e.preventDefault();
       e.stopPropagation();
-      defer(() => this.value2Editable.focus());
+      defer(() => this.outputEditable.focus());
     }
   }
 

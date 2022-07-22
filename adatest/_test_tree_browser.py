@@ -431,7 +431,8 @@ class TestTreeBrowser():
                 sendback_data["scores"] = {c: [[k, v] for v in ui_score_parts(self.test_tree.loc[k, c], self.test_tree.loc[k, "label"])] for c in self.score_columns}
                 outputs = {c: [[k, json.loads(self.test_tree.loc[k].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
                 sendback_data["raw_outputs"] = outputs
-                sendback_data["output"] = self.test_tree.loc[k, "output"]
+                if "output" not in msg[k]: # if the output was given to us the client is managing its current state so we shouldn't send it back
+                    sendback_data["output"] = self.test_tree.loc[k, "output"]
                 sendback_data["label"] = self.test_tree.loc[k, "label"]
                 sendback_data["labeler"] = self.test_tree.loc[k, "labeler"]
                 sendback_data.update(self.test_display_parts(self.test_tree.loc[k]))
@@ -706,7 +707,7 @@ class TestTreeBrowser():
                     id = uuid.uuid4().hex
                     self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
                     self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
-                    self.test_tree.loc[id, "output"] = ""
+                    self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
                     self.test_tree.loc[id, "label"] = "topic_marker" if self.mode == "topics" else ""
                     self.test_tree.loc[id, "labeler"] = "imputed"
                     self.test_tree.loc[id, "description"] = ""
@@ -804,7 +805,7 @@ class TestTreeBrowser():
             for i,id in enumerate(eval_ids):
                 # tests.loc[id, k+" score"] = scores[i]
 
-                if not overwrite_outputs and current_outputs.loc[id] != "" and current_outputs.loc[id] != new_outputs[i]:
+                if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
 
                     # mark the current row as nan score (meaning the output does not match)
                     tests.loc[id, k+" score"] = np.nan
