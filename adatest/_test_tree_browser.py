@@ -12,6 +12,7 @@ import collections
 
 from transformers import MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING
 from adatest.generators import TestTreeSource
+from adatest.utils import isinstance_ipython
 
 from .comm import JupyterComm
 import uuid
@@ -25,7 +26,7 @@ import statistics
 import checklist
 import checklist.editor
 from threading import Timer
-from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer, Scorer
+from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer, ImageScorer, Scorer
 from ._prompt_builder import PromptBuilder
 import builtins
 import adatest # Need to import like this to prevent circular dependencies
@@ -795,7 +796,10 @@ class TestTreeBrowser():
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
 
         for k in self.scorer:
-            self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs)
+            if isinstance_ipython(self.scorer[k], ImageScorer):
+                self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs, refresh_callback=self._refresh_interface)
+            else:
+                self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs)
         return
         for k in self.scorer:
 
