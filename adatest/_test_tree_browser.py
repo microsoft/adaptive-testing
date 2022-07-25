@@ -197,8 +197,7 @@ class TestTreeBrowser():
         ]
 
         # apply all the scorers to the test tree (this updates the test tree)
-        for k in self.scorer:
-            self.scorer[k](self.test_tree, k+" score")
+        self._compute_embeddings_and_scores(self.test_tree, self.recompute_scores, overwrite_outputs=False, save_outputs=True)
 
         # # make sure all the tests have scores (if we have a scorer)
         # self._compute_embeddings_and_scores(self.test_tree)
@@ -362,7 +361,7 @@ class TestTreeBrowser():
                         "description": ""
                     }
                     for c in self.score_columns:
-                        row[c] = ""
+                        row[c] = "__TOEVAL__"
                         row[c[:-6] + " raw outputs"] = "{}"
                     self.test_tree.loc[uuid.uuid4().hex] = row
 
@@ -419,17 +418,21 @@ class TestTreeBrowser():
                 for k2 in msg[k]:
                     self.test_tree.loc[k, k2] = msg[k][k2]
                 if "input" in msg[k] or "output" in msg[k]:
-                    self.test_tree.loc[k, self.score_columns] = ""
+                    self.test_tree.loc[k, self.score_columns] = "__TOEVAL__"
                     self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
                 elif "label" in msg[k]:
+                    #self.test_tree.retrain_topic_model(self.current_topic)
+                    pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
                     # sign = -1 if msg[k]["label"] == "pass" else 1
-                    self.test_tree.loc[k, self.score_columns] = abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
+                    # self.test_tree.loc[k, self.score_columns] = ""#abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
+                    # self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs=False)
 
                 # send just the data that changed back to the frontend
-                sendback_data["scores"] = {c: [[k, v] for v in score_parts(self.test_tree.loc[k, c], self.test_tree.loc[k, "label"])] for c in self.score_columns}
+                sendback_data["scores"] = {c: [[k, v] for v in ui_score_parts(self.test_tree.loc[k, c], self.test_tree.loc[k, "label"])] for c in self.score_columns}
                 outputs = {c: [[k, json.loads(self.test_tree.loc[k].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
                 sendback_data["raw_outputs"] = outputs
-                sendback_data["output"] = self.test_tree.loc[k, "output"]
+                if "output" not in msg[k]: # if the output was given to us the client is managing its current state so we shouldn't send it back
+                    sendback_data["output"] = self.test_tree.loc[k, "output"]
                 sendback_data["label"] = self.test_tree.loc[k, "label"]
                 sendback_data["labeler"] = self.test_tree.loc[k, "labeler"]
                 sendback_data.update(self.test_display_parts(self.test_tree.loc[k]))
@@ -442,7 +445,7 @@ class TestTreeBrowser():
                 
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
-                    if msg[k]["topic"] == "_DELETE_" or msg[k]["topic"] == "_OUT_OF_TOPIC_": # this means delete the test
+                    if msg[k]["topic"] == "_DELETE_": # this means delete the test
                         self.test_tree.drop(k, inplace=True)
                     else:
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
@@ -452,7 +455,7 @@ class TestTreeBrowser():
                 else:
                     for id, test in self.test_tree.iterrows():
                         if is_subtopic(k, test.topic):
-                            if msg[k]["topic"] == "_DELETE_" or msg[k]["topic"] == "_OUT_OF_TOPIC_":
+                            if msg[k]["topic"] == "_DELETE_":
                                 self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
@@ -503,7 +506,7 @@ class TestTreeBrowser():
                             "label": test.label,
                             "labeler": test.labeler,
                             "description": test.description,
-                            "scores": {c: [[k, v] for v in score_parts(test[c], test.label)] for c in self.score_columns},
+                            "scores": {c: [[k, v] for v in ui_score_parts(test[c], test.label)] for c in self.score_columns},
                             "editing": test.input == "New test"
                         }
 
@@ -518,18 +521,18 @@ class TestTreeBrowser():
                     child_topic = test.topic[len(topic):].split("/", 2)[1]
                     scores = data[topic+"/"+child_topic]["scores"]
                     for c in self.score_columns:
-                        scores[c].extend([[k, v] for v in score_parts(test[c], test.label)])
+                        scores[c].extend([[k, v] for v in ui_score_parts(test[c], test.label)])
 
             # sort by score and always put new topics first
             def sort_key(id):
                 try:
                     total = 0
                     count = 0
-                    sign = 1 #if data[id]["label"] == "fail" else -1
+                    # offset = 0 if data[id]["label"] == "fail" else -1
                     for s in data[id]["scores"][self.score_columns[0]]:
                         val = score_max(s[1], nan_val=np.nan)
                         if not np.isnan(val) and val is not None:
-                            total += val * sign
+                            total += val #+ offset
                             count += 1
                     if count == 0:
                         return 1e3
@@ -704,12 +707,12 @@ class TestTreeBrowser():
                     id = uuid.uuid4().hex
                     self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
                     self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
-                    self.test_tree.loc[id, "output"] = ""
+                    self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
                     self.test_tree.loc[id, "label"] = "topic_marker" if self.mode == "topics" else ""
                     self.test_tree.loc[id, "labeler"] = "imputed"
                     self.test_tree.loc[id, "description"] = ""
                     for c in self.score_columns:
-                        self.test_tree.loc[id, c] = ""
+                        self.test_tree.loc[id, c] = "__TOEVAL__"
 
                     # s = {
                     #     "topic": self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else ""),
@@ -784,11 +787,46 @@ class TestTreeBrowser():
         for i, (k, row) in enumerate(df.iterrows()):
             row["score"] = float(row["score"]) + topic_model_scale * sim_scores[i]
 
-    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
+    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False, save_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
 
         for k in self.scorer:
-            self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs)
+            # determine which rows we need to evaluate
+            eval_ids = []
+            for i, (id, test) in enumerate(tests.iterrows()):
+                if (recompute or test[k+" score"] == "__TOEVAL__") and test.label != "topic_marker" and test.label != "off_topic":
+                    eval_ids.append(id)
+
+            # run the scorer
+            new_outputs,scores = self.scorer[k](tests, eval_ids)
+
+            # update the scores in the test tree
+            current_outputs = tests["output"]
+            for i,id in enumerate(eval_ids):
+                # tests.loc[id, k+" score"] = scores[i]
+
+                if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
+
+                    # mark the current row as nan score (meaning the output does not match)
+                    tests.loc[id, k+" score"] = np.nan
+
+                    # add a new test where the model output does match if we are saving outputs
+                    if save_outputs:
+                        id_new = uuid.uuid4().hex
+                        tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
+                        tests.loc[id_new, "input"] = tests.loc[id, "input"]
+                        tests.loc[id_new, "output"] = new_outputs[i]
+                        tests.loc[id_new, "labeler"] = "imputed"
+                        tests.loc[id_new, "label"] = ""
+                        tests.loc[id_new, k+" score"] = scores[i]
+                else:
+                    tests.loc[id, "output"] = new_outputs[i]
+                    tests.loc[id, k+" score"] = scores[i]
+
+        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+
+        # reimpute missing labels
+        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
         return
         for k in self.scorer:
 
@@ -962,8 +1000,8 @@ class TestTreeBrowser():
     def test_display_parts(self, test):
         
         # # find which template instantiation has the highest score (and so should be displayed)
-        # score_parts = test[self.score_columns[0]].split("|")
-        # if len(score_parts) == 1:
+        # ui_score_parts = test[self.score_columns[0]].split("|")
+        # if len(ui_score_parts) == 1:
         #     max_score_ind = 0
         # else:
         #     max_score_ind = np.argmax([float(v) for v in test[self.score_columns[0]].split("|")])
@@ -1074,17 +1112,24 @@ def score_max(s, nan_val=-1e3):
     else:
         return np.max(s)
 
-def score_parts(s, label):
+def ui_score_parts(s, label):
+    """ Split a score into its parts and encode the label into the sign.
+    
+    Note this encoding is just used for passing scores to the UI (scores are not signed in the TestTree).
+    """
+    offset = 0
     if label == "pass":
-        sign = -1
+        sign = 1
+        offset = -1 - 1e-6
     elif label == "fail":
         sign = 1
+        offset = 1e-6 # just so we have a positive number to encode that this was a failure
     else:
         sign = np.nan
     if isinstance(s, str):
-        return [convert_float(v)*sign for v in s.split("|")]
+        return [np.clip(offset + convert_float(v)*sign, -1, 1) for v in s.split("|")]
     else:
-        return [s*sign]
+        return [np.clip(offset + s*sign, -1, 1)]
 
 def convert_float(s):
     if s == "":

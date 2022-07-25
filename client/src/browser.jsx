@@ -884,10 +884,15 @@ export default class Browser extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     const id = e.dataTransfer.getData("id");
+    const topic_name = e.dataTransfer.getData("topic_name");
     console.log("onSuggestionsDrop", e, id);
     if (this.state.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
     this.setState({suggestionsDropHighlighted: 0});
-    this.onDrop(id, {topic: this.state.topic + "/__suggestions__"});
+    if (topic_name !== null && topic_name !== "null") {
+      this.onDrop(id, {topic: this.state.topic + "/__suggestions__" + "/" + topic_name});
+    } else {
+      this.onDrop(id, {topic: this.state.topic + "/__suggestions__"});
+    }
   }
 
   onDrop(id, data) {
@@ -905,7 +910,7 @@ export default class Browser extends React.Component {
     if (this.suggestionsTemplateRow) {
       this.suggestionsTemplateRow.setState({value2: null});
     }
-    this.comm.send(this.id, {action: "change_topic", topic: stripSlash(topic)});
+    this.comm.send(this.id, {action: "change_topic", topic: stripSlash(topic).replaceAll(" ", "%20")});
   }
 }
 

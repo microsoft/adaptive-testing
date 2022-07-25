@@ -112,7 +112,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
         else:
             if request.raw_path == "/favicon.ico":
                 file_path = pathlib.Path(__file__).parent.absolute()
-                return web.FileResponse(file_path / "client" / "dist" / "favicon.png" )
+                return web.FileResponse(file_path / "resources" / "favicon.png" )
             elif "file_path" in request.match_info:
                 file_path = os.path.join(static_dir, *request.match_info["file_path"].replace("..", "").split("/"))
                 return web.FileResponse(file_path)

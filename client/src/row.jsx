@@ -280,8 +280,8 @@ export default class Row extends React.Component {
             <div className="adatest-row-input" onClick={this.clickRow}>
               <div onClick={this.clickInput} style={{display: "inline-block"}}>
                 <span style={{width: "0px"}}></span>
-                <span title={model_output_strings["value1"]} onContextMenu={this.handleInputContextMenu}>
-                  <ContentEditable onClick={this.clickInput} onTemplateExpand={this.templateExpandValue1} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.value1Default} />
+                <span onContextMenu={this.handleInputContextMenu}>
+                  <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </div>
@@ -289,11 +289,11 @@ export default class Row extends React.Component {
             <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden", display: "flex"}}>
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
-            <div onClick={this.clickOutput} style={{opacity: this.state.label === "off_topic" ? 0 : 1, maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.04) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
+            <div onClick={this.clickOutput} style={{opacity: this.state.label === "off_topic" ? 0 : 1, maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
               <span style={{alignSelf: "flex-end"}}>
                 <span style={{width: "0px"}}></span>
-                <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable ref={el => this.value2Editable = el} onClick={this.clickOutput} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
+                <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
+                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </span>
@@ -301,7 +301,7 @@ export default class Row extends React.Component {
           </div>
         )}
       </div>
-      {/* <div className="adatest-row-score-text-box">
+      {/* <div className="adatest-row-score-text-box"> 
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
       {/* {this.state.topic_name === null &&
@@ -338,26 +338,40 @@ export default class Row extends React.Component {
         }
 
         let label_opacity = isNaN(overall_score[k]) ? 0.5 : 1;
+
+        let scaled_score = scale_score(overall_score[k]);
         
         // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
         // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         return <div key={k} className="adatest-row-score-plot-box">
           {/* {overall_score[k] > 0 ? */}
-          <svg height="30" width="150">
+          <svg height="30" width="150">(total_pass / (total_pass + total_fail))
+            {scaled_score < 0 &&
+              <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
+            }
+            {scaled_score > 0 &&
+              <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
+            }
             {this.state.topic_name === null &&
               <React.Fragment>
+                {/* {this.state.label == "pass" &&
+                  <line x1="100" y1="15" x2={100 - (100-bar_width)/2} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
+                }
+                {this.state.label == "fail" &&
+                  <line x1="100" y1="15" x2={100 + bar_width/2} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
+                } */}
                 {this.state.labeler === "imputed" && this.state.label === "pass" ?
                   <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.labeler === "imputed" && this.state.label === "fail" ?
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
-                  <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 140, 34)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 140, 34,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
@@ -532,9 +546,9 @@ export default class Row extends React.Component {
   onOpen(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Row.onOpen(", e, ")");
+    console.log("this.state.topic_name XXXXXXXXXXXX", this.state.topic_name)//, "Row.onOpen(", e, ")");
     if (this.state.topic_name !== null && this.props.onOpen) {
-      this.props.onOpen(this.props.topic + "/" + encodeURIComponent(this.state.topic_name));
+      this.props.onOpen(this.props.topic + "/" + this.state.topic_name);
     }
   }
 
@@ -547,15 +561,16 @@ export default class Row extends React.Component {
   finishInput(text) {
     console.log("finishInput", text)
     this.setState({editing: false});
-    if (text.includes("/")) {
-      this.setState({input: text, scores: null});
-      this.props.comm.send(this.props.id, {input: text});
-    }
+    // if (text.includes("/")) {
+    //   this.setState({input: text, scores: null});
+    //   this.props.comm.send(this.props.id, {input: text});
+    // }
   }
 
   inputOutput(text) {
+    // return;
     console.log("inputOutput", text);
-    text = text.trim();
+    // text = text.trim(); // SML: causes the cursor to jump when editing because the text is updated
     this.setState({output: text, scores: null});
     this.props.comm.debouncedSend500(this.props.id, {output: text});
 
@@ -565,19 +580,14 @@ export default class Row extends React.Component {
     // this.setValue2(text);
   }
 
-  setValue2(text) {
-    this.setState({value2: text, scores: null});
-    this.props.comm.debouncedSend500(this.props.id, {value2: text});
-  }
-
   inputTopicName(text) {
-    text = encodeURIComponent(text.replace("\\", "").replace("\n", ""));
+    text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
     this.setState({topic_name: text});
   }
 
   finishTopicName(text) {
     console.log("finishTopicName", text)
-    text = encodeURIComponent(text.replace("\\", "").replace("\n", ""));
+    text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
     this.setState({topic_name: text, editing: false});
     let topic = this.props.topic;
     if (this.props.isSuggestion) topic += "/__suggestions__";
@@ -641,7 +651,7 @@ export default class Row extends React.Component {
       this.setState({editing: true});
       e.preventDefault();
       e.stopPropagation();
-      defer(() => this.value2Editable.focus());
+      defer(() => this.outputEditable.focus());
     }
   }
 
@@ -766,8 +776,8 @@ function scrollParentToChild(parent, child) {
 
 }
 
-const score_min = -1;
-const score_max = 1;
+// const score_min = -1;
+// const score_max = 1;
 function scale_score(score) {
-  return Math.max(Math.min(score, score_max), score_min) ///(score_max - score_min)
+  return score; //Math.max(Math.min(score, score_max), score_min) ///(score_max - score_min)
 }
