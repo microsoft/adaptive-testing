@@ -17,7 +17,7 @@ class TestTransformers:
 
         desired_result_count = 2
 
-        results = target(prompts, "", num_samples=desired_result_count)
+        results = target(prompts, "", mode="tests", num_samples=desired_result_count)
         assert results is not None
         assert len(results) == desired_result_count
         for item in results:
@@ -41,7 +41,7 @@ class TestOpenAI:
 
         desired_result_count = 2
 
-        results = target(prompts, "", num_samples=desired_result_count)
+        results = target(prompts, "", mode="tests", num_samples=desired_result_count)
         assert results is not None
         assert len(results) == desired_result_count
         assert "Ret 1" in results
