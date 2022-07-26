@@ -66,7 +66,7 @@ class Model():
         return np.array(self.inner_model(*args, **kwargs))
 
     
-class TransformersTextGenerationPipeline():
+class TransformersTextGenerationPipeline(Model):
     """ This wraps the transformer text generation pipeline object to match the Model API.
 
     TOTO: move this to SHAP.

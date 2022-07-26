@@ -23,7 +23,8 @@ export default class Row extends React.Component {
       dragging: false,
       dropHighlighted: 0,
       hovering: false,
-      plusHovering: false
+      plusHovering: false,
+      maxImageHeight: 100
     };
 
     this.dataLoadActions = [];
@@ -256,6 +257,7 @@ export default class Row extends React.Component {
           <div style={{display: "flex", marginTop: "7px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "adatest-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
               <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.state.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
+              <span style={{color: "#999999"}}>{this.state.description}</span>
             </div>
           </div>
           <div className="adatest-row" style={{opacity: 0.6, marginTop: "-16px", display: this.state.previewValue1 ? 'flex' : 'none'}}>
@@ -280,17 +282,21 @@ export default class Row extends React.Component {
             <div className="adatest-row-input" onClick={this.clickRow}>
               <div onClick={this.clickInput} style={{display: "inline-block"}}>
                 <span style={{width: "0px"}}></span>
-                <span onContextMenu={this.handleInputContextMenu}>
-                  <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
-                </span>
+                {/* <span onContextMenu={this.handleInputContextMenu}> */}
+                  {this.state.input.startsWith("__IMAGE=") ?
+                    <img src={this.state.input.substring(8)} onDoubleClick={this.toggleImageSize} style={{maxWidth: (this.state.maxImageHeight*3)+"px", maxHeight: this.state.maxImageHeight}} />
+                    :
+                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
+                  }
+                {/* </span> */}
                 <span style={{width: "0px"}}></span>
               </div>
             </div>
             <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden", display: "flex"}}>
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
-            <div onClick={this.clickOutput} style={{opacity: this.state.label === "off_topic" ? 0 : 1, maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
-              <span style={{alignSelf: "flex-end"}}>
+            <div onClick={this.clickOutput} style={{opacity: this.state.label === "off_topic" ? 0 : 1, maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", alignItems: "center", display: "flex"}}>
+              <span>
                 <span style={{width: "0px"}}></span>
                 <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
                   <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
@@ -420,6 +426,10 @@ export default class Row extends React.Component {
   templateExpandValue1() {
     console.log("templateExpandValue1")
     this.props.comm.send(this.props.id, {"action": "template_expand_value1"});
+  }
+
+  toggleImageSize() {
+    this.setState({maxImageHeight: this.state.maxImageHeight === 100 ? 500 : 100});
   }
 
   keyDownHandler(e) {

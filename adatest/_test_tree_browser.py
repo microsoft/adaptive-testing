@@ -205,10 +205,8 @@ class TestTreeBrowser():
         # ensure any test tree based generator has embeddings calculated
         if isinstance(self.generators, dict):
             for name, gen in self.generators.items():
-                if gen.gen_type == "test_tree":
+                if getattr(gen, "gen_type", "") == "test_tree":
                     gen.source.compute_embeddings()
-        elif self.generators.gen_type == "test_tree": # HN: Probably unused code, should be safe to remove
-            self.generators.source.compute_embeddings()
 
         # save the current state of the test tree
         self._auto_save()
@@ -396,7 +394,14 @@ class TestTreeBrowser():
                     self.mode = msg[k]["mode"]
 
                 elif action == 'change_description':
-                    self.test_tree.loc[msg[k]['topic_marker_id']]['description'] = msg[k]['description']
+                    id = msg[k]['topic_marker_id']
+                    if id not in self.test_tree.index:
+                        self.test_tree.loc[id, 'topic'] = "" # only the root topic would be missing from the tree
+                        self.test_tree.loc[id, 'input'] = ""
+                        self.test_tree.loc[id, 'output'] = ""
+                        self.test_tree.loc[id, 'label'] = "topic_marker"
+                    self.test_tree.loc[id, 'description'] = msg[k]['description']
+                    self._auto_save()
 
                 elif action == 'change_filter':
                     print("change_filter")
@@ -682,8 +687,11 @@ class TestTreeBrowser():
             suggest_topics=self.mode == "topics"
         )
 
+        # get the current topic description
+        desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
+
         # generate the suggestions
-        proposals = self._active_generator_obj(prompts, self.current_topic, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+        proposals = self._active_generator_obj(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
@@ -797,31 +805,33 @@ class TestTreeBrowser():
                 if (recompute or test[k+" score"] == "__TOEVAL__") and test.label != "topic_marker" and test.label != "off_topic":
                     eval_ids.append(id)
 
-            # run the scorer
-            new_outputs,scores = self.scorer[k](tests, eval_ids)
+            if len(eval_ids) > 0:
 
-            # update the scores in the test tree
-            current_outputs = tests["output"]
-            for i,id in enumerate(eval_ids):
-                # tests.loc[id, k+" score"] = scores[i]
+                # run the scorer
+                new_outputs,scores = self.scorer[k](tests, eval_ids)
 
-                if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
+                # update the scores in the test tree
+                current_outputs = tests["output"]
+                for i,id in enumerate(eval_ids):
+                    # tests.loc[id, k+" score"] = scores[i]
 
-                    # mark the current row as nan score (meaning the output does not match)
-                    tests.loc[id, k+" score"] = np.nan
+                    if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
 
-                    # add a new test where the model output does match if we are saving outputs
-                    if save_outputs:
-                        id_new = uuid.uuid4().hex
-                        tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
-                        tests.loc[id_new, "input"] = tests.loc[id, "input"]
-                        tests.loc[id_new, "output"] = new_outputs[i]
-                        tests.loc[id_new, "labeler"] = "imputed"
-                        tests.loc[id_new, "label"] = ""
-                        tests.loc[id_new, k+" score"] = scores[i]
-                else:
-                    tests.loc[id, "output"] = new_outputs[i]
-                    tests.loc[id, k+" score"] = scores[i]
+                        # mark the current row as nan score (meaning the output does not match)
+                        tests.loc[id, k+" score"] = np.nan
+
+                        # add a new test where the model output does match if we are saving outputs
+                        if save_outputs:
+                            id_new = uuid.uuid4().hex
+                            tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
+                            tests.loc[id_new, "input"] = tests.loc[id, "input"]
+                            tests.loc[id_new, "output"] = new_outputs[i]
+                            tests.loc[id_new, "labeler"] = "imputed"
+                            tests.loc[id_new, "label"] = ""
+                            tests.loc[id_new, k+" score"] = scores[i]
+                    else:
+                        tests.loc[id, "output"] = new_outputs[i]
+                        tests.loc[id, k+" score"] = scores[i]
 
         tests.deduplicate() # make sure any duplicates we may have introduced are removed
 
