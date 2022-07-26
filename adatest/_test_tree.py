@@ -10,7 +10,7 @@ import pandas as pd
 from ._prompt_builder import PromptBuilder
 from ._test_tree_browser import TestTreeBrowser, is_subtopic
 from ._model import Model
-from ._topic_model import TopicModel
+from ._topic_model import TopicLabelingModel, TopicMembershipModel
 import adatest
 from pathlib import Path
 import torch
@@ -133,7 +133,8 @@ class TestTree():
         if compute_embeddings:
             self.compute_embeddings()
 
-        self._topic_models = {}
+        self._topic_labeling_models = {}
+        self._topic_membership_models = {}
 
         # # keep track of our original state
         # if self.auto_save:
@@ -155,53 +156,6 @@ class TestTree():
                         "description": ""
                     }
                     marked_topics[parent_topic] = True
-
-    def compute_embeddings(self):
-        """ Compute the embeddings for all test cases in the test tree.
-
-        TODO: Shared logic with TestTreeBrowser._compute_embeddings_and_scores. Refactor! (SML: I think it will live here now)
-        """
-
-        # see what new embeddings we need to compute
-        all_strings = []
-        for id, test in self._tests.iterrows():
-            if test.label == "topic_marker":
-                parts = test.topic.rsplit("/", 1)
-                str = parts[1] if len(parts) == 2 else ""
-                all_strings.append(str)
-            else:
-                for str in [test.input, test.output]:
-                    all_strings.append(str)
-
-        # suggestions topics don't have topic markers so we check for them separately
-        all_strings.append("__suggestions__")
-        
-        # we don't use the output of the embedding, just do this to get the embeddings cached
-        adatest.embed(all_strings)
-
-        # compute the embeddings
-        # if len(new_strings) > 0:
-        #     string_embeddings = adatest.embed(new_strings).cpu()
-        #     for i,s in enumerate(new_strings):
-        #         adatest._embedding_cache[s] = string_embeddings[i]
-
-        # compute the embeddings
-        # if len(new_embedding_ids) > 0:
-        #     inputs = []
-        #     outputs = []
-        #     for id in new_embedding_ids:
-        #         if self._tests.loc[id, "label"] == "topic_marker":
-        #             parts = self._tests.loc[id, "topic"].rsplit("/", 1)
-        #             inputs.append(parts[1] if len(parts) == 2 else "")
-        #             outputs.append("")
-        #         else:
-        #             inputs.append(str(self._tests.loc[id, "input"]))
-        #             outputs.append(str(self._tests.loc[id, "output"]))
-        #     new_strings = list(set(new_strings))
-        #     string_embeddings = adatest.embedding_model.encode(strings, convert_to_tensor=True, show_progress_bar=False).cpu()
-        #     for i,s in enumerate(strings):
-        #         adatest._embedding_cache[s] = string_embeddings[i]
-
 
     def __getitem__(self, key):
         """ TestSets act just like a DataFrame when sliced. """
@@ -371,63 +325,96 @@ class TestTree():
                 already_seen[k] = True
         self._tests = self._tests.drop(drop_ids, axis=0)
 
+    def _cache_embeddings(self):
+        """ Pre-compute the embeddings for all test cases in the test tree.
+        """
+
+        # see what new embeddings we need to compute
+        all_strings = []
+        for id, test in self._tests.iterrows():
+            if test.label == "topic_marker":
+                parts = test.topic.rsplit("/", 1)
+                str = parts[1] if len(parts) == 2 else ""
+                all_strings.append(str)
+            else:
+                for str in [test.input, test.output]:
+                    all_strings.append(str)
+
+        # suggestions topics don't have topic markers so we check for them separately
+        all_strings.append("__suggestions__")
+        
+        # we don't use the output of the embedding, just do this to get the embeddings cached
+        adatest.embed(all_strings)
+
     def impute_labels(self):
         """ Impute missing labels in the test tree. """
         # TODO: this is just a random mock, it needs to implement real local topic models
 
-        self.compute_embeddings()
+        self._cache_embeddings()
 
         for id, test in self._tests.iterrows():
             if test.label == "":
-                self._tests.loc[id, "label"] = self.topic_model(test.topic)(test.input, test.output)
+                if self.topic_membership_model(test.topic)(test.input) == "off_topic":
+                    self._tests.loc[id, "label"] = "off_topic"
+                else:
+                    self._tests.loc[id, "label"] = self.topic_labeling_model(test.topic)(test.input, test.output)
                 self._tests.loc[id, "labeler"] = "imputed"
 
-    def predict_labels(self, topical_io_pairs):
-        """ Return the label probabilities for a set of input-output pairs. [NOT USED RIGHT NOW]
+    # def predict_labels(self, topical_io_pairs):
+    #     """ Return the label probabilities for a set of input-output pairs. [NOT USED RIGHT NOW]
 
-        Parameters
-        ----------
-        io_pairs : list[(str, str)]
-            A list of input-output pairs to score.
+    #     Parameters
+    #     ----------
+    #     io_pairs : list[(str, str)]
+    #         A list of input-output pairs to score.
 
-        Returns
-        -------
-        list[float]
-            A list of label probabilities.
-        """
+    #     Returns
+    #     -------
+    #     list[float]
+    #         A list of label probabilities.
+    #     """
 
-        out = np.zeros(len(topical_io_pairs))
+    #     out = np.zeros(len(topical_io_pairs))
 
-        to_embed = []
-        topics = {}
-        for i,(topic,input,output) in enumerate(topical_io_pairs):
-            if topic not in topics:
-                topics[topic] = []
-            to_embed.append(input)
-            to_embed.append(output)
-            topics[topic].append((i, len(to_embed) - 2, len(to_embed) - 1))
-        embeddings = adatest.embed(to_embed)
-        features = [None for i in range(len(topical_io_pairs))]
-        for topic in topics:
-            features = []
-            for i,ind1,ind2 in topics[topic]:
-                features.append(np.hstack([embeddings[ind1], embeddings[ind2]]))
-            features = np.vstack(features)
+    #     to_embed = []
+    #     topics = {}
+    #     for i,(topic,input,output) in enumerate(topical_io_pairs):
+    #         if topic not in topics:
+    #             topics[topic] = []
+    #         to_embed.append(input)
+    #         to_embed.append(output)
+    #         topics[topic].append((i, len(to_embed) - 2, len(to_embed) - 1))
+    #     embeddings = adatest.embed(to_embed)
+    #     features = [None for i in range(len(topical_io_pairs))]
+    #     for topic in topics:
+    #         features = []
+    #         for i,ind1,ind2 in topics[topic]:
+    #             features.append(np.hstack([embeddings[ind1], embeddings[ind2]]))
+    #         features = np.vstack(features)
 
-            label = np.array([v == "pass" for v in self.topic_model(topic)(features)], dtype=np.float32)
-            for i, (j,_,_) in enumerate(topics[topic]):
-                out[j] = label[i]
+    #         label = np.array([v == "pass" for v in self.topic_model(topic)(features)], dtype=np.float32)
+    #         for i, (j,_,_) in enumerate(topics[topic]):
+    #             out[j] = label[i]
 
-        return np.array(out)
+    #     return np.array(out)
 
-    def topic_model(self, topic):
-        topic = topic.replace("/__suggestions__", "") # predict suggestions using their parent topic model
-        if topic not in self._topic_models:
-            self._topic_models[topic] = TopicModel(topic, self)
-        return self._topic_models[topic]
+    def topic_labeling_model(self, topic):
+        topic = topic.replace("/__suggestions__", "") # predict suggestions using their parent topic label model
+        if topic not in self._topic_labeling_models:
+            self._topic_labeling_models[topic] = TopicLabelingModel(topic, self)
+        return self._topic_labeling_models[topic]
 
-    def retrain_topic_model(self, topic):
-        self._topic_models[topic] = TopicModel(topic, self)
+    def topic_membership_model(self, topic):
+        topic = topic.replace("/__suggestions__", "") # predict suggestions using their parent topic membership model
+        if topic not in self._topic_membership_models:
+            self._topic_membership_models[topic] = TopicMembershipModel(topic, self)
+        return self._topic_membership_models[topic]
+
+    def retrain_topic_labeling_model(self, topic):
+        self._topic_labeling_models[topic] = TopicLabelingModel(topic, self)
+
+    def retrain_topic_membership_model(self, topic):
+        self._topic_membership_models[topic] = TopicMembershipModel(topic, self)
 
     def drop_topic(self, topic):
         """ Remove a topic from the test tree. """

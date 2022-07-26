@@ -12,4 +12,5 @@ __version__ = '0.3.0'
 default_generators = {
     "abstract": TestTree(r"test_trees/abstract_capabilities.csv")
 }
-embedding_model = None
+text_embedding_model = None
+image_embedding_model = None

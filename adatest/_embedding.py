@@ -2,13 +2,49 @@ import transformers
 import torch
 import numpy as np
 import adatest
+import PIL
 
 _embedding_cache = {}
 
 def embed(strings, normalize=True):
 
-    # this code block is from the sentence_transformers documentation
-    if adatest.embedding_model is None:
+    # find which strings are not in the cache
+    new_text_strings = []
+    new_image_urls = []
+    for s in strings:
+        if s not in _embedding_cache:
+            if s.startswith("__IMAGE="):
+                new_image_urls.append(s)
+            else:
+                new_text_strings.append(s)
+            _embedding_cache[s] = None # so we don't embed the same string twice
+    
+    # embed the new text strings
+    if len(new_text_strings) > 0:
+        new_embeds = _text_embedding_model()(new_text_strings)
+        for i,s in enumerate(new_text_strings):
+            if normalize:
+                _embedding_cache[s] = new_embeds[i] / np.linalg.norm(new_embeds[i])
+            else:
+                _embedding_cache[s] = new_embeds[i]
+
+    # embed the new image urls
+    if len(new_image_urls) > 0:
+        new_embeds = _image_embedding_model()([url[8:] for url in new_image_urls])
+        for i,s in enumerate(new_image_urls):
+            if normalize:
+                _embedding_cache[s] = new_embeds[i] / np.linalg.norm(new_embeds[i])
+            else:
+                _embedding_cache[s] = new_embeds[i]
+    
+    return [_embedding_cache[s] for s in strings]
+
+def _text_embedding_model():
+    """ Get the text embedding model.
+    
+    Much of this code block is from the sentence_transformers documentation.
+    """
+    if adatest.text_embedding_model is None:
 
         # Mean Pooling - Take attention mask into account for correct averaging
         def mean_pooling(model_output, attention_mask):
@@ -30,26 +66,31 @@ def embed(strings, normalize=True):
 
             # Perform pooling. In this case, max pooling.
             return mean_pooling(model_output, encoded_input['attention_mask']).cpu().numpy()
-
-        adatest.embedding_model = embed_model
-
-    # find which strings are not in the cache
-    new_strings = []
-    for s in strings:
-        if s not in _embedding_cache:
-            new_strings.append(s)
-            _embedding_cache[s] = None # so we don't embed the same string twice
+        
+        adatest.text_embedding_model = embed_model
     
-    # embed the new strings
-    if len(new_strings) > 0:
-        new_embeds = adatest.embedding_model(new_strings)
-        for i,s in enumerate(new_strings):
-            if normalize:
-                _embedding_cache[s] = new_embeds[i] / np.linalg.norm(new_embeds[i])
-            else:
-                _embedding_cache[s] = new_embeds[i]
+    return adatest.text_embedding_model
+
+def _image_embedding_model():
+    if adatest.image_embedding_model is None:
+        import clip  # pylint: disable=import-outside-toplevel
+
+        model, preprocess = clip.load("ViT-L/14", device="cpu", jit=True)
+
+        def embed_model(urls):
+            with torch.no_grad():
+                out = []
+                for url in urls:
+                    image = adatest.utils.get_image(url)
+                    image_emb = model.encode_image(preprocess(image).unsqueeze(0).to("cpu"))
+                    image_emb /= image_emb.norm(dim=-1, keepdim=True)
+                    image_emb = image_emb.cpu().detach().numpy().astype("float32")[0]
+                    out.append(image_emb)
+            return np.vstack(out)
+        
+        adatest.image_embedding_model = embed_model
     
-    return [_embedding_cache[s] for s in strings]
+    return adatest.image_embedding_model
 
 def cos_sim(a, b):
     """ Cosine distance between two vectors.
