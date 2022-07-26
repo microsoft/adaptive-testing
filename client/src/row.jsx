@@ -288,9 +288,11 @@ export default class Row extends React.Component {
             </div>
             <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
               { 
-                this.props.outputMode === "image" ? (
-                  <img src={placeholder} style={{width: "100%", height: "100%"}} />
-                ) : (
+                this.props.outputMode === "image" ?
+                    this.state.output.split(",").map((img_url) =>
+                      <img src={"/_static/" + this.state.output} style={{width: "100%", height: "100%"}} />
+                    )
+                 : (
                   <span style={{alignSelf: "flex-end"}}>
                     <span style={{width: "0px"}}></span>
                     <span title={model_output_strings["value2"]} style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>

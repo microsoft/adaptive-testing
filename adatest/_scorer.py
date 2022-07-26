@@ -4,16 +4,19 @@ import logging
 import uuid
 import itertools
 import openai
+from pandas import DataFrame
 import scipy.stats
 import threading
 import time
 import queue
+import os
 import transformers
 import shap
 
 import adatest
 from ._model import Model
 from .utils import isinstance_ipython
+from ._dalle import generate_images_from_prompt, save_image_to_disk
 #from transformers.tokenization_utils_base import ExplicitEnum
 #from ._explorer import file_log
 
@@ -424,15 +427,10 @@ class GeneratorScorer(Scorer):
 
 
 class ImageScorer(Scorer):
-    """ Wraps a text classification model and defines a callable scorer that returns a score value for any input/output pair.
-
-    Positive scores indicate test failures, positive scores indicate tests that pass. For example if we wrap
-    a text sentiment classifer the `scorer(TestTree([("this is great!", "should be", "POSITIVE")]))` will return
-    a large positive value indicating that the model is very likely to correctly produce that output when given
-    that input.
+    """ A scorer for a text-to-image generation model
     """
 
-    def __init__(self, model, topk=1, output_names=None, method="dirichlet", dirichlet_concentration=10, wait_seconds = 5):
+    def __init__(self, model, image_dir="", wait_seconds = 5):
         """ Create a new scorer given a model that returns a probability vector for each input string.
         
         Parameters:
@@ -440,39 +438,9 @@ class ImageScorer(Scorer):
         model : callable
             A model that is callable with a single argument (which is a list of strings) and returns a matrix of outputs.
 
-        topk : int
-            The number of top outputs to consider when scoring tests. For example topk=2 causes "should not be" tests to
-            check the top two model outputs.
-
-        output_names : list of strings
-            A list of strings that correspond to the outputs of the model. If None, model.output_names is used.
-
-        method : 'margin' or 'dirichlet'
-            The scoring method to use. Dirichlet is preferred, but margin is available for backwards compatibility.
-
-        dirichlet_concentration : float
-            The concentration parameter for the dirichlet scoring method. It is in the units o pseudo-counts where larger
-            values lead to a tighter prior centered around the model's probability outputs (so scores are more likely to
-            be -1 or +1).
         """
         super().__init__(model)
-
-        # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
-        if hasattr(self, "output_names"):
-            return # already initialized
-
-        # extract output names from the model if they are not provided directly
-        if output_names is None:
-            self.output_names = self.model.output_names
-        else:
-            self.output_names = output_names
-        
-        if not callable(self.output_names):
-            self._output_name_to_index = {v: i for i, v in enumerate(self.output_names)}
-            assert topk == 1, "topk must be 1 right now" # TODO: this is because we need to figure out topk and templates
-        self.topk = topk
-        self.method = method
-        self.dirichlet_concentration = dirichlet_concentration
+        self.image_dir = image_dir
 
         # Create worker thread and queue for processing model outputs
         self.input_queue = queue.Queue()
@@ -484,14 +452,16 @@ class ImageScorer(Scorer):
 
     def _model_worker(self, wait_seconds):
         while True:
-            (input_str, ind, tests, score_column, overwrite_outputs, refresh_callback) = self.input_queue.get()
+            (input_str, id, tests, score_column, on_success) = self.input_queue.get()
             try:
-                model_out = self.model([input_str])
-                self.update_dataframe(model_out, input_str, ind, tests, score_column, overwrite_outputs)
-                if refresh_callback is not None:
-                    refresh_callback()
+                result = generate_images_from_prompt(input_str, 'photo', batch_size=1)
+                image_filenames = []
+                for b64_image in result["b64_images"]:
+                    image_filenames.append(save_image_to_disk(b64_image, self.image_dir))
+                self.update_dataframe(image_filenames, id, tests, score_column)
+                if on_success is not None:
+                    on_success()
             except Exception as e:
-                model_out = np.zeros((1, len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
                 log.error(e)
                 log.error(input_str)
                 log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
@@ -499,11 +469,11 @@ class ImageScorer(Scorer):
                 self.pending_inputs_lock.acquire()
                 if input_str in self.pending_inputs:
                     self.pending_inputs.remove(input_str)
-                self.pending_inputs_lock.release()
                 self.input_queue.task_done()
+                self.pending_inputs_lock.release()
                 time.sleep(wait_seconds)
 
-    def __call__(self, tests, score_column, overwrite_outputs=False, refresh_callback=None):
+    def __call__(self, tests, score_column, on_success=None):
         """ Score a set of tests.
 
         Parameters
@@ -514,74 +484,60 @@ class ImageScorer(Scorer):
         output_bias : float
             How much to bias the output entries in a test towards the actual output from the model.
         """
-
         
         # determine which rows we need to evaluate
         eval_inputs = []
-        eval_inds = []
+        eval_ids = []
         for i, (id, test) in enumerate(tests.iterrows()):
             if test[score_column] == "" and test.label != "topic_marker":
                 template_expansions = expand_template(test.input)
                 for expansion in template_expansions:
                     eval_inputs.append(expansion)
-                    eval_inds.append(i)
+                    eval_ids.append(id)
 
         # run the model on the rows we need to evaluate
-        for (input_str, ind) in zip(eval_inputs, eval_inds):
+        for (input_str, id) in zip(eval_inputs, eval_ids):
             self.pending_inputs_lock.acquire()
             try:
                 if input_str not in self.pending_inputs:
                     self.pending_inputs.add(input_str)
-                    self.input_queue.put_nowait((input_str, ind, tests, score_column, overwrite_outputs, refresh_callback))
+                    self.input_queue.put_nowait((input_str, id, tests, score_column, on_success))
             except queue.Full:
                 log.warning("Model input queue is full, skipping evaluation of input: %s" % input_str)
                 self.pending_inputs.remove(input_str)
             finally:
                 self.pending_inputs_lock.release()
     
-    def update_dataframe(self, model_out, input_str, ind, tests, score_column, overwrite_outputs):
+    def update_dataframe(self, image_filenames: list[str], id: str, tests: DataFrame, score_column: str):
+        """ Store the generated image path and its scores in the dataframe.
+
+        Parameters
+        ----------
+        image_filenames : list[str]
+            The names of the generated image files on disk.
+
+        id : str
+            The id of the test row that was used to generate the image.
+        
+        tests : pandas.DataFrame
+            The dataframe of tests.
+        
+        score_column : str
+            The name of the column in the dataframe that contains the scores.
+        """
         # compute the output strings for model output
-        out_strings = self.model.output_names[np.argmax(model_out)]
-        out_probs = np.max(model_out)
+        out_score = 1.0 # TODO: Use image classification model
 
-        # ensure the model output is represented in the tests
-        current_outputs = tests["output"]
-        current_labelers = tests["labeler"]
-
-        if current_labelers.iloc[ind] == "imputed":
-            id = tests.index[ind]
-            tests.loc[id, "output"] = out_strings
-            tests.loc[id, "label"] = ""
-            tests.loc[id, score_column] = out_probs
-            updated_id = id
-        elif not overwrite_outputs and current_outputs.iloc[ind] != out_strings:
-
-            # mark the current row as nan score (meaning the output does not match)
-            tests.loc[tests.index[ind], score_column] = np.nan
-
-            # add a new test where the model output does match
-            id = uuid.uuid4().hex
-            tests.loc[id, "topic"] = tests.loc[tests.index[ind], "topic"]
-            tests.loc[id, "input"] = input_str
-            tests.loc[id, "output"] = out_strings
-            tests.loc[id, "label"] = ""
-            tests.loc[id, "labeler"] = "imputed"
-            tests.loc[id, score_column] = out_probs
-
-            updated_id = id
-        else:
-            id = tests.index[ind]
-            tests.loc[id, "output"] = out_strings
-            tests.loc[id, score_column] = out_probs
-            updated_id = id
-        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+        # TODO: Dataframe access here is probably not thread-safe
+        tests.loc[id, "output"] = f'"{",".join(image_filenames)}"'
+        tests.loc[id, score_column] = out_score
 
         # reimpute missing labels
         tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
 
         # set the test score sign to match the label
-        if updated_id in tests.index and tests.loc[updated_id, "label"] == "pass":
-            tests.loc[updated_id, score_column] = -float(tests.loc[updated_id, score_column])
+        if id in tests.index and tests.loc[id, "label"] == "pass":
+            tests.loc[id, score_column] = -float(tests.loc[id, score_column])
 
 
 class ClassifierScorerOld(Scorer):

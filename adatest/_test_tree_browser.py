@@ -103,7 +103,7 @@ class TestTreeBrowser():
 
     def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
                  max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
-                 score_filter, topic_model_scale, output_mode):
+                 score_filter, topic_model_scale, output_mode, image_dir):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -125,6 +125,7 @@ class TestTreeBrowser():
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
         self.output_mode = output_mode
+        self.image_dir = image_dir
 
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
@@ -161,7 +162,8 @@ class TestTreeBrowser():
         if isinstance(self.scorer, dict):
             self.score_columns = [k+" score" for k in self.scorer]
             for k in self.scorer:
-                self.scorer[k] = Scorer(self.scorer[k])
+                if not isinstance_ipython(self.scorer[k], Scorer):
+                    self.scorer[k] = Scorer(self.scorer[k])
         elif self.scorer is not None:
             self.score_columns = ["model score"]
             self.scorer = {"model": Scorer(self.scorer)}
@@ -509,7 +511,7 @@ class TestTreeBrowser():
                     elif matches_filter(test, self.filter_text):
                         data[k] = {
                             "input": test.input,
-                            "output": test.output,
+                            "output": test.output if self.output_mode != "image" else self.image_dir + "/" + test.output.replace('"', ''),
                             "label": test.label,
                             "labeler": test.labeler,
                             "description": test.description,
@@ -797,7 +799,10 @@ class TestTreeBrowser():
 
         for k in self.scorer:
             if isinstance_ipython(self.scorer[k], ImageScorer):
-                self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs, refresh_callback=self._refresh_interface)
+                def on_success():
+                    self._auto_save()
+                    self._refresh_interface()
+                self.scorer[k](tests, k+" score", on_success=on_success)
             else:
                 self.scorer[k](tests, k+" score", overwrite_outputs=overwrite_outputs)
         return
