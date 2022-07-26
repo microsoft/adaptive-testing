@@ -268,7 +268,7 @@ class GeneratorScorer(Scorer):
     def _score_test(self, tests, id, output):
         test = tests.loc[id]
 
-        label = tests.topic_model(test.topic)(test.input, output)
+        label = tests.topic_labeling_model(test.topic)(test.input, output)
 
         if label == "pass":
             return 0.0
