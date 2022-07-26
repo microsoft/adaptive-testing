@@ -4,7 +4,7 @@ import asyncio
 import aiohttp
 import transformers
 import openai
-import profanity_filter
+from profanity import profanity
 import numpy as np
 import torch
 import adatest
@@ -17,14 +17,6 @@ try:
 except ImportError:
     pass
 
-# make sure the spacy language model is loaded since it is needed by ProfanityFilter
-try:
-    spacy.load("en", disable=["parser"])
-except:
-    spacy.cli.download("en")
-
-_pf_object = profanity_filter.ProfanityFilter()
-_profanity_filter = lambda x: _pf_object.censor(x)
 
 class Generator():
     """ Abstract class for generators.
@@ -165,7 +157,7 @@ class TextCompletionGenerator(Generator):
 
            
 class Transformers(TextCompletionGenerator):
-    def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=_profanity_filter):
+    def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
@@ -238,7 +230,7 @@ class OpenAI(TextCompletionGenerator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
     
-    def __init__(self, models, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=_profanity_filter):
+    def __init__(self, models, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(models, sep, subsep, quote, filter)
         self.gen_type = "model"
@@ -274,7 +266,7 @@ class AI21(TextCompletionGenerator):
     """ Backend wrapper for the AI21 API.
     """
     
-    def __init__(self, model, api_key, sep="\n", subsep=" ", quote="\"", temperature=0.95, filter=_profanity_filter):
+    def __init__(self, model, api_key, sep="\n", subsep=" ", quote="\"", temperature=0.95, filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
