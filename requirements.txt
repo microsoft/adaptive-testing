@@ -12,4 +12,4 @@ transformers
 torch
 spacy
 profanity
-PIL
+Pillow
