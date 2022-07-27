@@ -12,3 +12,4 @@ transformers
 torch
 spacy
 profanity
+pillow
