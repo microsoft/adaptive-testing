@@ -231,7 +231,7 @@ export default class Browser extends React.Component {
                   inFillin={inFillin}
                   scrollParent={this.suggestionsScrollWrapRef}
                   giveUpSelection={this.removeSelection}
-                  scoreColumns={this.state.score_columns}
+                  scoreColumns={this.props.outputMode !== "image" ? this.state.score_columns : null}
                   test_types={this.state.test_types}
                   test_type_parts={this.state.test_type_parts}
                   user={this.state.user}
@@ -322,7 +322,7 @@ export default class Browser extends React.Component {
                 scrollParent={document.body}
                 generateTopicName={this.generateTopicName}
                 setSelected={this.setSelected}
-                scoreColumns={this.state.score_columns}
+                scoreColumns={this.props.outputMode !== "image" ? this.state.score_columns : null}
                 test_types={this.state.test_types}
                 test_type_parts={this.state.test_type_parts}
                 user={this.state.user}

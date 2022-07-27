@@ -26,7 +26,8 @@ export default class Row extends React.Component {
       dragging: false,
       dropHighlighted: 0,
       hovering: false,
-      plusHovering: false
+      plusHovering: false,
+      expandedImages: [],
     };
 
     this.dataLoadActions = [];
@@ -288,9 +289,20 @@ export default class Row extends React.Component {
             </div>
             <div onClick={this.clickOutput} style={{maxWidth: "400px", overflowWrap: "anywhere", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", display: "flex"}}>
               { 
+                // output for row
                 this.props.outputMode === "image" ?
-                    this.state.output.split(",").map((img_url) =>
-                      <img src={"/_static/" + this.state.output} style={{width: "100%", height: "100%"}} />
+                    this.state.output.split(",").map((imgUrl) =>
+                      {
+                        if (imgUrl === "") {
+                          return <div className="loading-circles" />
+                        } else {
+                          let imgClass = "adatest-row-output-image-thumbnail";
+                          if (this.state.expandedImages.find(img => img === imgUrl) !== undefined) {
+                            imgClass = "adatest-row-output-image-expanded";
+                          }
+                          return <img src={"/_static/" + imgUrl} className={imgClass} onClick={_ => this.handleImgClick(imgUrl)} role="button" />
+                        }
+                      }
                     )
                  : (
                   <span style={{alignSelf: "flex-end"}}>
@@ -309,6 +321,7 @@ export default class Row extends React.Component {
       {/* <div className="adatest-row-score-text-box">
         {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
+      { /* check / x label buttons */ }
       {this.state.topic_name === null &&
         <svg height="30" width="90" style={{marginTop: "0px", flex: "0 0 90px", textAling: "left", display: "inline-block", marginLeft: "8px", marginRight: "0px"}}>
           {this.state.labeler === "imputed" && this.state.label === "pass" ?
@@ -331,6 +344,7 @@ export default class Row extends React.Component {
           <line x1="60" y1="15" x2="90" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
         </svg>
       }
+      { /* output score graphic */ }
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
 
         let total_pass = 0;
@@ -599,6 +613,11 @@ export default class Row extends React.Component {
   inputInput(text) {
     console.log("inputInput", text)
     this.setState({input: text, scores: null});
+    if (this.props.outputMode === "image") {
+      // In image mode, model output takes a long time
+      // so we need to be cautious about sending too many requests
+      return;
+    }
     this.props.comm.debouncedSendEvent500(changeInput(this.props.id, text));
   }
 
@@ -607,6 +626,8 @@ export default class Row extends React.Component {
     this.setState({editing: false});
     if (text.includes("/")) {
       this.setState({input: text, scores: null});
+      this.props.comm.sendEvent(changeInput(this.props.id, text));
+    } else if (this.props.outputMode === "image") {
       this.props.comm.sendEvent(changeInput(this.props.id, text));
     }
   }
@@ -773,6 +794,15 @@ export default class Row extends React.Component {
       this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic + "/" + this.state.topic_name));
     } else {
       this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
+    }
+  }
+
+  handleImgClick(imgUrl) {
+    console.log("Image clicked", imgUrl);
+    if (this.state.expandedImages.find(img => img === imgUrl) === undefined) {
+      this.setState({expandedImages: [...this.state.expandedImages, imgUrl]});
+    } else {
+      this.setState({expandedImages: this.state.expandedImages.filter(img => img !== imgUrl)});
     }
   }
 }

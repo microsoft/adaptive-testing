@@ -509,9 +509,17 @@ class TestTreeBrowser():
                     
                     # add a test
                     elif matches_filter(test, self.filter_text):
+                        if (self.output_mode == "image"):
+                            image_filename = test.output.replace('"', '')
+                            if len(image_filename) == 0:
+                                output = ''
+                            else:
+                                output = self.image_dir + "/" + image_filename
+                        else:
+                            output = test.output
                         data[k] = {
                             "input": test.input,
-                            "output": test.output if self.output_mode != "image" else self.image_dir + "/" + test.output.replace('"', ''),
+                            "output": output,
                             "label": test.label,
                             "labeler": test.labeler,
                             "description": test.description,

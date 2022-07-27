@@ -14,6 +14,8 @@ import random
 import uuid
 import logging
 
+from .utils._dalle_mock import get_fake_dalle_result
+
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 SUBKEY = os.environ.get("SUBKEY")
 
@@ -36,6 +38,7 @@ def generate_image(prompt, image_type, batch_size=1, seed=None, retry=True):
     prompt: text
     image_type: illustration, photo or unknown
     """
+
     if seed is not None:
         payload = {
             "image_type": image_type,
@@ -54,16 +57,25 @@ def generate_image(prompt, image_type, batch_size=1, seed=None, retry=True):
         log.debug(f"Sending DALLE request: {payload}")
         return http.request('POST',
                 "https://babel-dalle2-access.azure-api.net/dalle2/text2im",
-                payload, auth_headers_babel)
+                fields=payload,
+                timeout=90,
+                headers=auth_headers_babel)
 
-    response = send_dalle_request()
+    if prompt == "New test" or prompt == "":
+      # TODO: Discuss how to handle default value prompt
+      log.debug("Generating fake result for default prompt 'New test'")
+      response = get_fake_dalle_result(batch_size)
+    else:
+      response = send_dalle_request()
+
     log.debug(f"DALLE response status {response.status} for prompt {prompt}")
 
     if (response.status == 408 or response.status == 429) and retry:
         retry_count = 0
         while retry_count < 3:
-            log.debug(f"DALLE response status {response.status}. Retrying in 15 seconds...")
-            time.sleep(15)
+            sleep_secs = random.randint(1, 4) * 8 + random.randint(1, 4)
+            log.debug(f"DALLE response status {response.status}. Retrying in {sleep_secs} seconds...")
+            time.sleep(sleep_secs)
             response = send_dalle_request()
             if response.status != 408 and response.status != 429:
                 break

@@ -269,11 +269,58 @@
     background: linear-gradient(rgba(246, 248, 250, 0) 0px, rgb(246, 248, 250, 1) 18px);
     pointer-events: none;
     border-radius: 0px 0px 7px 7px;
-  }
+}
 .adatest-drop-highlighted {
     background: #dddddd;
 }
 
 .adatest-hover-gray:hover {
     background: #dddddd;
+}
+
+.adatest-row-output-image-thumbnail {
+    width: 75px;
+    height: 75px;
+    background: #ffffff;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.adatest-row-output-image-expanded {
+    width: 350px;
+    height: 350px;
+    background: #ffffff;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.loading-circles {
+    width: 40px;
+    height: 20px;
+    display: flex;
+    justify-content: space-between;
+    background: #fff;
+    filter: blur(3px) contrast(1);
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    mix-blend-mode: darken;
+}
+
+.loading-circles:after {
+    --sign: -1;
+}
+
+.loading-circles:before,
+.loading-circles:after {
+    content: "";
+    width: 40px;
+    border-radius: 50%;
+    background: #128ce3;
+    animation: hshift 1.5s infinite alternate;
+}
+
+@keyframes hshift {
+    70%,100% {transform: translate(calc(var(--sign, 1)*30px))}
 }
