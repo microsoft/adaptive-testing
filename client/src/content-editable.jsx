@@ -3,7 +3,7 @@ import autoBind from 'auto-bind';
 import sanitizeHtml from 'sanitize-html';
 import { defer } from 'lodash';
 
-export default class ContentEditable extends React.PureComponent {
+export default class ContentEditable extends React.Component {
   static defaultProps = {
     editable: true,
     defaultText: "",

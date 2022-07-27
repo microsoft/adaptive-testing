@@ -265,7 +265,7 @@ export default class Browser extends React.Component {
                 {this.state.generator_options && this.state.generator_options.length > 1 &&
                 <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
                   {this.state.generator_options.map((generator_option) => {
-                    return <option>{generator_option}</option>
+                    return <option key={generator_option}>{generator_option}</option>
                   })}
                 </select>
                 }

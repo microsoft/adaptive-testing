@@ -353,10 +353,16 @@ export default class Row extends React.Component {
           {/* {overall_score[k] > 0 ? */}
           <svg height="30" width="150">(total_pass / (total_pass + total_fail))
             {scaled_score < 0 &&
-              <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
+              <g opacity="0.05">
+                <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
+                <rect x="50" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(26, 127, 55, 1)", strokeWidth: "1"}} />
+              </g>
             }
             {scaled_score > 0 &&
-              <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
+              <g opacity="0.05">
+                <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 1.0)", strokeWidth: "25"}}></line>
+                <rect x="100" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
+              </g>
             }
             {this.state.topic_name === null &&
               <React.Fragment>
