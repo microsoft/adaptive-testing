@@ -131,7 +131,12 @@ class TestTree():
         self._tests = self._tests[column_names + [c for c in self._tests.columns if c not in column_names]]
 
         if compute_embeddings:
-            self.compute_embeddings()
+            self._cache_embeddings()
+
+        # replace any invalid topics with the empty string
+        for i, row in self._tests.iterrows():
+            if not isinstance(row.topic, str) or not row.topic.startswith("/"):
+                self._tests.loc[i, "topic"] = ""
 
         self._topic_labeling_models = {}
         self._topic_membership_models = {}

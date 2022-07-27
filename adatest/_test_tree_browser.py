@@ -188,7 +188,7 @@ class TestTreeBrowser():
         self.comm = None
 
         # define our current mode, and set of supported modes
-        self.mode = "tests"
+        self.mode = "tests" if self.test_tree.shape[0] > 0 else "topics"
         self.mode_options = [
             # "validity focused", # focus first on making valid in-topic tests, then secondarily on making those tests high scoring
             # "failure focused", # focus on making high scoring (failing) tests, then secondarily on making those tests valid and in-topic
@@ -670,7 +670,17 @@ class TestTreeBrowser():
             desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
 
         # generate the suggestions
-        proposals = self._active_generator_obj(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+        generators = [self._active_generator_obj] + list(self.generators.values())
+        for generator in generators:
+            try:
+                proposals = generator(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+                break
+            except ValueError:
+                pass # try the next generator
+        
+        # all topics should be URI encoded
+        if self.mode == "topics":
+            proposals = [urllib.parse.quote(x) for x in proposals]
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports

@@ -248,7 +248,7 @@ class OpenAI(TextCompletionGenerator):
                     openai.api_key = f.read().strip()
 
     def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100):
-        if len(prompts) == 0:
+        if len(prompts[0]) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
         prompts, prompt_ids = self._validate_prompts(prompts)
