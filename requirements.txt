@@ -10,3 +10,5 @@ checklist
 shap
 transformers
 torch
+spacy
+profanity

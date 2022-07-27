@@ -255,9 +255,9 @@ export default class Browser extends React.Component {
               </div>
             }
             {!this.state.disable_suggestions && 
-              <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length >= 0 ? "0.6" : "0.2", cursor: this.state.tests.length >= 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "rgb(0, 0, 0)", marginTop: "1px"}}>
+              <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
+                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
                   {(this.state.mode_options || []).map((mode_option) => {
                     return <option key={mode_option}>{mode_option}</option>
                   })}

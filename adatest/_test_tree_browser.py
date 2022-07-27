@@ -205,10 +205,8 @@ class TestTreeBrowser():
         # ensure any test tree based generator has embeddings calculated
         if isinstance(self.generators, dict):
             for name, gen in self.generators.items():
-                if gen.gen_type == "test_tree":
-                    gen.source.compute_embeddings()
-        elif self.generators.gen_type == "test_tree": # HN: Probably unused code, should be safe to remove
-            self.generators.source.compute_embeddings()
+                if getattr(gen, "gen_type", "") == "test_tree":
+                    gen.source._cache_embeddings()
 
         # save the current state of the test tree
         self._auto_save()
@@ -281,7 +279,8 @@ class TestTreeBrowser():
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
                     self._clear_suggestions()
-                    self.test_tree.retrain_topic_model(self.current_topic)
+                    self.test_tree.retrain_topic_labeling_model(self.current_topic)
+                    self.test_tree.retrain_topic_membership_model(self.current_topic)
                     self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
@@ -396,7 +395,14 @@ class TestTreeBrowser():
                     self.mode = msg[k]["mode"]
 
                 elif action == 'change_description':
-                    self.test_tree.loc[msg[k]['topic_marker_id']]['description'] = msg[k]['description']
+                    id = msg[k]['topic_marker_id']
+                    if id not in self.test_tree.index:
+                        self.test_tree.loc[id, 'topic'] = "" # only the root topic would be missing from the tree
+                        self.test_tree.loc[id, 'input'] = ""
+                        self.test_tree.loc[id, 'output'] = ""
+                        self.test_tree.loc[id, 'label'] = "topic_marker"
+                    self.test_tree.loc[id, 'description'] = msg[k]['description']
+                    self._auto_save()
 
                 elif action == 'change_filter':
                     print("change_filter")
@@ -607,6 +613,13 @@ class TestTreeBrowser():
             if self.test_tree.loc[k, "topic"].startswith(self.current_topic + "/__suggestions__"):
                 self.test_tree.drop(k, inplace=True)
 
+    def generate_suggestions(self, topic=None, filter=""):
+        if topic is not None:
+            self.current_topic = topic
+        self._clear_suggestions()
+        self.test_tree.retrain_topic_labeling_model(self.current_topic)
+        self.test_tree.retrain_topic_membership_model(self.current_topic)
+        self._generate_suggestions(filter=filter)
 
     def _generate_suggestions(self, filter):
         """ Generate suggestions for the current topic.
@@ -626,39 +639,6 @@ class TestTreeBrowser():
                 test_map[test.topic + " __topic_marker__"] = True
             else:
                 test_map[test.topic + " __JOIN__ " + test.input] = True
-
-        # see if we have a finite set of valid outputs
-        # valid_outputs = getattr(self.scorer, "output_names", None)
-        # if valid_outputs is not None and value2_filter is not None:
-        #     valid_outputs = [s for s in valid_outputs if re.search(value2_filter, s) is not None]
-
-        # # see if we have only topics are direct children, if so, we suggest topics
-        # has_direct_tests = False
-        # has_known_subtopics = False
-        # for k, test in self.test_tree.iterrows():
-        #     if test["topic"] == self.current_topic:
-        #         if test["type"] == "test":
-        #             has_direct_tests = True
-        #     elif is_subtopic(self.current_topic, test["topic"]):
-        #         has_known_subtopics = True
-        # suggest_topics = not has_direct_tests and has_known_subtopics
-        # suggest_topics = self.mode == "topics"
-        # zero_shot_tests = not has_direct_tests and not has_known_subtopics
-        
-        
-        
-        # {} should output {}
-        # {} should not output {}
-        # {} should have the same output as {}
-        # {} should not be more {} than {}
-        # {} should be invertable. [] is the output.
-        # {} should not output text containing {}
-        # {} should output toxic text. [] is the output.
-        # {} should not output toxic text. [] is the output.
-        
-        # {}'s output should not contain {}
-        
-
 
         
         # validity focused (focus first on making valid in-topic tests, then secondarily on making those tests high scoring)
@@ -682,8 +662,15 @@ class TestTreeBrowser():
             suggest_topics=self.mode == "topics"
         )
 
+        # get the current topic description
+        curr_topic_mask = (self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")
+        if curr_topic_mask.sum() == 0:
+            desc = ""
+        else:
+            desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
+
         # generate the suggestions
-        proposals = self._active_generator_obj(prompts, self.current_topic, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+        proposals = self._active_generator_obj(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
@@ -797,70 +784,38 @@ class TestTreeBrowser():
                 if (recompute or test[k+" score"] == "__TOEVAL__") and test.label != "topic_marker" and test.label != "off_topic":
                     eval_ids.append(id)
 
-            # run the scorer
-            new_outputs,scores = self.scorer[k](tests, eval_ids)
+            if len(eval_ids) > 0:
 
-            # update the scores in the test tree
-            current_outputs = tests["output"]
-            for i,id in enumerate(eval_ids):
-                # tests.loc[id, k+" score"] = scores[i]
+                # run the scorer
+                new_outputs,scores = self.scorer[k](tests, eval_ids)
 
-                if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
+                # update the scores in the test tree
+                current_outputs = tests["output"]
+                for i,id in enumerate(eval_ids):
+                    # tests.loc[id, k+" score"] = scores[i]
 
-                    # mark the current row as nan score (meaning the output does not match)
-                    tests.loc[id, k+" score"] = np.nan
+                    if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
 
-                    # add a new test where the model output does match if we are saving outputs
-                    if save_outputs:
-                        id_new = uuid.uuid4().hex
-                        tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
-                        tests.loc[id_new, "input"] = tests.loc[id, "input"]
-                        tests.loc[id_new, "output"] = new_outputs[i]
-                        tests.loc[id_new, "labeler"] = "imputed"
-                        tests.loc[id_new, "label"] = ""
-                        tests.loc[id_new, k+" score"] = scores[i]
-                else:
-                    tests.loc[id, "output"] = new_outputs[i]
-                    tests.loc[id, k+" score"] = scores[i]
+                        # mark the current row as nan score (meaning the output does not match)
+                        tests.loc[id, k+" score"] = np.nan
+
+                        # add a new test where the model output does match if we are saving outputs
+                        if save_outputs:
+                            id_new = uuid.uuid4().hex
+                            tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
+                            tests.loc[id_new, "input"] = tests.loc[id, "input"]
+                            tests.loc[id_new, "output"] = new_outputs[i]
+                            tests.loc[id_new, "labeler"] = "imputed"
+                            tests.loc[id_new, "label"] = ""
+                            tests.loc[id_new, k+" score"] = scores[i]
+                    else:
+                        tests.loc[id, "output"] = new_outputs[i]
+                        tests.loc[id, k+" score"] = scores[i]
 
         tests.deduplicate() # make sure any duplicates we may have introduced are removed
 
         # reimpute missing labels
         tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
-        return
-        for k in self.scorer:
-
-            self.scorer[k](tests)
-
-            # run the model on all the rows without a score
-            new_ids = tests.index[tests[k+ " score"] == ""]
-            outputs = self.scorer[k].outputs(tests["input"][new_ids])
-
-        if self.scorer is not None:
-            self._compute_scores(tests, recompute=recompute)
-
-        # model outputs and embeddings
-        if adatest.embedding_model is not None:
-            new_embedding_ids = [k for k in tests.index if k not in adatest._embedding_cache]
-            if len(new_embedding_ids) > 0:
-                value1s = []
-                value2s = []
-                value3s = []
-                for k in new_embedding_ids:
-                    if tests.loc[k, "type"] == "topic_marker":
-                        parts = tests.loc[k, "topic"].rsplit("/", 1)
-                        value1s.append(parts[1] if len(parts) == 2 else "")
-                        value2s.append("")
-                        value3s.append("")
-                    else:
-                        value1s.append(str(tests.loc[k, "value1"]))
-                        value2s.append(str(tests.loc[k, "value2"]))
-                        value3s.append(str(tests.loc[k, "value3"]))
-                new_value1_embeddings = adatest.embedding_model.encode(value1s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value2_embeddings = adatest.embedding_model.encode(value2s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                new_value3_embeddings = adatest.embedding_model.encode(value3s, convert_to_tensor=True, show_progress_bar=False).cpu()
-                for i,k in enumerate(new_embedding_ids):
-                    adatest._embedding_cache[k] = np.hstack([new_value1_embeddings[i], new_value2_embeddings[i], new_value3_embeddings[i]])
 
     def _compute_scores(self, tests, recompute):
         """ Use the scorer(s) to fill in scores in the passed TestTree.
