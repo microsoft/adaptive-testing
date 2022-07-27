@@ -7,6 +7,7 @@ import openai
 from profanity import profanity
 import numpy as np
 import torch
+import os
 import adatest
 import spacy
 from ._embedding import cos_sim
@@ -230,14 +231,21 @@ class OpenAI(TextCompletionGenerator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
     
-    def __init__(self, models, api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=profanity.censor):
+    def __init__(self, model="curie", api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
-        super().__init__(models, sep, subsep, quote, filter)
+        super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
         self.temperature = temperature
         self.top_p = top_p
         if api_key is not None:
             openai.api_key = api_key
+
+        # load a key by default if a standard file exists
+        elif openai.api_key is None:
+            key_path = os.path.expanduser("~/.openai_api_key")
+            if os.path.exists(key_path):
+                with open(key_path) as f:
+                    openai.api_key = f.read().strip()
 
     def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100):
         if len(prompts) == 0:

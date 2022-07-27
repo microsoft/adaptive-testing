@@ -613,6 +613,13 @@ class TestTreeBrowser():
             if self.test_tree.loc[k, "topic"].startswith(self.current_topic + "/__suggestions__"):
                 self.test_tree.drop(k, inplace=True)
 
+    def generate_suggestions(self, topic=None, filter=""):
+        if topic is not None:
+            self.current_topic = topic
+        self._clear_suggestions()
+        self.test_tree.retrain_topic_labeling_model(self.current_topic)
+        self.test_tree.retrain_topic_membership_model(self.current_topic)
+        self._generate_suggestions(filter=filter)
 
     def _generate_suggestions(self, filter):
         """ Generate suggestions for the current topic.
@@ -656,7 +663,11 @@ class TestTreeBrowser():
         )
 
         # get the current topic description
-        desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
+        curr_topic_mask = (self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")
+        if curr_topic_mask.sum() == 0:
+            desc = ""
+        else:
+            desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
 
         # generate the suggestions
         proposals = self._active_generator_obj(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)

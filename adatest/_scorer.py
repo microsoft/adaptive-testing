@@ -181,8 +181,10 @@ class ClassifierScorer(Scorer):
                 elif label == "pass":
                     pass_prob += probs[ind, 0]
 
-            assert fail_prob + pass_prob > 0, "The model outputed probabilities that are all zero, and hence can't be scored!"
-            return fail_prob / (pass_prob + fail_prob)
+            if not (fail_prob + pass_prob > 0):
+                return np.nan
+            else:
+                return fail_prob / (pass_prob + fail_prob)
         else:
             raise NotImplementedError("TODO: implement classifer scoring for templated tests")
 

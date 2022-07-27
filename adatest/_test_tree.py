@@ -199,6 +199,9 @@ class TestTree():
     @property
     def copy(self):
         return self._tests.copy
+    @property
+    def sort_values(self):
+        return self._tests.sort_values
     
     # NOTE: Can't delegate to df.append as it is depricated in favor of pd.concat, which we can't use due to type checks 
     def append(self, test_tree, axis=0):
@@ -206,9 +209,15 @@ class TestTree():
             self._tests = pd.concat([self._tests, test_tree], axis=axis)
         elif isinstance(test_tree, TestTree):
             self._tests = pd.concat([self._tests, test_tree._tests], axis=axis)
+        elif isinstance(test_tree, dict):
+            # check if the values are strings or lists of strings
+            if any([isinstance(v, str) for v in test_tree.values()]):
+                self._tests = pd.concat([self._tests, pd.DataFrame({k: [test_tree[k]] for k in test_tree}, index=[uuid.uuid4().hex])], axis=axis)
+            else:
+                self._tests = pd.concat([self._tests, pd.DataFrame(test_tree)], axis=axis)
 
-        self.deduplicate()
-        self.compute_embeddings()
+        #self.deduplicate()
+        #self.compute_embeddings()
         return None # TODO: Rethink append logic -- return copy vs. in place update?
 
     def __len__(self):
@@ -233,7 +242,7 @@ class TestTree():
         ids = [id for id, test in self._tests.iterrows() if is_subtopic(topic, test.topic)]
         return self.loc[ids]
 
-    def adapt(self, scorer=None, generator=None, auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
+    def adapt(self, scorer=None, generator=adatest.generators.OpenAI(), auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
               max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
               score_filter=-1e10, topic_model_scale=0): # TODO: remove active_generator and replace with the ability to set the generator?
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
