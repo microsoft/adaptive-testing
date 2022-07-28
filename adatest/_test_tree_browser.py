@@ -70,7 +70,7 @@ def file_log(*args):
 
 def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
-    return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
+    return True if re.search(r'^%s(/|$)' % re.escape(topic), candidate) else False
 
 def matches_filter(test, filter_text: str):
     if filter_text is None or filter_text == "":
