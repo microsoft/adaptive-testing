@@ -1,7 +1,7 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter, faQuestion } from '@fortawesome/free-solid-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
@@ -9,6 +9,9 @@ import Row from './row';
 import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
+import {  Slider, Input } from "antd";
+import "antd/dist/antd.css";
+import FolderBrowser from './folder_browser';
 
 export default class Browser extends React.Component {
   constructor(props) {
@@ -33,7 +36,10 @@ export default class Browser extends React.Component {
       timerExpired: false,
       experiment_locations: [],
       experiment: false,
-      value2Filter: ""
+      value2Filter: "",
+      active_temperature: 1,		
+  	  user_prompt: "",
+
     };
 
     console.log("this.props.location", this.props.location)
@@ -169,6 +175,16 @@ export default class Browser extends React.Component {
         </span>
       </div>
       
+    {/* john edit */}
+
+            {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
+  <div style={{display:'flex', clear: 'both', width: '100%'}}>
+    <div id="folderbrowser" style={{width: '20%', marginLeft: 'auto', left: 'auto', right:'auto'}}>
+          <FolderBrowser not_move={false} structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts} mother_this={this} 
+            hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} onDrop={this.onDrop}></FolderBrowser>
+    </div>
+
+
 
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
         <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
@@ -196,6 +212,48 @@ export default class Browser extends React.Component {
         <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
           <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
+                {/* charvi edit for adding slider */}
+                <div
+            style={{
+              // position: "absolute",
+              color: "rgb(170, 170, 170)",
+              margin: "10px 0px 5px 0px",
+              border: "1px solid rgb(170, 170, 170)",
+              borderRadius: "5px",
+              textAlign: "right",
+              paddingRight: "11px",
+              height: "50px",
+            }}
+          >
+          <div>  
+          <div style={{width:"80%",height:"34px", float:"left", paddingLeft: "10px", color:"rgb(0, 0, 0)" ,marginTop:"8px"    }} >
+            <Input 
+               prefix= {"Prompt: "} 
+               placeholder= {"Give me a list of ... such as ... ," }
+               allowClear= {true}
+               onChange={this.changePrompt} 
+               defaultValue={this.state.user_prompt} 
+               id ={"prompt_input_box"}
+               />
+          </div>
+          <div style={{float:"left",  height: "30px", paddingLeft: "15px"}}>
+          <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
+              Creativity: { this.state.active_temperature < 1.5 ? "Low" :this.state.active_temperature==1.5 ? "Medium" : "High"  }
+            </div>
+            <div style={{textAlign: "right",   paddingRight: "10px",    color: "#999999" , marginBottom: "4px"   }} >
+              <Slider
+                step={0.5}
+                style={{ display: "inline-block", minWidth: "100px" }}
+                onChange={this.changeTemperature}
+                min={1}
+                max={2}
+                defaultValue={this.state.active_temperature}
+                tipFormatter={null}
+            />
+            </div>
+          </div>
+          </div>
+          </div>
         <div clear="all"></div>
 
         {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
@@ -375,6 +433,7 @@ export default class Browser extends React.Component {
           </div>
         }
       </div>
+    </div> 
 
       <div style={{textAlign: "right", paddingRight: "11px"}}>
         {this.state.score_columns && this.state.score_columns.map(k => {
@@ -574,7 +633,8 @@ export default class Browser extends React.Component {
     const failKey = 66;
     const offTopicKey = 67;
     console.log("keyCodeXX", e.keyCode);
-    if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey) { // backspace and delete and labeling keys
+    {
+    if ( (document.activeElement.id != "prompt_input_box") && (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey)) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
       const ids = this.state.suggestions.concat(this.state.tests);
       if (keys.length > 0) {
@@ -660,6 +720,7 @@ export default class Browser extends React.Component {
     } else {
       return;
     }
+  }
     e.preventDefault();
     e.stopPropagation();
 
@@ -764,9 +825,24 @@ export default class Browser extends React.Component {
       suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
       suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
-      checklist_mode: !!this.suggestionsTemplateRow
+      checklist_mode: !!this.suggestionsTemplateRow,
+      temperature: this.state.active_temperature,
+      user_prompt: this.state.user_prompt
     });
   }
+
+  changeTemperature(e) {
+    console.log("changeTemperature", e);
+    // this.comm.send(this.id, { active_temperature: e });
+    this.setState({ active_temperature: e });
+  }
+
+  changePrompt(e) {
+    console.log("changePrompt", e);
+    this.setState({user_prompt: e.target.value});
+    
+  }
+
 
   clearSuggestions(e) {
     e.preventDefault();

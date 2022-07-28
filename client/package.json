@@ -30,6 +30,7 @@
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
+    "antd": "^4.22.2",
     "auto-bind": "^4.0.0",
     "json5": "^2.2.0",
     "lodash": "^4.17.21",

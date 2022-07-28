@@ -72,6 +72,51 @@ def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
+#crv
+def is_direct_subtopic(topic, candidate):
+    # Returns true if candidate is a subtopic of topic
+    return is_subtopic(topic, candidate) and topic.count('/')+1==candidate.count('/')
+
+def get_count (df, key): 
+    return np.sum( df.apply(lambda x: 1 if ((key in x['topic']) and( x['label'] in ['pass', 'fail'])) else 0, axis = 1)) 
+def get_count_slow(df, key):
+    sumpass = 0
+    sumfail = 0  
+    for i, row in df.iterrows() : 
+        if ((key in row.topic) and( row.label in ['pass', 'fail']) and ('suggestions' not in row.topic)):
+            if row.label == 'pass' : 
+                sumpass +=1
+            else : 
+                sumfail +=1 
+    return [sumpass, sumfail]
+
+def search_structure(topic, structure):
+    r = False
+    for key in structure:
+        if topic==key:
+            return True
+        if search_structure(topic, structure[key]):
+            r=True
+    return r
+
+def find_childrens_to_update(test_tree, topics_to_update):
+    children = []
+                                
+    for t in topics_to_update:
+        cur_structure = test_tree.structure
+        t_split = t.split('/')
+        tk = ''
+        for idx, t_p in enumerate(t_split):
+            if idx==0:
+                continue
+            tk = tk+'/'+t_p
+            if tk in cur_structure:
+                cur_structure = cur_structure[tk]
+                children = children + list(cur_structure.keys())
+            else:
+                break
+    return list(set(topics_to_update+children))
+
 def matches_filter(test, filter_text: str):
     if filter_text is None or filter_text == "":
         return True
@@ -281,7 +326,9 @@ class TestTreeBrowser():
                     self._clear_suggestions()
                     self.test_tree.retrain_topic_labeling_model(self.current_topic)
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
-                    self._generate_suggestions(filter=msg[k].get("filter", ""))
+                    # self._generate_suggestions(filter=msg[k].get("filter", ""))
+                    # crv
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",1))
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
                     # else:
@@ -393,6 +440,7 @@ class TestTreeBrowser():
                 # change between topics and tests
                 elif action is None and "mode" in msg[k]:
                     self.mode = msg[k]["mode"]
+                ### crv update score tbd
 
                 elif action == 'change_description':
                     id = msg[k]['topic_marker_id']
@@ -555,9 +603,31 @@ class TestTreeBrowser():
 
             return sorted_children
         
+        #crv
+        def create_structure( tests, topic):   # data is a dictionary, topic is a string, tests is a test tree type in the class, each test in tests is a series 
+            structure = {'count' : get_count_slow(tests, topic)}
+            
+            # children = []
+            
+            # add tests and topics to the data lookup structure
+            for k, test in tests.iterrows():
+                
+                if test.label=="topic_marker":
+                    if is_direct_subtopic(topic, test.topic):
+                      
+                        structure[test.topic] = create_structure( tests, test.topic)
+
+
+            return structure
+
         # get the children of the current topic
         children = create_children(data, self.test_tree, self.current_topic)
         suggestions_children = create_children(data, self.test_tree, self.current_topic + "/__suggestions__")
+
+        #crv
+        # get the tree structure of the test set
+        structure = create_structure( self.test_tree, '')
+        self.test_tree.structure = structure
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
@@ -587,6 +657,8 @@ class TestTreeBrowser():
             "suggestions": suggestions_children,
             "tests": children,
             "user": self.user,
+            #crv
+            "structure": structure, 
             "topic": self.current_topic,
             "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",
             "topic_marker_id": topic_marker_id if topic_marker_id is not None else uuid.uuid4().hex,
@@ -620,8 +692,8 @@ class TestTreeBrowser():
         self.test_tree.retrain_topic_labeling_model(self.current_topic)
         self.test_tree.retrain_topic_membership_model(self.current_topic)
         self._generate_suggestions(filter=filter)
-
-    def _generate_suggestions(self, filter):
+    #crv
+    def _generate_suggestions(self, filter,temperature, user_prompt):
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -670,10 +742,11 @@ class TestTreeBrowser():
             desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
 
         # generate the suggestions
+        #crv
         generators = [self._active_generator_obj] + list(self.generators.values())
         for generator in generators:
             try:
-                proposals = generator(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+                proposals = generator(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, temperature=temperature , user_prompt = user_prompt)
                 break
             except ValueError:
                 pass # try the next generator

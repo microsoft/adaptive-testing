@@ -130,7 +130,8 @@ class TextCompletionGenerator(Generator):
     def _parse_suggestion_texts(self, suggestion_texts, prompts):
         """ Parse the suggestion texts into tuples.
         """
-        assert len(suggestion_texts) % len(prompts) == 0, "Missing prompt completions!"
+        # charvi edit - commented below line
+        # assert len(suggestion_texts) % len(prompts) == 0, "Missing prompt completions!"
 
         # _, gen_value1, gen_value2, gen_value3 = self._varying_values(prompts, "") # note that "" is an unused topic argument
         
@@ -246,8 +247,8 @@ class OpenAI(TextCompletionGenerator):
             if os.path.exists(key_path):
                 with open(key_path) as f:
                     openai.api_key = f.read().strip()
-
-    def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100):
+    #crv
+    def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100, temperature =None, user_prompt=''):
         if len(prompts[0]) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
@@ -260,14 +261,32 @@ class OpenAI(TextCompletionGenerator):
         # create prompts to generate the model input parameters of the tests
         prompt_strings = self._create_prompt_strings(prompts, topic, mode)
         
+        # substitute user provided prompt/temperature if available
+        call_temp = temperature if temperature is not None else self.temperature
+        call_prompt = prompt_strings if user_prompt is '' else user_prompt
+
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
-            engine=self.source, prompt=prompt_strings, max_tokens=max_length,
-            temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=self.quote
+            engine=self.source, prompt=call_prompt, max_tokens=max_length,
+            temperature=call_temp, top_p=self.top_p, n=num_samples, stop=self.quote
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
-        
-        return self._parse_suggestion_texts(suggestion_texts, prompts)
+        parsed_suggestion =  self._parse_suggestion_texts(suggestion_texts, prompts)
+        if user_prompt== call_prompt: 
+            print('hello user prompt is being used ')
+            parsed_text = []
+
+            for p in parsed_suggestion: 
+                x = p.split('\n')
+                
+                cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' '))]) for text in x]
+                parsed_text.extend([text for text in cleanx if text])
+
+            return(list(set(parsed_text)) ) 
+
+        else: 
+            return parsed_suggestion
+        # return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
 class AI21(TextCompletionGenerator):
