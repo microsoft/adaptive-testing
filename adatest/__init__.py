@@ -7,7 +7,7 @@ from ._model import Model
 from ._topic_model import ChainTopicModel, StandardTopicModel
 from . import generators
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 default_generators = {
     "abstract": TestTree(r"test_trees/abstract_capabilities.csv")
