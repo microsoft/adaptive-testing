@@ -2,6 +2,7 @@ import numpy as np
 import logging
 import re
 import torch
+import urllib.parse
 import adatest
 from ._embedding import cos_sim
 log = logging.getLogger(__name__)
@@ -158,7 +159,7 @@ class PromptBuilder():
                 sim_avoidance = np.zeros(len(ids))
                 if suggest_topics:
                     embeddings_arr = torch.tensor(np.vstack(adatest.embed(
-                        [test_tree.loc[id, "topic"].split("/")[-1] for id in ids]
+                        [urllib.parse.unquote(test_tree.loc[id, "topic"].split("/")[-1]) for id in ids]
                     )))
                 else:
                     embeddings_arr = torch.tensor(np.hstack([
@@ -226,7 +227,7 @@ class PromptBuilder():
                     if row["topic"] == "":
                         continue # we can't use the root to help suggest topic names
                     parents,child = row["topic"].rsplit("/", 1)
-                    prompt.append((k, parents, child))
+                    prompt.append((k, parents, urllib.parse.unquote(child)))
                 else:
                     prompt.append((k, row["topic"], row["input"]))
             prompts.append(prompt)
