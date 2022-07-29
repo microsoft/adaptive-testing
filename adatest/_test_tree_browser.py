@@ -614,8 +614,11 @@ class TestTreeBrowser():
                 
                 if test.label=="topic_marker":
                     if is_direct_subtopic(topic, test.topic):
-                      
-                        structure[test.topic] = create_structure( tests, test.topic)
+                        replacements = {'%20': ' ', '%0A%0A':' ', "%3F": "?", '%21': "!"}
+                        topic_with_space = test.topic
+                        for i in replacements.keys(): 
+                            topic_with_space  = topic_with_space.replace(i, replacements[i])
+                        structure[topic_with_space] = create_structure( tests, test.topic)
 
 
             return structure
