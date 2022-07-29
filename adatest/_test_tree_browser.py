@@ -822,7 +822,8 @@ class TestTreeBrowser():
                         tests.loc[id, "output"] = new_outputs[i]
                         tests.loc[id, k+" score"] = scores[i]
 
-        tests.deduplicate() # make sure any duplicates we may have introduced are removed
+        # make sure any duplicates we may have introduced are removed
+        tests.deduplicate()
 
         # reimpute missing labels
         tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
