@@ -17,3 +17,6 @@ local_data
 /build
 /dist
 /test_trainer/runs
+/test_trees/local
+/adatest/utils/local
+/tests/local

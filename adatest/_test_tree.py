@@ -331,13 +331,23 @@ class TestTree():
 
         already_seen = {}
         drop_ids = []
+
+        # catch duplicate tests in the same topic
         for id, test in self._tests.iterrows():
             k = test.topic + "|_ADA_JOIN_|" + test.input + "|_ADA_JOIN_|" + test.output
             if k in already_seen:
                 drop_ids.append(id)
             else:
                 already_seen[k] = True
-        self._tests = self._tests.drop(drop_ids, axis=0)
+
+        # see if any suggestions are duplicates of things already in the their topic
+        # (note we do this as a second loop so we know we have already marked all the
+        # members of the topic in already_seen)
+        for id, test in self._tests.iterrows():
+            k = test.topic.replace("/__suggestions__", "") + "|_ADA_JOIN_|" + test.input + "|_ADA_JOIN_|" + test.output
+            if k in already_seen:
+                drop_ids.append(id)
+        self._tests.drop(drop_ids, axis=0, inplace=True)
 
     def _cache_embeddings(self):
         """ Pre-compute the embeddings for all test cases in the test tree.
