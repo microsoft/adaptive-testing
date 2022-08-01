@@ -1,6 +1,6 @@
 from ._test_tree import TestTree
 from ._test_tree_browser import TestTreeBrowser
-from ._scorer import Scorer, DummyScorer, ClassifierScorer, GeneratorScorer
+from ._scorer import Scorer, DummyScorer, ClassifierScorer, GeneratorScorer, RawScorer
 from ._server import serve
 from ._embedding import embed
 from ._model import Model

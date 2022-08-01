@@ -12,7 +12,7 @@ class PromptBuilder():
     """ A class to build prompts for the model.
     """
     
-    def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=0.25, skip_randomization=0.25, prompt_diversity=True,
+    def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=0.05, skip_randomization=0.25, prompt_diversity=True,
                  subtopic_diversity=True):
         """ Initialize the prompt builder.
         
@@ -43,7 +43,7 @@ class PromptBuilder():
 
         self.prompt_size = prompt_size
         self.slot_randomization = slot_randomization
-        self.score_randomization = score_randomization
+        self.score_randomization = score_randomization # TODO: make this scale according to the stddev of the top 7 entries?
         self.skip_randomization = skip_randomization
         self.prompt_diversity = prompt_diversity
         self.subtopic_diversity = subtopic_diversity

@@ -27,8 +27,6 @@ import torch
 #             self.position += 1
 #             return self.test_tree.iloc[self.position - 1]
 
-def topic_model_labeler(topic, input, output):
-    return 
 class TestTree():
     """ A hierarchically organized set of tests represented as a DataFrame.
 
