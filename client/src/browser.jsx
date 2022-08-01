@@ -181,6 +181,7 @@ export default class Browser extends React.Component {
           <span style={{fontSize: "16px"}}>
           {breadCrumbParts.map((name, index) => {
             //console.log("bread crum", name, index);
+            // name = decodeURIComponent(name);
             const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
               {index > 0 && <span style={{color: "black"}}> / </span>}
               <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
@@ -239,11 +240,11 @@ export default class Browser extends React.Component {
                 />
               </React.Fragment>
             })}
-            {this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions &&
+            {/* {this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions &&
               <div onClick={e => this.removeScoreFilter(e)} className="adatest-row-add-button adatest-hover-opacity" style={{lineHeight: "25px", display: "inline-block",}}>
                 <FontAwesomeIcon icon={faChevronDown} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
-            }
+            } */}
             <div style={{height: "15px"}}></div>
           </div>
           
@@ -255,21 +256,25 @@ export default class Browser extends React.Component {
               </div>
             }
             {!this.state.disable_suggestions && 
-              <div onClick={this.refreshSuggestions} style={{opacity: this.state.tests.length >= 0 ? "0.6" : "0.2", cursor: this.state.tests.length >= 0 ? "pointer" : "default", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggestions</span>
-                {this.state.generator_options && this.state.generator_options.length > 1 &&
-                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "50px"}}>
-                  {this.state.generator_options.map((generator_option) => {
-                    return <option>{generator_option}</option>
-                  })}
-                </select>
-                }
-                <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
+              <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
+                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
                   {(this.state.mode_options || []).map((mode_option) => {
                     return <option key={mode_option}>{mode_option}</option>
                   })}
+                </select></span>
+                {this.state.generator_options && this.state.generator_options.length > 1 &&
+                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
+                  {this.state.generator_options.map((generator_option) => {
+                    return <option key={generator_option}>{generator_option}</option>
+                  })}
                 </select>
+                }
+                {/* <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
+                  {(this.state.mode_options || []).map((mode_option) => {
+                    return <option key={mode_option}>{mode_option}</option>
+                  })}
+                </select> */}
               </div>
             }
             {this.state.suggestions_error && 
@@ -285,7 +290,26 @@ export default class Browser extends React.Component {
           </div>
         </div>}
 
-        
+        <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
+          <div style={{width: "200px", textAlign: "right", display: "inline-block"}}>
+            Input
+          </div>
+          <div style={{width: "25px", textAlign: "left", display: "inline-block"}}>
+            
+          </div>
+          <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
+            Output
+          </div>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+            <nobr>Off-topic</nobr>
+          </div>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+            Pass
+          </div>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+            Fail
+          </div>
+        </div>
         
         <div className="adatest-children-frame">
           {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
@@ -547,11 +571,11 @@ export default class Browser extends React.Component {
 
   keyDownHandler(e) {
     let newId = undefined;
-    const passKey = 90;
-    const failKey = 88;
-    const outKey = 67;
+    const passKey = 86;
+    const failKey = 66;
+    const offTopicKey = 67;
     console.log("keyCodeXX", e.keyCode);
-    if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == outKey) { // backspace and delete and labeling keys
+    if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
       const ids = this.state.suggestions.concat(this.state.tests);
       if (keys.length > 0) {
@@ -563,7 +587,7 @@ export default class Browser extends React.Component {
           }
         }
 
-        if (e.keyCode == outKey && !in_suggestions) { // when marking for out of topic we only do this for suggestion rows
+        if (e.keyCode == offTopicKey && !in_suggestions) { // when marking for out of topic we only do this for suggestion rows
           return;
         }
 
@@ -581,7 +605,7 @@ export default class Browser extends React.Component {
               this.rows[keys[i]].labelAsFail();
             }
           }
-        } else if (e.keyCode == outKey) {
+        } else if (e.keyCode == offTopicKey) {
           const keys = Object.keys(this.state.selections);
           if (keys.length > 0) {
             for (const i in keys) {
@@ -854,10 +878,15 @@ export default class Browser extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     const id = e.dataTransfer.getData("id");
+    const topic_name = e.dataTransfer.getData("topic_name");
     console.log("onSuggestionsDrop", e, id);
     if (this.state.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
     this.setState({suggestionsDropHighlighted: 0});
-    this.onDrop(id, this.state.topic + "/__suggestions__");
+    if (topic_name !== null && topic_name !== "null") {
+      this.onDrop(id, this.state.topic + "/__suggestions__" + "/" + topic_name);
+    } else {
+      this.onDrop(id, this.state.topic + "/__suggestions__");
+    }
   }
 
   onDrop(id, topic) {
@@ -875,10 +904,7 @@ export default class Browser extends React.Component {
     if (this.suggestionsTemplateRow) {
       this.suggestionsTemplateRow.setState({value2: null});
     }
-    if (topic === "/") {
-      topic = ""
-    }
-    this.comm.sendEvent(changeTopic(topic))
+    this.comm.sendEvent(changeTopic(stripSlash(topic).replaceAll(" ", "%20")))
   }
 
 }

@@ -92,10 +92,11 @@
 
 .adatest-row-score-plot-box {
     float: right;
-    height: 10px;
-    flex: 0 0 100px;
+    height: 30px;
+    flex: 0 0 150px;
     margin-right: 10px;
-    padding-top: 5px;
+    padding-top: 0px;
+    align-self: center;
 }
 
 .adatest-row-add-button {

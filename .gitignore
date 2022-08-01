@@ -1,6 +1,8 @@
 gadfly.egg-info
 __pycache__
 *.pyc
+*.log
+.vscode
 node_modules
 .jekyll-cache
 .ipynb_checkpoints
@@ -10,6 +12,11 @@ dist/gadfly-*
 local_scratch*
 wandb
 local_data
-notebooks/TDD/data
-env/
-build/
+/notebooks/TDD/data
+/notebooks/PPT
+/build
+/dist
+/test_trainer/runs
+/test_trees/local
+/adatest/utils/local
+/tests/local

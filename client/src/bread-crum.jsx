@@ -16,7 +16,7 @@ export default class BreadCrum extends React.Component {
     return <div className={this.state.dropHighlighted ? "adatest-crum-selected" : ""} style={{borderRadius: "10px 10px 10px 10px", display: "inline-block", cursor: "pointer"}} 
           onClick={this.onClick} onDragOver={this.onDragOver} onDragEnter={this.onDragEnter}
           onDragLeave={this.onDragLeave} onDrop={this.onDrop}>
-      {this.props.name === "" ? "Tests" : this.props.name}
+      {this.props.name === "" ? "Tests" : decodeURIComponent(this.props.name)}
     </div>
   }
 

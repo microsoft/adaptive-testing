@@ -2,33 +2,17 @@ import numpy as np
 import logging
 import re
 import torch
+import urllib.parse
 import adatest
-
+from ._embedding import cos_sim
 log = logging.getLogger(__name__)
-
-# test_tree(scorer=model, dataset=dataset)
-
-# test_tree()
-
-# test_tree2 = test_tree(dataset)
-
-# test_tree.auto_categorize(dataset)
-
-# test_tree.browse(dataset)
-
-# test_tree.browse(target=model, dataset=dataset)
-
-# test_tree.browse(model)
-
-# adatest.browse(test_tree, model)
-
 
 
 class PromptBuilder():
     """ A class to build prompts for the model.
     """
     
-    def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=1.0, skip_randomization=0.25, prompt_diversity=True,
+    def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=0.25, skip_randomization=0.25, prompt_diversity=True,
                  subtopic_diversity=True):
         """ Initialize the prompt builder.
         
@@ -41,8 +25,7 @@ class PromptBuilder():
             The proportion of slots to make fully random (within the current topic).
 
         score_randomization : float
-            An additive randomization factor for the scores. 0 mean no randomization, 1 means add one standard
-            deviation of Gaussian noise.
+            The standard deviation of an additive Gaussian randomization factor for the scores.
 
         skip_randomization : float
             The proportion of times we skip over top ranking tests when building the prompt.
@@ -99,27 +82,16 @@ class PromptBuilder():
 
         ids = np.array(test_tree.index)
 
-        # make sure all the embeddings are computed
-        test_tree.compute_embeddings()
+        # return early for an empty test tree
+        if len(ids) == 0:
+            return [[] for _ in range(repetitions)]
         
-        # if suggesting topics mark only direct subtopics as "in topic"
-        # if suggest_topics:
-        #     topic_scaling = np.zeros(len(ids))
-        #     for i, k in enumerate(ids):
-        #         if test_tree.loc[k, "type"] == "topic_marker" and test_tree.loc[k, "topic"].rsplit('/', 1)[0] == topic:
-        #             topic_scaling[i] = 1.0
-        
-        # # if suggesting tests we compute each test's distance from current topic, where distance
-        # # is measured by the length of the topic prefix shared between the test and the current topic
-        # else:
-        parts = topic.split("/")
+        # we compute each test's distance from current topic, where distance is measured
+        # by the length of the topic prefix shared between the test and the current topic
         topic_scaling = np.ones(test_tree.shape[0])
-
-        if len(topic_scaling) == 0: # Early exit for completely empty test trees
-            return []
-
-        for i in range(1, len(parts)):
-            prefix = "/".join(parts[:i+1])
+        topic_parts = topic.split("/")
+        for i in range(1, len(topic_parts)):
+            prefix = "/".join(topic_parts[:i+1])
             if suggest_topics:
                 prefix += "/"
             topic_scaling *= 1 + 99 * np.array([v.startswith(prefix) for v in test_tree["topic"]])
@@ -131,6 +103,11 @@ class PromptBuilder():
         else:
             topic_scaling *= 1 + 99 * np.array([v == topic for v in test_tree["topic"]])
             topic_scaling *= np.array(test_tree["label"] != "topic_marker")
+        topic_scaling *= np.array(["__suggestions__" not in t for t in test_tree["topic"]])
+
+        # return early if we have nothing to build a prompt with
+        if np.sum(topic_scaling) == 0:
+            return [[] for _ in range(repetitions)]
 
         topic_scaling /= np.max(topic_scaling)
 
@@ -150,20 +127,12 @@ class PromptBuilder():
 
         # filter down to a single test type (chosen to match the top scoring test)
         if suggest_topics:
-            # test_type = "topic_marker"
-            scores = np.ones(len(ids)) # Scores should not influence topic suggestions
+            # scores currently do not influence topic suggestions
+            # TODO: can we score topics and topic suggestions?
+            scores = np.ones(len(ids))
         else:
             # compute a positive single value score for each test
-            scores = np.array([score_max(test_tree.loc[k, score_column]) for k in ids])
-            scores -= np.nanmin(scores) - 1e-8 # the 1e-8 terms causes NaN scores to be last priority
-            scores = np.nan_to_num(scores)
-
-            # rank_vals = scores * topic_scaling * hidden_scaling
-            # test_type = test_tree.loc[ids[np.argmax(rank_vals)], "type"]
-            # for i,k in enumerate(ids):
-            #     if test_tree.loc[k, "type"] != test_type:
-            #         hidden_scaling[i] = 0.0
-                    
+            scores = np.array([score_max(test_tree.loc[k, score_column], test_tree.loc[k, "label"]) for k in ids])
 
         # filter down to just top rows we will use during the iterative scoring process
         rank_vals = scores * topic_scaling * hidden_scaling
@@ -171,7 +140,7 @@ class PromptBuilder():
         ids = ids[top_inds]
         topic_scaling = topic_scaling[top_inds]
         hidden_scaling = hidden_scaling[top_inds]
-        scores = scores[top_inds]
+        scores = scores[top_inds] * 1.0
 
         # build a list of randomized prompts
         prompts = []
@@ -181,14 +150,8 @@ class PromptBuilder():
             scores_curr = scores.copy()
             topic_scaling_curr = topic_scaling.copy()
 
-            # score randomization TODO: Scott look into scores_curr > 1
-            score_weights = topic_scaling * (scores_curr > 1)
-            if np.sum(score_weights) > 0:
-                std_dev = np.sqrt(np.cov(scores_curr, aweights=score_weights)) + 1e-6
-            else:
-                std_dev = 1e-6
-            if not np.isnan(std_dev):
-                scores_curr += self.score_randomization * std_dev * np.random.rand(len(ids))
+            # score randomization
+            scores_curr += self.score_randomization * np.random.rand(len(ids))
 
             # sim_avoidance is a vector that marks which items (and items related through similarities)
             # should be avoided (ranked lower for prompt selection)
@@ -196,13 +159,14 @@ class PromptBuilder():
                 sim_avoidance = np.zeros(len(ids))
                 if suggest_topics:
                     embeddings_arr = torch.tensor(np.vstack(adatest.embed(
-                        [test_tree.loc[id, "topic"].split("/")[-1] for id in ids]
+                        [urllib.parse.unquote(test_tree.loc[id, "topic"].split("/")[-1]) for id in ids]
                     )))
                 else:
-                    embeddings_arr = torch.tensor(np.vstack([
-                        np.hstack(adatest.embed([test_tree.loc[id, "input"], test_tree.loc[id, "output"]]))
-                    for id in ids]))
-                similarities = adatest._cos_sim(embeddings_arr, embeddings_arr).numpy()
+                    embeddings_arr = torch.tensor(np.hstack([
+                        np.vstack(adatest.embed([test_tree.loc[id, "input"] for id in ids])),
+                        np.vstack(adatest.embed([test_tree.loc[id, "output"] for id in ids]))
+                    ]))
+                similarities = cos_sim(embeddings_arr, embeddings_arr).numpy()
             hard_avoidance = np.zeros(len(ids))
             diversity = np.ones(len(ids))
 
@@ -215,14 +179,14 @@ class PromptBuilder():
             outside_topics_used = np.ones(len(ids))
             while len(prompt_ids) < num_greedy + num_random:
 
-                # once we get to the random part of the process we forget what topics we have visited and scramble the scores
+                # once we get to the random part of the process we scramble the scores
                 if len(prompt_ids) == num_greedy:
-                    scores = 1 + np.random.rand(len(ids))*0.1
+                    scores_curr = 1 + np.random.rand(len(ids))*0.1
 
                 # find the next bext index
                 if self.prompt_diversity:
                     diversity = 1 - (similarities * sim_avoidance).max(1)
-                rank_vals = scores * topic_scaling_curr * diversity * (1 - hard_avoidance) * hidden_scaling * outside_topics_used
+                rank_vals = scores_curr * topic_scaling_curr * diversity * (1 - hard_avoidance) * hidden_scaling * outside_topics_used
 
                 if np.nanmax(rank_vals) <= 0 and len(prompt_ids) > 0: # stop if we have run out of the current subtree
                     break
@@ -250,15 +214,10 @@ class PromptBuilder():
                 # lower the weight of the subtopic we just picked from
                 if self.subtopic_diversity:
                     new_topic = test_tree.loc[ids[new_ind], "topic"]
-                    if topic == new_topic:
-                        subtopic_scaling = np.ones(len(ids))
-                        subtopic_scaling[new_ind] = 0.0001
-                    else:
+                    if topic != new_topic and is_subtopic(topic, new_topic):
                         subtopic = topic + "/" + new_topic[(len(topic)+1):].split("/")[0]
-                        # print(subtopic)
-                        # subtopic_scaling = np.array([0.0001 if test_tree.loc[k, "topic"].startswith(subtopic) else 1 for k in ids])
-                        subtopic_scaling = np.array([0.0001 if is_subtopic(subtopic, test_tree.loc[k, "topic"]) else 1 for k in ids])
-                    topic_scaling_curr *= subtopic_scaling
+                        subtopic_scaling = np.array([0.001 if is_subtopic(subtopic, test_tree.loc[k, "topic"]) else 1 for k in ids])
+                        topic_scaling_curr *= subtopic_scaling
 
             # create the prompt as a list of tuples
             prompt = []
@@ -268,7 +227,7 @@ class PromptBuilder():
                     if row["topic"] == "":
                         continue # we can't use the root to help suggest topic names
                     parents,child = row["topic"].rsplit("/", 1)
-                    prompt.append((k, parents, child))
+                    prompt.append((k, parents, urllib.parse.unquote(child)))
                 else:
                     prompt.append((k, row["topic"], row["input"]))
             prompts.append(prompt)
@@ -280,13 +239,13 @@ def is_subtopic(topic, candidate):
     """
     return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
-def score_max(s):
+def score_max(s, label):
     if s == "" or s is None:
-        return -1e3
+        return 1 if label == "fail" else 0
     elif isinstance(s, str):
         return np.max([convert_float(v) for v in s.split("|")])
     elif np.isnan(s):
-        return -1e3
+        return 1 if label == "fail" else 0
     else:
         return np.max(s)
 
