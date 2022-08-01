@@ -277,6 +277,75 @@ class GeneratorScorer(Scorer):
         else:
             return 1.0
 
+class RawScorer(Scorer):
+    """ Wraps a model that directly outputs a score each input as a callable scorer.
+
+    The score from the model should be in the range [0,1] with higher scores indicating failures
+    (or just more interesting behavior).
+    """
+
+    def __init__(self, model):
+        """ Create a new scorer given a model that returns a bounded real value for each input string.
+        
+        Parameters:
+        -----------
+        model : callable
+            A model that is callable with a single argument (which is a list of strings) and returns a vector of score in the range [0,1].
+        """
+        super().__init__(model)
+
+    def __call__(self, tests, eval_ids):
+        """ Compute the scores (and model outputs) for the tests matching the given ids.
+
+        Parameters
+        ----------
+        tests : TestTree
+            A test tree for scoring. Note this should be the full test tree since it defines the local topic label
+            models used for scoring.
+
+        eval_ids : list of strings
+            The ids of the tests to score.
+        """
+        
+        # expand templates in the test tree
+        eval_inputs = []
+        eval_inds = []
+        for i, id in enumerate(eval_ids):
+            test = tests.loc[id]
+            template_expansions = expand_template(test.input)
+            for expansion in template_expansions:
+                eval_inputs.append(expansion)
+                eval_inds.append(i)
+
+        # run the model
+        try:
+            model_out = self.model(eval_inputs)
+        except Exception as e:
+            model_out = np.zeros(len(eval_inputs)) * np.nan # TODO: remove this hack after the user study
+            log.error(e)
+            log.error(eval_inputs)
+            log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
+
+        # compute the output strings and scores for each output in template form
+        out_strings = [[] for _ in range(len(eval_ids))]
+        out_scores = [[] for _ in range(len(eval_ids))]
+        i = 0
+        while i < len(model_out):
+            out_strings[eval_inds[i]].append(str(np.round(model_out[i], 6))) # convert float to string with precision of 6
+            out_scores[eval_inds[i]].append(model_out[i])
+            i += 1
+        for i in eval_inds:
+            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
+            out_scores[i] = np.max(out_scores[i]) # the score of a set of items is the score of the max item
+
+        # score all the tests
+        scores = []
+        outputs = []
+        for i, ind in enumerate(eval_inds):
+            outputs.append(out_strings[ind])
+            scores.append(out_scores[ind])
+
+        return outputs,scores
 
 def expand_template(s, keep_braces=False):
     """ Expand a template string into a list of strings.

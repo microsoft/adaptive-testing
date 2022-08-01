@@ -9,6 +9,7 @@ import torch
 import json
 import re
 import collections
+from tqdm import tqdm
 
 from transformers import MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING
 from adatest.generators import TestTreeSource
@@ -178,7 +179,7 @@ class TestTreeBrowser():
         # ensure that each scorer's score column is in the test tree dataframe
         for c in self.score_columns:
             if c not in self.test_tree.columns:
-                self.test_tree[c] = ["" for _ in range(self.test_tree.shape[0])]
+                self.test_tree[c] = [np.nan for _ in range(self.test_tree.shape[0])]
 
         # a unique identifier for this test set instance, used for UI connections
         self._id = uuid.uuid4().hex
@@ -214,6 +215,37 @@ class TestTreeBrowser():
         # init a blank set of suggetions
         # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
         self._suggestions_error = "" # tracks if we failed to generate suggestions
+
+    def auto_optimize(self, rounds=10, topic=""):
+        """ Run the testing loop for a topic without user involvement.
+        
+        Note that this assumes the labeling model is always correct.
+        """
+
+        for _ in tqdm(list(range(rounds))):
+    
+            # create new suggestions in the topic
+            self.generate_suggestions(topic)
+            
+            # get the ids of the on-topic suggestions
+            keep_ids = []
+            drop_ids = []
+            for k, test in self.test_tree.iterrows():
+                main_score = test[self.score_columns[0]]
+                if test.topic == topic+"/__suggestions__":
+                    if test.label != "off_topic" and not isinstance(main_score, str) and not np.isnan(main_score):
+                        keep_ids.append(k)
+                    else:
+                        drop_ids.append(k)
+            
+            # print(tests.loc[top10_ids[0], "model score"])
+            # print(tests.loc[top10_ids[0], "input"])
+            # print()
+            
+            # label and move these top suggestions to the root topic
+            self.test_tree.loc[keep_ids, "labeler"] = "auto_optimize"
+            self.test_tree.loc[keep_ids, "topic"] = topic
+            self.test_tree.drop(drop_ids, inplace=True)
 
     def _repr_html_(self, prefix="", environment="jupyter", websocket_server=None):
         """ Returns the HTML interface for this browser.
@@ -791,7 +823,7 @@ class TestTreeBrowser():
             # determine which rows we need to evaluate
             eval_ids = []
             for i, (id, test) in enumerate(tests.iterrows()):
-                if (recompute or test[k+" score"] == "__TOEVAL__") and test.label != "topic_marker" and test.label != "off_topic":
+                if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "__TOOVERWRITE__") and test.label != "topic_marker" and test.label != "off_topic":
                     eval_ids.append(id)
 
             if len(eval_ids) > 0:

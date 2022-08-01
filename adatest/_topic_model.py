@@ -63,6 +63,8 @@ class TopicLabelingModel:
 
         if len(embeddings) == 0 and len(labels) == 0: # Handle empty testframe case
             self.model = ConstantModel("Unknown")
+        elif len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) <= 1:
+            self.model = ConstantModel(labels[0])
         else:
             embeddings = np.vstack(embeddings)
 
@@ -87,20 +89,15 @@ class TopicLabelingModel:
             # if perfect_output_map:
             #     self.model = OutputNearestNeighborLabelModel(embeddings, labels)
             
-
-            # fit a linear SVM the outputs don't 
-            if len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) > 1:
-                # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
-                # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
-                # do very poorly if there are errors in the data labels since it will fit them exactly. Perhaps we can help this by
-                # ensembling several SVCs together each trained on a different bootstrap sample? This might add the roubustness (against label mismatches)
-                # that is lacking with hard-margin SVC fitting (it is also motivated a bit by the connections between SGD and hard-margin SVC fitting, and that
-                # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
-                self.model = LinearSVC()
-                # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
-                self.model.fit(embeddings[topic_scaling == 1], [labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])
-            else:
-                self.model = ConstantModel(labels[0])
+            # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
+            # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
+            # do very poorly if there are errors in the data labels since it will fit them exactly. Perhaps we can help this by
+            # ensembling several SVCs together each trained on a different bootstrap sample? This might add the roubustness (against label mismatches)
+            # that is lacking with hard-margin SVC fitting (it is also motivated a bit by the connections between SGD and hard-margin SVC fitting, and that
+            # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
+            self.model = LinearSVC()
+            # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
+            self.model.fit(embeddings[topic_scaling == 1], [labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])
 
     def __call__(self, input, output):
         embeddings = np.hstack(adatest.embed([input, output]))
@@ -144,6 +141,8 @@ class TopicMembershipModel:
 
         if len(embeddings) == 0 and len(labels) == 0: # Handle empty testframe case
             self.model = ConstantModel("Unknown")
+        elif len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) <= 1:
+            self.model = ConstantModel(labels[0])
         else:
             embeddings = np.vstack(embeddings)
 
@@ -168,20 +167,15 @@ class TopicMembershipModel:
             # if perfect_output_map:
             #     self.model = OutputNearestNeighborLabelModel(embeddings, labels)
             
-
-            # fit a linear SVM the outputs don't 
-            if len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) > 1:
-                # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
-                # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
-                # do very poorly if there are errors in the data labels since it will fit them exactly. Perhaps we can help this by
-                # ensembling several SVCs together each trained on a different bootstrap sample? This might add the roubustness (against label mismatches)
-                # that is lacking with hard-margin SVC fitting (it is also motivated a bit by the connections between SGD and hard-margin SVC fitting, and that
-                # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
-                self.model = LinearSVC()
-                # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
-                self.model.fit(embeddings[topic_scaling == 1], [labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])
-            else:
-                self.model = ConstantModel(labels[0])
+            # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
+            # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
+            # do very poorly if there are errors in the data labels since it will fit them exactly. Perhaps we can help this by
+            # ensembling several SVCs together each trained on a different bootstrap sample? This might add the roubustness (against label mismatches)
+            # that is lacking with hard-margin SVC fitting (it is also motivated a bit by the connections between SGD and hard-margin SVC fitting, and that
+            # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
+            self.model = LinearSVC()
+            # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
+            self.model.fit(embeddings[topic_scaling == 1], [labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])
 
     def __call__(self, input):
         embeddings = adatest.embed([input])[0]

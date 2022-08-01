@@ -36,7 +36,7 @@ class TestTree():
     webserver. A TestTree object also conforms to most of the standard pandas DataFrame API.
     """
 
-    def __init__(self, tests=None, index=None, compute_embeddings=False, ensure_topic_markers=True, **kwargs):
+    def __init__(self, tests=None, labeling_model=TopicLabelingModel, membership_model=TopicMembershipModel, index=None, compute_embeddings=False, ensure_topic_markers=True, **kwargs):
         """ Create a new test tree.
 
         Parameters
@@ -58,6 +58,9 @@ class TestTree():
 
         # the canonical ordered list of test tree columns
         column_names = ['topic', 'input', 'output', 'label', 'labeler', 'description']
+
+        self.labeling_model = labeling_model
+        self.membership_model = membership_model
 
         # create a new test tree in memory
         if tests is None:
@@ -92,6 +95,20 @@ class TestTree():
             self._tests['label'] = ''
             self._tests['labeler'] = "dataset"
             self._tests['description'] = ''
+
+        elif isinstance(tests, list) and isinstance(tests[0], str):
+            self._tests = pd.DataFrame(columns=column_names)
+            self._tests['input'] = tests
+            self._tests['output'] = "__TOOVERWRITE__"
+            self._tests['topic'] = ''
+            self._tests['label'] = ''
+            self._tests['labeler'] = ''
+            self._tests['description'] = ''
+            self._tests_location = None
+
+            if index is None:
+                index = [uuid.uuid4().hex for _ in range(len(tests))]
+            self._tests.index = index
 
         else:
             if index is None:
@@ -344,9 +361,10 @@ class TestTree():
         # (note we do this as a second loop so we know we have already marked all the
         # members of the topic in already_seen)
         for id, test in self._tests.iterrows():
-            k = test.topic.replace("/__suggestions__", "") + "|_ADA_JOIN_|" + test.input + "|_ADA_JOIN_|" + test.output
-            if k in already_seen:
-                drop_ids.append(id)
+            if test.topic.endswith("/__suggestions__"):
+                k = test.topic[:-len("/__suggestions__")] + "|_ADA_JOIN_|" + test.input + "|_ADA_JOIN_|" + test.output
+                if k in already_seen:
+                    drop_ids.append(id)
         self._tests.drop(drop_ids, axis=0, inplace=True)
 
     def _cache_embeddings(self):
@@ -425,20 +443,20 @@ class TestTree():
     def topic_labeling_model(self, topic):
         topic = topic.replace("/__suggestions__", "") # predict suggestions using their parent topic label model
         if topic not in self._topic_labeling_models:
-            self._topic_labeling_models[topic] = TopicLabelingModel(topic, self)
+            self._topic_labeling_models[topic] = self.labeling_model(topic, self)
         return self._topic_labeling_models[topic]
 
     def topic_membership_model(self, topic):
         topic = topic.replace("/__suggestions__", "") # predict suggestions using their parent topic membership model
         if topic not in self._topic_membership_models:
-            self._topic_membership_models[topic] = TopicMembershipModel(topic, self)
+            self._topic_membership_models[topic] = self.membership_model(topic, self)
         return self._topic_membership_models[topic]
 
     def retrain_topic_labeling_model(self, topic):
-        self._topic_labeling_models[topic] = TopicLabelingModel(topic, self)
+        self._topic_labeling_models[topic] = self.labeling_model(topic, self)
 
     def retrain_topic_membership_model(self, topic):
-        self._topic_membership_models[topic] = TopicMembershipModel(topic, self)
+        self._topic_membership_models[topic] = self.membership_model(topic, self)
 
     def drop_topic(self, topic):
         """ Remove a topic from the test tree. """
