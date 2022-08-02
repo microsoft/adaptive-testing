@@ -1,13 +1,13 @@
-import pandas as pd
+import pytest
 
 import adatest._test_tree_browser as ttb
 
 
 class TestIsSubTopic:
-    def test_topic_is_subtopic(self):
-        assert ttb.is_subtopic("/A", "/A/B")
-        assert ttb.is_subtopic("/A", "/A/B/C")
-        assert ttb.is_subtopic("/A", "/A/B/C/")
+    @pytest.mark.parametrize(['topic', 'sub_topic'], [("/A", "/A/B"),("/A", "/A/B/C"), ("/A", "/A/B/C/")])
+    def test_topic_is_subtopic(self, topic, sub_topic):
+        assert ttb.is_subtopic(topic, sub_topic)
 
-    def test_topic_is_not_subtopic(self):
-        assert not ttb.is_subtopic("/A/B", "/A/C")
+    @pytest.mark.parametrize(['topic', 'not_sub_topic'], [("/A/B", "/A/C"), ("/A", "/AB")])
+    def test_topic_is_not_subtopic(self, topic, not_sub_topic):
+        assert not ttb.is_subtopic(topic, not_sub_topic)
