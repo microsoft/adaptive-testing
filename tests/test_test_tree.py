@@ -29,7 +29,7 @@ def test_simple_init_with_list():
     assert len(tree) == 2
     assert tree["topic"][0] == ""
     assert tree["topic"][1] == ""
-    if tree['type'][0] is None:
+    if tree["type"][0] is None:
         assert tree["type"][1] == "{} should output {}"
         assert tree["input"][0] == ""
         assert tree["input"][1] == "This is good"
