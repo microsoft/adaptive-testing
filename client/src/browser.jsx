@@ -187,7 +187,7 @@ export default class Browser extends React.Component {
 
 
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
-        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
+        <div style={{textAlign: "left", paddingLeft: "5px", paddingRight: "5px"}}>
           {/* {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
@@ -245,8 +245,8 @@ export default class Browser extends React.Component {
                 step={0.5}
                 style={{ display: "inline-block", minWidth: "100px" }}
                 onChange={this.changeTemperature}
-                min={1}
-                max={2}
+                min={0}
+                max={1}
                 defaultValue={this.state.active_temperature}
                 tipFormatter={null}
             />
@@ -258,7 +258,7 @@ export default class Browser extends React.Component {
 
         {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
-          <div className="adatest-scroll-wrap" style={{maxHeight: 31*this.state.max_suggestions, overflowY: "auto"}} ref={(el) => this.suggestionsScrollWrapRef = el}>
+          <div className="adatest-scroll-wrap" ref={(el) => this.suggestionsScrollWrapRef = el}>
             {this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
                 // .filter(id => {

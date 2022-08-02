@@ -143,6 +143,11 @@
     opacity: 0.6;
 }
 
+.adatest-scroll-wrap {
+    overflow-y: auto;
+    max-height: 35vh;
+}
+
 .adatest-scroll-wrap::-webkit-scrollbar {
     display: none;
 }
