@@ -39,3 +39,8 @@ def _download_image(url):
     with urllib.request.urlopen(urllib_request, timeout=10) as r:
         img_stream = io.BytesIO(r.read())
     return PIL.Image.open(img_stream)
+
+
+def is_subtopic(topic: str, candidate: str) -> bool:
+    # Returns true if candidate is a subtopic of topic
+    return True if re.search(r'^%s(/|$)' % re.escape(topic), candidate) else False

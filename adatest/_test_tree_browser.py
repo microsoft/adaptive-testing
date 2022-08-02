@@ -31,6 +31,7 @@ from ._prompt_builder import PromptBuilder
 import builtins
 import adatest # Need to import like this to prevent circular dependencies
 import urllib.parse
+from .utils import is_subtopic
 
 # from https://gist.github.com/walkermatt/2871026
 def throttle(interval):
@@ -69,9 +70,6 @@ def file_log(*args):
     f.flush()
     f.close()
 
-def is_subtopic(topic: str, candidate: str) -> bool:
-    # Returns true if candidate is a subtopic of topic
-    return True if re.search(r'^%s(/|$)' % re.escape(topic), candidate) else False
 
 def matches_filter(test, filter_text: str) -> bool:
     if filter_text is None or filter_text == "":
