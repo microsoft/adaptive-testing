@@ -159,34 +159,37 @@ export default class Browser extends React.Component {
     // let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
     // let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
-    return (<div onKeyDown={this.keyDownHandler} tabIndex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
-      <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-        {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
-      </div>
-      <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-        {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
-      </div>
-      <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-        <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
-          <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
-        </span>
+    return (
+    <div onKeyDown={this.keyDownHandler} tabIndex="0" className="adatest-browser-container" ref={(el) => this.divRef = el}>
+      <div style={{gridArea: "header"}}>
+        <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
+        </div>
+        <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
+        </div>
+        <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
+            <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
+          </span>
+        </div>
       </div>
       
     {/* john edit */}
 
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
-  <div style={{display:'flex', clear: 'both', width: '100%'}}>
-    <div id="folderbrowser" style={{width: '20%', marginLeft: 'auto', left: 'auto', right:'auto'}}>
-          <FolderBrowser not_move={false} structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts} mother_this={this} 
-            hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} onDrop={this.onDrop}></FolderBrowser>
-    </div>
+        <div style={{gridArea: "folders"}}>
+          <div id="folderbrowser" >
+            <FolderBrowser not_move={false} structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts} mother_this={this} 
+              hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} onDrop={this.onDrop}></FolderBrowser>
+          </div>
+        </div>
 
 
-
-      <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
+      <div style={{display: "flex", flexDirection: "column", paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center", gridArea: "content"}}>
         <div style={{textAlign: "left", paddingLeft: "5px", paddingRight: "5px"}}>
           {/* {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
@@ -213,18 +216,19 @@ export default class Browser extends React.Component {
           <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
                 {/* charvi edit for adding slider */}
-                <div
-            style={{
-              // position: "absolute",
-              color: "rgb(170, 170, 170)",
-              margin: "10px 0px 5px 0px",
-              border: "1px solid rgb(170, 170, 170)",
-              borderRadius: "5px",
-              textAlign: "right",
-              paddingRight: "11px",
-              height: "50px",
-            }}
-          >
+        <div
+          style={{
+            // position: "absolute",
+            color: "rgb(170, 170, 170)",
+            margin: "10px 0px 5px 0px",
+            border: "1px solid rgb(170, 170, 170)",
+            borderRadius: "5px",
+            textAlign: "right",
+            paddingRight: "11px",
+            paddingTop: "5px",
+            paddingBottom: "10px"
+          }}
+        >
           <div>  
           <div style={{width:"80%",height:"34px", float:"left", paddingLeft: "10px", color:"rgb(0, 0, 0)" ,marginTop:"8px"    }} >
             <Input 
@@ -236,29 +240,64 @@ export default class Browser extends React.Component {
                id ={"prompt_input_box"}
                />
           </div>
-          <div style={{float:"left",  height: "30px", paddingLeft: "15px"}}>
-          <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
-              Creativity: { this.state.active_temperature < 1.5 ? "Low" :this.state.active_temperature==1.5 ? "Medium" : "High"  }
+            <div style={{float:"left",  height: "30px", paddingLeft: "15px"}}>
+              <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
+                  Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
+              </div>
+              <div style={{textAlign: "right",   paddingRight: "10px",    color: "#999999" , marginBottom: "4px"   }} >
+                <Slider
+                  step={0.5}
+                  style={{ display: "inline-block", minWidth: "100px" }}
+                  onChange={this.changeTemperature}
+                  min={0}
+                  max={1}
+                  defaultValue={this.state.active_temperature}
+                  tipFormatter={null}
+              />
+              </div>
             </div>
-            <div style={{textAlign: "right",   paddingRight: "10px",    color: "#999999" , marginBottom: "4px"   }} >
-              <Slider
-                step={0.5}
-                style={{ display: "inline-block", minWidth: "100px" }}
-                onChange={this.changeTemperature}
-                min={0}
-                max={1}
-                defaultValue={this.state.active_temperature}
-                tipFormatter={null}
-            />
-            </div>
           </div>
-          </div>
-          </div>
-        <div clear="all"></div>
+        </div>
 
-        {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
+        {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${this.state.suggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }
+          onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
-          <div className="adatest-scroll-wrap" ref={(el) => this.suggestionsScrollWrapRef = el}>
+          <div className="adatest-suggestions-control-bar" style={{width: "100%"}}>
+            {!this.state.disable_suggestions && 
+              <>
+                <div onClick={this.clearSuggestions} className="adatest-hover-opacity" style={{marginLeft: "20px", cursor: "pointer"}}>
+                  { this.state.suggestions.length > 1 && <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} /> }
+                </div>
+                <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                  <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
+                  <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested tests</span>
+                  {/* <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
+                    {(this.state.mode_options || []).map((mode_option) => {
+                      return <option key={mode_option}>{mode_option}</option>
+                    })}
+                  </select> */}
+                </div>
+                {this.state.generator_options && this.state.generator_options.length > 1 ? 
+                  <select title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{color: "rgb(170, 170, 170)"}}>
+                    {this.state.generator_options.map((generator_option) => {
+                      return <option key={generator_option}>{generator_option}</option>
+                    })}
+                  </select> : <div></div>
+                }
+              </>
+            }
+            {this.state.suggestions_error && 
+              <div style={{cursor: "pointer", color: "#990000", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
+                {this.state.suggestions_error}
+              </div>
+            }
+            {/* {this.state.loading_suggestions && this.state.tests.length < 5 &&
+              <div style={{cursor: "pointer", color: "#995500", display: "block", fontWeight: "normal", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
+                Warning: Auto-suggestions may perform poorly with less than five tests in the current topic!
+              </div>
+            } */}
+          </div>
+          <div className="adatest-scroll-wrap adatest-suggestions-box-content" ref={(el) => this.suggestionsScrollWrapRef = el}>
             {this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
                 // .filter(id => {
@@ -302,49 +341,9 @@ export default class Browser extends React.Component {
                 <FontAwesomeIcon icon={faChevronDown} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
             } */}
-            <div style={{height: "15px"}}></div>
           </div>
           
-          <div className="adatest-suggestions-box-after"></div>
-          <div style={{position: "absolute", top: "10px", width: "100%"}}>
-            {this.state.suggestions.length > 1 &&
-              <div onClick={this.clearSuggestions} className="adatest-row-add-button adatest-hover-opacity" style={{marginTop: "0px", left: "6px", top: "4px", width: "11px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
-                <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
-              </div>
-            }
-            {!this.state.disable_suggestions && 
-              <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
-                  {(this.state.mode_options || []).map((mode_option) => {
-                    return <option key={mode_option}>{mode_option}</option>
-                  })}
-                </select></span>
-                {this.state.generator_options && this.state.generator_options.length > 1 &&
-                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
-                  {this.state.generator_options.map((generator_option) => {
-                    return <option key={generator_option}>{generator_option}</option>
-                  })}
-                </select>
-                }
-                {/* <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
-                  {(this.state.mode_options || []).map((mode_option) => {
-                    return <option key={mode_option}>{mode_option}</option>
-                  })}
-                </select> */}
-              </div>
-            }
-            {this.state.suggestions_error && 
-              <div style={{cursor: "pointer", color: "#990000", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
-                {this.state.suggestions_error}
-              </div>
-            }
-            {/* {this.state.loading_suggestions && this.state.tests.length < 5 &&
-              <div style={{cursor: "pointer", color: "#995500", display: "block", fontWeight: "normal", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
-                Warning: Auto-suggestions may perform poorly with less than five tests in the current topic!
-              </div>
-            } */}
-          </div>
+          {/* <div className="adatest-suggestions-box-after"></div> */}
         </div>}
 
         <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
@@ -368,7 +367,7 @@ export default class Browser extends React.Component {
           </div>
         </div>
         
-        <div className="adatest-children-frame">
+        <div className="adatest-children-frame adatest-scroll-wrap">
           {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
             This topic is empty. Click the plus (+) button to add a test.
           </div>}
@@ -433,9 +432,8 @@ export default class Browser extends React.Component {
           </div>
         }
       </div>
-    </div> 
 
-      <div style={{textAlign: "right", paddingRight: "11px"}}>
+      <div style={{textAlign: "right", paddingRight: "11px", gridArea: "footer"}}>
         {this.state.score_columns && this.state.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>

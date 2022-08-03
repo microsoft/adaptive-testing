@@ -1,3 +1,15 @@
+.adatest-browser-container {
+    outline: none;
+    display: grid;
+    height: 100vh;
+    grid-template-columns: 20% 80%;
+    grid-template-rows: 50px calc(100vh - 100px) 50px;
+    grid-template-areas:
+        "header header"
+        "folders content"
+        "footer footer";
+}
+
 .adatest-button-container {
     display: block;
     width: 100%;
@@ -72,6 +84,7 @@
     /* padding-bottom: 10px; */
     border-radius: 7px 7px 7px 7px;
     border: 1px solid rgb(216, 222, 228);
+    height: auto;
 }
 
 .adatest-row-child {
@@ -123,14 +136,16 @@
 } */
 
 .adatest-plain-select {
-    margin-left: 4px;
     appearance: none;
     border: none;
     background: none;
     -webkit-appearance: none;
     font-size: 13px;
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
-    margin: 0px;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-bottom: 0px;
+    margin-right: 12px;
 }
 .adatest-plain-select:focus {
     outline: 0px solid transparent;
@@ -145,12 +160,11 @@
 
 .adatest-scroll-wrap {
     overflow-y: auto;
-    max-height: 35vh;
 }
 
-.adatest-scroll-wrap::-webkit-scrollbar {
+/* .adatest-scroll-wrap::-webkit-scrollbar {
     display: none;
-}
+} */
 
 .adatest-row-hide-button {
     opacity: 0;
@@ -255,6 +269,16 @@
     outline: 0px solid transparent;
 }
 
+
+.adatest-suggestions-control-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    height: 25px;
+}
+
 .adatest-suggestions-box {
     position: relative;
     border-radius: 7px 7px 7px 7px;
@@ -262,10 +286,21 @@
     text-align: center;
     padding: 0px;
     padding-top: 10px;
+    padding-bottom: 10px;
     margin-top: 10px;
-    padding-bottom: 0px;
     border: 1px solid rgb(216, 222, 228);
 }
+
+.adatest-suggestions-box-active {
+    height: 25vh;
+}
+
+.adatest-suggestions-box-content {
+    max-height: calc(100% - 20px);
+    -webkit-mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+}
+
 .adatest-suggestions-box-after {
     content: 'werwerwe';
     width: 100%;
