@@ -52,6 +52,8 @@ def _download_image(url):
     return PIL.Image.open(img_stream)
 
 
-def is_subtopic(topic: str, candidate: str) -> bool:
+def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
+    # Both arguments are strings, which look like UNIX paths
+    # Return is boolean
     return True if re.search(r"^%s(/|$)" % re.escape(topic), candidate) else False

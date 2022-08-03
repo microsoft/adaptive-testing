@@ -71,7 +71,7 @@ def file_log(*args):
     f.close()
 
 
-def matches_filter(test, filter_text: str) -> bool:
+def matches_filter(test, filter_text):
     if filter_text is None or filter_text == "":
         return True
     else:
