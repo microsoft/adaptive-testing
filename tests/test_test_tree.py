@@ -17,19 +17,23 @@ def test_simple_init_with_file():
 
 
 def test_simple_init_with_list():
-    tree = adatest.TestTree(
-        ["The food was nice!", "The location is excellent."]
-    )
+    tree = adatest.TestTree(["The food was nice!", "The location is excellent."])
     assert len(tree) == 3
-    assert tree.columns.to_list() == ['topic', 'input', 'output', 'label', 'labeler', 'description']
-    assert "The food was nice!" in tree['input'].to_list()
-    assert "The location is excellent." in tree['input'].to_list()
-    outputs = np.unique(tree['output'].to_list(), return_counts=True)
-    assert outputs[0][0] == ''
+    assert tree.columns.to_list() == [
+        "topic",
+        "input",
+        "output",
+        "label",
+        "labeler",
+        "description",
+    ]
+    assert "The food was nice!" in tree["input"].to_list()
+    assert "The location is excellent." in tree["input"].to_list()
+    outputs = np.unique(tree["output"].to_list(), return_counts=True)
+    assert outputs[0][0] == ""
     assert outputs[1][0] == 1
-    assert outputs[0][1] == '__TOOVERWRITE__'
-    assert outputs[1][1] ==2
-
+    assert outputs[0][1] == "__TOOVERWRITE__"
+    assert outputs[1][1] == 2
 
 
 def test_to_csv():
