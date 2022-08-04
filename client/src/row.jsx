@@ -280,6 +280,14 @@ export default class Row extends React.Component {
           </React.Fragment> : (
           <div className="adatest-row">
             <div className="adatest-row-input" onClick={this.clickRow}>
+              <div style={{marginRight: "auto"}}>
+                <div style={{marginRight: "4px", display: "inline-block", margin: "3px", borderRadius: "4px", background: "rgba(1, 1, 1, 0.04)", border: "0px solid #999999", color: "#666666", padding: "3px", fontSize: "10px"}}>
+                <nobr>&nbsp;{decodeURIComponent(this.props.topic)}&nbsp;</nobr>
+                </div>
+                <div style={{marginRight: "4px", display: "inline-block", margin: "3px", borderRadius: "4px", background: "rgba(1, 1, 1, 0.04)", border: "0px solid #999999", color: "#666666", padding: "3px", fontSize: "10px"}}>
+                  <nobr>&nbsp;/Clear positive&nbsp;</nobr>
+                </div>
+              </div>
               <div onClick={this.clickInput} style={{display: "inline-block"}}>
                 <span style={{width: "0px"}}></span>
                 {/* <span onContextMenu={this.handleInputContextMenu}> */}
@@ -349,9 +357,9 @@ export default class Row extends React.Component {
         
         // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
         // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
-        return <div key={k} className="adatest-row-score-plot-box">
+        return <div key={k} className="adatest-row-score-plot-box" style={{flex: "0 0 100px"}}>
           {/* {overall_score[k] > 0 ? */}
-          <svg height="30" width="150">(total_pass / (total_pass + total_fail))
+          <svg height="30" width="150" style={{marginLeft: "-50px"}}>
             {scaled_score < 0 &&
               <g opacity="0.05">
                 <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
@@ -382,11 +390,11 @@ export default class Row extends React.Component {
                 :
                   <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
+                {/* {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
                   <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(207, 140, 34, 1.0)" textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-                }
+                } */}
                 <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
                 <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
                 <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>

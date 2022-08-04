@@ -1,7 +1,8 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faCommentAlt, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
+// import { faMessage, } from '@fortawesome/free-regular-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
@@ -9,6 +10,7 @@ import Row from './row';
 import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
+import Tree from './tree';
 
 export default class Browser extends React.Component {
   constructor(props) {
@@ -153,34 +155,48 @@ export default class Browser extends React.Component {
     // let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
     // let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
-    return (<div onKeyDown={this.keyDownHandler} tabIndex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
-      <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-        {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
+    return (<div onKeyDown={this.keyDownHandler} tabIndex="0" style={{outline: "none", display: "flex"}} ref={(el) => this.divRef = el}>
+      <div style={{width: "210px", paddingTop: "20px", paddingRight: "10px"}}>
+        <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px"}}>Tags</div>
+        <div style={{marginLeft: "-22px"}}>
+          <Tree topic="" children={this.state.topic_tree} level={0} show_label={false} open={true} onClick={this.setLocation} />
+        </div>
+        {/* <div style={{paddingTop: "15px", paddingBottom: "15px", marginLeft: "-18px"}}>
+          <div style={{background: "#dddddd", height: "1px"}}></div>
+        </div>
+        <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px", marginTop: "5px"}}>Expectation</div>
+        <div style={{marginLeft: "-22px"}}>
+          <Tree topic="" children={data} level={0} show_label={false} open={true} onClick={this.setLocation} />
+        </div> */}
       </div>
-      <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-        {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
+      <div style={{flexGrow: 1}}>
+      <div style={{display: "flex"}}>
+        <div style={{float: "right", flexGrow: 1, marginRight: "10px", padding: "8px 10px 7px 14px", width: "350px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faCommentAlt} style={{fontSize: "13px", color: "#000000", marginTop: "1px", marginBottom: "-1px", display: "inline-block"}} /></div>
+          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
+            <ContentEditable defaultText="describe what you want" text={this.state.filter_text} onFinish={this.inputFilterText} />
+          </span>
+        </div>
+        <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
+            <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
+          </span>
+        </div>
+        <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
+        </div>
+        <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
+        </div>
       </div>
-      <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-        <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-        <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
-          <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
-        </span>
-      </div>
-      
 
-      <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
-        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
-          {/* {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
-            return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
-              {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
-            </div>
-          })} */}
+      <div style={{paddingTop: '0px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
+        {/* <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
           <span style={{fontSize: "16px"}}>
           {breadCrumbParts.map((name, index) => {
-            //console.log("bread crum", name, index);
-            // name = decodeURIComponent(name);
             const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
               {index > 0 && <span style={{color: "black"}}> / </span>}
               <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
@@ -195,7 +211,7 @@ export default class Browser extends React.Component {
         </div>
         <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
           <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
-        </div>
+        </div> */}
         <div clear="all"></div>
 
         {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
@@ -289,7 +305,10 @@ export default class Browser extends React.Component {
           </div>
         </div>}
 
-        <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
+        <div style={{display: "flex",  paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
+          <div style={{flexGrow: 1, textAlign: "left", paddingLeft: "11px", display: "inline-block"}}>
+            Tags
+          </div>
           <div style={{width: "200px", textAlign: "right", display: "inline-block"}}>
             Input
           </div>
@@ -299,9 +318,9 @@ export default class Browser extends React.Component {
           <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
             Output
           </div>
-          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+          {/* <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             <nobr>Off-topic</nobr>
-          </div>
+          </div> */}
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Pass
           </div>
@@ -391,7 +410,7 @@ export default class Browser extends React.Component {
           </span>
         })}
       </div>
-    </div>);
+    </div></div>);
   }
 
   clickComparatorFilter(e) {

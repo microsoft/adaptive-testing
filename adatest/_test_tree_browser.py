@@ -515,14 +515,14 @@ class TestTreeBrowser():
 
         def create_children(data, tests, topic):
             children = []
-            
+                    
             # add tests and topics to the data lookup structure
             for k, test in tests.iterrows():
                 if is_subtopic(topic, test.topic):
                     
                     # add a topic
                     if test.label == "topic_marker":
-                        if is_subtopic(topic, test.topic) and test.topic != topic:
+                        if is_subtopic(topic, test.topic) and test.topic != topic and False:
                             name = test.topic[len(topic)+1:]
                             if "/" not in name: # only add direct children
                                 data[test.topic] = {
@@ -554,12 +554,12 @@ class TestTreeBrowser():
                             children.append(k)
             
             # fill in the scores for the child topics
-            for k, test in tests.iterrows():
-                if "/__suggestions__" not in test.topic and is_subtopic(topic, test.topic) and test.topic != topic:
-                    child_topic = test.topic[len(topic):].split("/", 2)[1]
-                    scores = data[topic+"/"+child_topic]["scores"]
-                    for c in self.score_columns:
-                        scores[c].extend([[k, v] for v in ui_score_parts(test[c], test.label)])
+            # for k, test in tests.iterrows():
+            #     if "/__suggestions__" not in test.topic and is_subtopic(topic, test.topic) and test.topic != topic:
+            #         child_topic = test.topic[len(topic):].split("/", 2)[1]
+            #         scores = data[topic+"/"+child_topic]["scores"]
+            #         for c in self.score_columns:
+            #             scores[c].extend([[k, v] for v in ui_score_parts(test[c], test.label)])
 
             # sort by score and always put new topics first
             def sort_key(id):
@@ -591,6 +591,32 @@ class TestTreeBrowser():
         children = create_children(data, self.test_tree, self.current_topic)
         suggestions_children = create_children(data, self.test_tree, self.current_topic + "/__suggestions__")
 
+        # build the full topic tree as nested dictionaries
+        all_children = {}
+        for k, test in self.test_tree.iterrows():
+            if test.label == "topic_marker":
+                parts = test.topic.rsplit("/", 1)
+                if len(parts) == 2:
+                    parent,name = parts
+                    all_children[parent] = all_children.get(parent, []) + [test.topic]
+                    all_children[test.topic] = all_children.get(test.topic, [])
+        def build_tree(topic):
+            if topic in all_children:
+                children_list = [build_tree(c) for c in all_children[topic]]
+            else:
+                children_list = []
+            if len(children_list) > 0:
+                children_list.append(build_tree(topic + "/Uncategorized"))
+            tree_dict = {
+                "child_selected": self.current_topic.startswith(topic) and (topic != self.current_topic),
+                "selected": topic == self.current_topic,
+                "name": topic.rsplit("/", 1)[1] if topic != "" else "Root",
+                "topic": topic,
+                "children": children_list
+            }
+            return tree_dict
+        topic_tree = build_tree("")["children"]
+
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
         # SML: I expect we can delete this at some point?
@@ -618,6 +644,7 @@ class TestTreeBrowser():
         data["browser"] = {
             "suggestions": suggestions_children,
             "tests": children,
+            "topic_tree": topic_tree,
             "user": self.user,
             "topic": self.current_topic,
             "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",

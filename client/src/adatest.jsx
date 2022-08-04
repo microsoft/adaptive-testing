@@ -22,7 +22,7 @@ export default class AdaTest extends React.Component {
     const Router = this.props.environment === "web" ? BrowserRouter : MemoryRouter;
 
     return (
-      <div style={{maxWidth: "1000px", marginLeft: "auto", marginRight: "auto"}}>
+      <div style={{maxWidth: "1200px", marginLeft: "auto", marginRight: "auto"}}>
         <div style={{paddingLeft: "0px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
           <Router>
             <BrowserWithRouter
