@@ -1,6 +1,8 @@
 import os
 import tempfile
 
+import numpy as np
+
 import adatest
 
 
@@ -16,36 +18,18 @@ def test_simple_init_with_file():
 
 def test_simple_init_with_list():
     tree = adatest.TestTree(
-        [
-            {
-                "topic": "",
-                "type": "{} should output {}",
-                "input": "This is good",
-                "output": "NEGATIVE",
-                "label": "fail",
-            }
-        ]
+        ["The food was nice!", "The location is excellent."]
     )
-    assert len(tree) == 2
-    assert tree["topic"][0] == ""
-    assert tree["topic"][1] == ""
-    if tree["type"][0] is None:
-        assert tree["type"][1] == "{} should output {}"
-        assert tree["input"][0] == ""
-        assert tree["input"][1] == "This is good"
-        assert tree["output"][0] == ""
-        assert tree["output"][1] == "NEGATIVE"
-        assert tree["label"][0] == "topic_marker"
-        assert tree["label"][1] == "fail"
-    else:
-        assert tree["type"][0] == "{} should output {}"
-        assert tree["type"][1] is None
-        assert tree["input"][1] == ""
-        assert tree["input"][0] == "This is good"
-        assert tree["output"][1] == ""
-        assert tree["output"][0] == "NEGATIVE"
-        assert tree["label"][1] == "topic_marker"
-        assert tree["label"][0] == "fail"
+    assert len(tree) == 3
+    assert tree.columns.to_list() == ['topic', 'input', 'output', 'label', 'labeler', 'description']
+    assert "The food was nice!" in tree['input'].to_list()
+    assert "The location is excellent." in tree['input'].to_list()
+    outputs = np.unique(tree['output'].to_list(), return_counts=True)
+    assert outputs[0][0] == ''
+    assert outputs[1][0] == 1
+    assert outputs[0][1] == '__TOOVERWRITE__'
+    assert outputs[1][1] ==2
+
 
 
 def test_to_csv():
