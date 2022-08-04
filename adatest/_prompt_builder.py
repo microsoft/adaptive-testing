@@ -5,6 +5,7 @@ import torch
 import urllib.parse
 import adatest
 from ._embedding import cos_sim
+from .utils import is_subtopic
 log = logging.getLogger(__name__)
 
 
@@ -233,11 +234,6 @@ class PromptBuilder():
             prompts.append(prompt)
         
         return prompts
-
-def is_subtopic(topic, candidate):
-    """ Returns True if candidate is a subtopic of topic.
-    """
-    return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
 def score_max(s, label):
     if s == "" or s is None:
