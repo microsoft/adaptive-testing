@@ -8,11 +8,6 @@ from sklearn.svm import LinearSVC
 import adatest
 import re
 
-
-def is_subtopic(topic, candidate):
-    # Returns true if candidate is a subtopic of topic
-    return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
-
 class ConstantModel():
     def __init__(self, label):
         self.label = label
