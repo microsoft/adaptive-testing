@@ -2,7 +2,6 @@ import transformers
 import torch
 import numpy as np
 import adatest
-import PIL
 
 _embedding_cache = {}
 

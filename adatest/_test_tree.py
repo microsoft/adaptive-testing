@@ -225,7 +225,7 @@ class TestTree():
     def sort_values(self):
         return self._tests.sort_values
     
-    # NOTE: Can't delegate to df.append as it is depricated in favor of pd.concat, which we can't use due to type checks 
+    # NOTE: Can't delegate to df.append as it is deprecated in favor of pd.concat, which we can't use due to type checks 
     def append(self, test_tree, axis=0):
         if isinstance(test_tree, pd.DataFrame):
             self._tests = pd.concat([self._tests, test_tree], axis=axis)
