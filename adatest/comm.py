@@ -1,11 +1,12 @@
 import time
-from ipykernel.comm import Comm
 import json
 import logging
 log = logging.getLogger(__name__)
 
 class JupyterComm():
     def __init__(self, target_name, callback=None, mode="register"):
+        from ipykernel.comm import Comm
+        
         self.target_name = target_name
         self.callback = callback
         self.jcomm = None

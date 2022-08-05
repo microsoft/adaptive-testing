@@ -1,10 +1,10 @@
 import numpy as np
 import logging
 import re
-import torch
 import urllib.parse
 import adatest
-from ._embedding import cos_sim
+from .embedders import cos_sim
+from .utils import is_subtopic
 log = logging.getLogger(__name__)
 
 
@@ -158,15 +158,15 @@ class PromptBuilder():
             if self.prompt_diversity:
                 sim_avoidance = np.zeros(len(ids))
                 if suggest_topics:
-                    embeddings_arr = torch.tensor(np.vstack(adatest.embed(
+                    embeddings_arr = np.vstack(adatest.embed(
                         [urllib.parse.unquote(test_tree.loc[id, "topic"].split("/")[-1]) for id in ids]
-                    )))
+                    ))
                 else:
-                    embeddings_arr = torch.tensor(np.hstack([
+                    embeddings_arr = np.hstack([
                         np.vstack(adatest.embed([test_tree.loc[id, "input"] for id in ids])),
                         np.vstack(adatest.embed([test_tree.loc[id, "output"] for id in ids]))
-                    ]))
-                similarities = cos_sim(embeddings_arr, embeddings_arr).numpy()
+                    ])
+                similarities = cos_sim(embeddings_arr, embeddings_arr)
             hard_avoidance = np.zeros(len(ids))
             diversity = np.ones(len(ids))
 
@@ -233,11 +233,6 @@ class PromptBuilder():
             prompts.append(prompt)
         
         return prompts
-
-def is_subtopic(topic, candidate):
-    """ Returns True if candidate is a subtopic of topic.
-    """
-    return True if re.search(r'^%s(/|$)' % topic.replace('+', r'\+'), candidate) else False
 
 def score_max(s, label):
     if s == "" or s is None:
