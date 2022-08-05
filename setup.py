@@ -28,7 +28,7 @@ setup(
     packages=find_packages(exclude=['user_studies', 'notebooks', 'client']),
     package_data={'adatest': ['resources/*']},
     install_requires = [
-        "nest_asyncio", "aiohttp", "aiohttp_session", "aiohttp_security"
+        "nest_asyncio", "aiohttp", "aiohttp_session", "aiohttp_security",
         "numpy", "pandas", "scikit-learn", "shap", "profanity", "appdirs", "diskcache"
     ]
 )
