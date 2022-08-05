@@ -2,15 +2,11 @@
 """
 import asyncio
 import aiohttp
-import transformers
-import openai
 from profanity import profanity
 import numpy as np
-import torch
 import os
 import adatest
-import spacy
-from ._embedding import cos_sim
+from .embedders import cos_sim
 import urllib
 
 try:
@@ -160,6 +156,8 @@ class TextCompletionGenerator(Generator):
            
 class Transformers(TextCompletionGenerator):
     def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
+        import transformers
+
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
@@ -233,6 +231,8 @@ class OpenAI(TextCompletionGenerator):
     """
     
     def __init__(self, model="curie", api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=profanity.censor):
+        import openai
+
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
@@ -249,6 +249,8 @@ class OpenAI(TextCompletionGenerator):
                     openai.api_key = f.read().strip()
 
     def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100):
+        import openai
+
         if len(prompts[0]) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
@@ -263,7 +265,7 @@ class OpenAI(TextCompletionGenerator):
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
-            engine=self.source, prompt=prompt_strings, max_tokens=max_length,
+            model=self.source, prompt=prompt_strings, max_tokens=max_length, user="adatest",
             temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=self.quote
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
@@ -339,20 +341,20 @@ class TestTreeSource(Generator):
         # Find tests closest to the proposals in the embedding space
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # TODO: Handle case when suggestion_threads>1 better than just selecting the first set of prompts as we do here
-        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for topic,input in prompts[0]]) 
-        data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for input in self.source["input"]])
+        topic_embeddings = np.vstack([adatest._embedding_cache[input] for topic,input in prompts[0]]) 
+        data_embeddings = np.vstack([adatest._embedding_cache[input] for input in self.source["input"]])
         
         max_suggestions = min(num_samples * len(prompts), len(data_embeddings))
         method = 'distance_to_avg'
         if method == 'avg_distance':
             dist = cos_sim(topic_embeddings, data_embeddings)
-            closest_indices = torch.topk(dist.mean(axis=0), k=max_suggestions).indices
+            closest_indices = np.argpartition(dist.mean(axis=0), -max_suggestions)[-max_suggestions:]
             
         elif method == 'distance_to_avg':
             avg_topic_embedding = topic_embeddings.mean(axis=0)
 
             distance = cos_sim(avg_topic_embedding, data_embeddings)
-            closest_indices = torch.topk(distance, k=max_suggestions).indices
+            closest_indices = np.argpartition(distance, -max_suggestions)[-max_suggestions:]
 
         output = self.source.iloc[np.array(closest_indices).squeeze()].copy()
         output['topic'] = topic
@@ -427,6 +429,7 @@ class ClipRetrieval(Generator):
         return list(set(suggestion_texts))
     
     def get_text_embedding(self, text):
+        import torch
         with torch.no_grad():
             text_emb = self.clip_model.encode_text(clip.tokenize([text], truncate=True).to("cpu"))
             text_emb /= text_emb.norm(dim=-1, keepdim=True)

@@ -1,17 +1,10 @@
-import time
-from IPython.display import display, HTML
-import openai
 import numpy as np
 import copy
-import math
 import pandas as pd
-import torch
 import json
 import re
-import collections
 from tqdm import tqdm
 
-from transformers import MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING
 from adatest.generators import TestTreeSource
 
 from .comm import JupyterComm
@@ -20,15 +13,9 @@ import pathlib
 import copy
 import re
 import logging
-import os
-import io
 import statistics
-import checklist
-import checklist.editor
 from threading import Timer
-from ._scorer import expand_template, clean_template, ClassifierScorer, GeneratorScorer, Scorer
-from ._prompt_builder import PromptBuilder
-import builtins
+from ._scorer import expand_template, clean_template, Scorer
 import adatest # Need to import like this to prevent circular dependencies
 import urllib.parse
 from .utils import is_subtopic
@@ -283,6 +270,7 @@ class TestTreeBrowser():
     def display(self):
         """ Manually display the HTML interface.
         """
+        from IPython.display import display, HTML
         display(HTML(self._repr_html_()))
 
     def interface_event(self, msg):
@@ -515,44 +503,46 @@ class TestTreeBrowser():
             children = []
             
             # add tests and topics to the data lookup structure
-            for k, test in tests.iterrows():
-                if is_subtopic(topic, test.topic):
+            subtopic_ids = tests.index[tests["topic"].str.match(r"^%s(/|$)" % re.escape(topic))]
+            for k in subtopic_ids:
+                test = tests.loc[k]
                     
-                    # add a topic
-                    if test.label == "topic_marker":
-                        if is_subtopic(topic, test.topic) and test.topic != topic:
-                            name = test.topic[len(topic)+1:]
-                            if "/" not in name: # only add direct children
-                                data[test.topic] = {
-                                    "label": test.label,
-                                    "labeler": test.labeler,
-                                    "description": "",
-                                    "scores": {c: [] for c in self.score_columns},
-                                    "topic_marker_id": k,
-                                    "topic_name": name,
-                                    "editing": test.topic.endswith("/New topic")
-                                }
-                                children.append(test.topic)
-                    
-                    # add a test
-                    elif matches_filter(test, self.filter_text):
-                        data[k] = {
-                            "input": test.input,
-                            "output": test.output,
-                            "label": test.label,
-                            "labeler": test.labeler,
-                            "description": test.description,
-                            "scores": {c: [[k, v] for v in ui_score_parts(test[c], test.label)] for c in self.score_columns},
-                            "editing": test.input == "New test"
-                        }
+                # add a topic
+                if test.label == "topic_marker":
+                    if test.topic != topic:
+                        name = test.topic[len(topic)+1:]
+                        if "/" not in name: # only add direct children
+                            data[test.topic] = {
+                                "label": test.label,
+                                "labeler": test.labeler,
+                                "description": "",
+                                "scores": {c: [] for c in self.score_columns},
+                                "topic_marker_id": k,
+                                "topic_name": name,
+                                "editing": test.topic.endswith("/New topic")
+                            }
+                            children.append(test.topic)
+                
+                # add a test
+                elif matches_filter(test, self.filter_text):
+                    data[k] = {
+                        "input": test.input,
+                        "output": test.output,
+                        "label": test.label,
+                        "labeler": test.labeler,
+                        "description": test.description,
+                        "scores": {c: [[k, v] for v in ui_score_parts(test[c], test.label)] for c in self.score_columns},
+                        "editing": test.input == "New test"
+                    }
 
-                        data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
-                        data[k].update(self.test_display_parts(test))
-                        if test.topic == topic:
-                            children.append(k)
+                    data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
+                    data[k].update(self.test_display_parts(test))
+                    if test.topic == topic:
+                        children.append(k)
             
             # fill in the scores for the child topics
-            for k, test in tests.iterrows():
+            for k in subtopic_ids:
+                test = tests.loc[k]
                 if "/__suggestions__" not in test.topic and is_subtopic(topic, test.topic) and test.topic != topic:
                     child_topic = test.topic[len(topic):].split("/", 2)[1]
                     scores = data[topic+"/"+child_topic]["scores"]
@@ -756,6 +746,10 @@ class TestTreeBrowser():
                         test_map_tmp[str_val] = True
 
             # suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
+            # make sure any duplicates we may have introduced are removed
+            self.test_tree.deduplicate()
+            
+            # compute the scores for the new tests
             self._compute_embeddings_and_scores(self.test_tree)
 
         # Filter invalid suggestions
@@ -786,6 +780,9 @@ class TestTreeBrowser():
         return topic_marker_index
 
     def _add_topic_model_score(self, df, topic_model_scale):
+        """ This is an old experimental funciton that is not meant to be used anymore.
+        """
+        import openai
         documents = []
         for k,s in df.iterrows():
             max_output = -10e8
@@ -819,10 +816,11 @@ class TestTreeBrowser():
 
         for k in self.scorer:
             # determine which rows we need to evaluate
-            eval_ids = []
-            for i, (id, test) in enumerate(tests.iterrows()):
-                if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "__TOOVERWRITE__") and test.label != "topic_marker" and test.label != "off_topic":
-                    eval_ids.append(id)
+            # eval_ids = []
+            # for i, (id, test) in enumerate(tests.iterrows()):
+            #     if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "__TOOVERWRITE__") and test.label != "topic_marker" and test.label != "off_topic":
+            #         eval_ids.append(id)
+            eval_ids = tests.index[(tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__") & (tests["label"] != "topic_marker") & (tests["label"] != "off_topic")]
 
             if len(eval_ids) > 0:
 
@@ -853,7 +851,7 @@ class TestTreeBrowser():
                         tests.loc[id, k+" score"] = scores[i]
 
         # make sure any duplicates we may have introduced are removed
-        tests.deduplicate()
+        # tests.deduplicate()
 
         # reimpute missing labels
         tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
@@ -1048,6 +1046,9 @@ class TestTreeBrowser():
         }
 
     def templatize(self, s):
+        """ This is an experimental function that is not meant to be used generally.
+        """
+        import openai
         prompt = """INPUT: "Where are regular people on Twitter"
     OUTPUT: "Where are {regular|normal|sane|typical} people on {Twitter|Facebook|Reddit|Instagram}"
     ###

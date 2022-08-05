@@ -1,7 +1,5 @@
 import pandas as pd
 import uuid
-import logging
-import random
 import os
 import io
 import time
@@ -13,7 +11,6 @@ from ._model import Model
 from ._topic_model import TopicLabelingModel, TopicMembershipModel
 import adatest
 from pathlib import Path
-import torch
 
 # class TestTreeIterator():
 #     def __init__(self, test_tree):
@@ -36,7 +33,7 @@ class TestTree():
     webserver. A TestTree object also conforms to most of the standard pandas DataFrame API.
     """
 
-    def __init__(self, tests=None, labeling_model=TopicLabelingModel, membership_model=TopicMembershipModel, index=None, compute_embeddings=False, ensure_topic_markers=True, **kwargs):
+    def __init__(self, tests=None, labeling_model=TopicLabelingModel, membership_model=TopicMembershipModel, index=None, compute_embeddings=False, ensure_topic_markers=True, cache_file=None, **kwargs):
         """ Create a new test tree.
 
         Parameters
@@ -210,6 +207,9 @@ class TestTree():
     def shape(self):
         return self._tests.shape
     @property
+    def str(self):
+        return self._tests.str
+    @property
     def iterrows(self):
         return self._tests.iterrows
     @property
@@ -370,13 +370,19 @@ class TestTree():
                     drop_ids.append(id)
         self._tests.drop(drop_ids, axis=0, inplace=True)
 
-    def _cache_embeddings(self):
-        """ Pre-compute the embeddings for all test cases in the test tree.
+    def _cache_embeddings(self, ids=None):
+        """ Pre-compute the embeddings for the given test cases.
+
+        This is used so we can batch the computation don't compute them one at a time later.
         """
+
+        if ids is None:
+            ids = self._tests.index
 
         # see what new embeddings we need to compute
         all_strings = []
-        for id, test in self._tests.iterrows():
+        for id in ids:
+            test = self._tests.loc[id]
             if test.label == "topic_marker":
                 parts = test.topic.rsplit("/", 1)
                 str = parts[1] if len(parts) == 2 else ""
@@ -386,7 +392,7 @@ class TestTree():
                     all_strings.append(str)
 
         # suggestions topics don't have topic markers so we check for them separately
-        all_strings.append("__suggestions__")
+        # all_strings.append("__suggestions__")
         
         # we don't use the output of the embedding, just do this to get the embeddings cached
         adatest.embed(all_strings)
@@ -395,9 +401,10 @@ class TestTree():
         """ Impute missing labels in the test tree. """
         # TODO: this is just a random mock, it needs to implement real local topic models
 
-        self._cache_embeddings()
-
-        for id, test in self._tests.iterrows():
+        ids_to_impute = self._tests.index[self._tests["label"] == ""]
+        self._cache_embeddings(ids_to_impute)
+        for id in ids_to_impute:
+            test = self._tests.loc[id]
             if test.label == "":
                 if self.topic_membership_model(test.topic)(test.input) == "off_topic":
                     self._tests.loc[id, "label"] = "off_topic"

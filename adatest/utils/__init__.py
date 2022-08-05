@@ -1,8 +1,7 @@
 import re
 import urllib
-import PIL
 import io
-
+import shap
 
 def parse_test_type(test_type):
     part_names = ["text1", "value1", "text2", "value2", "text3", "value3", "text4"]
@@ -40,6 +39,7 @@ def get_image(url):
 
 
 def _download_image(url):
+    import PIL
     urllib_request = urllib.request.Request(
         url,
         data=None,

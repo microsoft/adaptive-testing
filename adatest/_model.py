@@ -1,7 +1,5 @@
 import numpy as np
 import shap
-import transformers
-from .utils import isinstance_ipython
 
 
 class Model():
@@ -14,7 +12,7 @@ class Model():
     def __new__(cls, model, *args, **kwargs):
         """ If we are wrapping a model that is already a Model, we just return it.
         """
-        if isinstance_ipython(model, Model) or isinstance_ipython(model, shap.models.Model):
+        if shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             return model
         else:
             return super().__new__(cls)
@@ -34,7 +32,7 @@ class Model():
         """
 
         # finish early if we are wrapping an object that is already a Model
-        if isinstance_ipython(model, Model) or isinstance_ipython(model, shap.models.Model):
+        if shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             if output_names is not None:
                 self.output_names = output_names
             assert len(kwargs) == 0
@@ -48,13 +46,13 @@ class Model():
         if self.__class__ is Model:
             
             # wrap transformer pipeline objects for convenience
-            if isinstance_ipython(model, transformers.pipelines.text_classification.TextClassificationPipeline):
+            if shap.utils.safe_isinstance(model, "transformers.pipelines.text_classification.TextClassificationPipeline"):
                 self.__class__ = shap.models.TransformersPipeline
                 shap.models.TransformersPipeline.__init__(self, model, **kwargs)
                 if output_names is not None: # Override output names if user supplied
                     self.output_names = output_names
 
-            elif isinstance_ipython(model, transformers.pipelines.text_generation.TextGenerationPipeline):
+            elif shap.utils.safe_isinstance(model, "transformers.pipelines.text_generation.TextGenerationPipeline"):
                 self.__class__ = TransformersTextGenerationPipeline
                 TransformersTextGenerationPipeline.__init__(self, model, **kwargs)
             

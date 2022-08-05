@@ -31,63 +31,41 @@ class TopicLabelingModel:
         self.topic = topic
         self.test_tree = test_tree
 
-        # compute the weighting of samples for each test for this topic (SML: this is disabled below right now)
-        # TODO: make this code shared correctly with prompt builder
+        # mask out entries that do not have a pass/fail label
+        valid_mask = ~((test_tree["labeler"] == "imputed") | (test_tree["label"] == "topic_marker") | (test_tree["label"] == "off_topic"))
+        
+        # try and select samples from the current topic
+        topic_mask = (test_tree["topic"] == topic) & valid_mask
+        
+        # if we didn't find enough samples then expand to include subtopics
+        if topic_mask.sum() <= 1:
+            topic_mask = test_tree["topic"].str.startswith(topic) & valid_mask
+        
+        # if we still didn't find enough samples then expand to include parent topics
         parts = topic.split("/")
-        topic_scaling = np.ones(test_tree.shape[0])
-        for i in range(1, len(parts)):
+        for i in range(len(parts), 0, -1):
             prefix = "/".join(parts[:i+1])
-            topic_scaling *= 1 + 9 * np.array([v.startswith(prefix) for v in test_tree["topic"]])
-        topic_scaling += 1 * np.array([v == topic for v in test_tree["topic"]])
-
-        # collect the embeddings
-        # TODO: like in prompt builder we should have a max of how many samples we work with
-        null_embedding = np.hstack(adatest.embed(["", ""]))
-        embeddings = []
-        labels = []
-        output_map = {}
-        perfect_output_map = True
-        for i, (id, test) in enumerate(test_tree.iterrows()):
-            if test.labeler == "imputed" or test.label == "topic_marker" or test.label == "off_topic":
-                topic_scaling[i] = 0
-                embeddings.append(null_embedding)
-                labels.append("pass")
+            if topic_mask.sum() <= 1:
+                topic_mask = test_tree["topic"].str.startswith(prefix) & valid_mask
             else:
-                embeddings.append(np.hstack(adatest.embed([test.input, test.output])))
-                labels.append(test.label)
+                break
 
-        if len(embeddings) == 0 and len(labels) == 0: # Handle empty testframe case
+        # get our features and labels for fitting a model
+        strings = list(test_tree["input"][topic_mask]) + list(test_tree["output"][topic_mask])
+        labels = list(test_tree["label"][topic_mask])
+        unrolled_embeds = adatest.embed(strings)
+        embeddings = np.hstack([unrolled_embeds[:len(labels)], unrolled_embeds[len(labels):]])
+
+        # empty test tree
+        if len(labels) == 0:
             self.model = ConstantModel("Unknown")
-        elif len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) <= 1:
+
+        # constant label topic
+        elif len(set(labels)) == 1:
             self.model = ConstantModel(labels[0])
+        
+        # enough samples to fit a model
         else:
-            embeddings = np.vstack(embeddings)
-
-            # normalize the weights
-            topic_scaling /= topic_scaling.max()
-            topic_scaling *= topic_scaling == 1 # TODO: this is a hack to turn off our dependenence on out-of-topic samples (unless we have zero in-topic samples)
-
-            # this is a hack right now, not sure why it's necessary since it should be caught above
-            if len(set([labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])) <= 1:
-                self.model = ConstantModel(labels[0])
-                return
-
-            # check if the labels are perfectly determined by the output value
-            output_map = {}
-            perfect_output_map = True
-            for i, (id, test) in enumerate(test_tree.iterrows()):
-                if topic_scaling[i] > 0:
-                    if output_map.get(test.output, test.label) != test.label:
-                        perfect_output_map = False
-                        break
-                    output_map[test.output] = test.label
-            
-            # degenerate case with only one label type
-            # if len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) == 1:
-            #     self.model = ConstantModel(labels[0])
-            # el
-            # if perfect_output_map:
-            #     self.model = OutputNearestNeighborLabelModel(embeddings, labels)
             
             # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
             # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
@@ -97,7 +75,7 @@ class TopicLabelingModel:
             # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
             self.model = LinearSVC()
             # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
-            self.model.fit(embeddings[topic_scaling == 1], [labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])
+            self.model.fit(embeddings, labels)
 
     def __call__(self, input, output):
         embeddings = np.hstack(adatest.embed([input, output]))
@@ -114,68 +92,44 @@ class TopicMembershipModel:
         self.topic = topic
         self.test_tree = test_tree
 
-        # compute the weighting of samples for each test for this topic (SML: this is disabled below right now)
-        # TODO: make this code shared correctly with prompt builder
+        # mask out entries that do not have a topic membership label
+        valid_mask = ~((test_tree["labeler"] == "imputed") | (test_tree["label"] == "topic_marker"))
+        
+        # try and select samples from the current topic
+        topic_mask = (test_tree["topic"] == topic) & valid_mask
+        
+        # if we didn't find enough samples then expand to include subtopics
+        if topic_mask.sum() <= 1:
+            topic_mask = test_tree["topic"].str.startswith(topic) & valid_mask
+        
+        # if we still didn't find enough samples then expand to include parent topics
         parts = topic.split("/")
-        topic_scaling = np.ones(test_tree.shape[0])
-        for i in range(1, len(parts)):
+        for i in range(len(parts), 0, -1):
             prefix = "/".join(parts[:i+1])
-            topic_scaling *= 1 + 9 * np.array([v.startswith(prefix) for v in test_tree["topic"]])
-        topic_scaling += 1 * np.array([v == topic for v in test_tree["topic"]])
-
-        # collect the embeddings
-        # TODO: like in prompt builder we should have a max of how many samples we work with
-        null_embedding = adatest.embed([""])[0]
-        embeddings = []
-        labels = []
-        output_map = {}
-        perfect_output_map = True
-        for i, (id, test) in enumerate(test_tree.iterrows()):
-            if test.labeler == "imputed" or test.label == "topic_marker":
-                topic_scaling[i] = 0
-                embeddings.append(null_embedding)
-                labels.append("on_topic")
+            if topic_mask.sum() <= 1:
+                topic_mask = test_tree["topic"].str.startswith(prefix) & valid_mask
             else:
-                embeddings.append(adatest.embed([test.input])[0])
-                labels.append("off_topic" if test.label == "off_topic" else "on_topic")
+                break
 
-        if len(embeddings) == 0 and len(labels) == 0: # Handle empty testframe case
+        # get our features and labels for fitting a model
+        strings = list(test_tree["input"][topic_mask])
+        labels = [l if l == "off_topic" else "on_topic" for l in test_tree["label"][topic_mask]]
+        embeddings = np.array(adatest.embed(strings))
+
+        # empty test tree
+        if len(labels) == 0:
             self.model = ConstantModel("Unknown")
-        elif len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) <= 1:
+
+        # constant label topic
+        elif len(set(labels)) == 1:
             self.model = ConstantModel(labels[0])
+        
+        # enough samples to fit a model
         else:
-            embeddings = np.vstack(embeddings)
-
-            # normalize the weights
-            topic_scaling /= topic_scaling.max()
-            topic_scaling *= topic_scaling == 1 # TODO: this is a hack to turn off our dependenence on out-of-topic samples (unless we have zero in-topic samples)
-
-            # check if the labels are perfectly determined by the output value
-            output_map = {}
-            perfect_output_map = True
-            for i, (id, test) in enumerate(test_tree.iterrows()):
-                if topic_scaling[i] > 0:
-                    if output_map.get(test.output, test.label) != test.label:
-                        perfect_output_map = False
-                        break
-                    output_map[test.output] = test.label
-            
-            # degenerate case with only one label type
-            # if len(set([l for i,l in enumerate(labels) if topic_scaling[i] > 0])) == 1:
-            #     self.model = ConstantModel(labels[0])
-            # el
-            # if perfect_output_map:
-            #     self.model = OutputNearestNeighborLabelModel(embeddings, labels)
             
             # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
-            # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
-            # do very poorly if there are errors in the data labels since it will fit them exactly. Perhaps we can help this by
-            # ensembling several SVCs together each trained on a different bootstrap sample? This might add the roubustness (against label mismatches)
-            # that is lacking with hard-margin SVC fitting (it is also motivated a bit by the connections between SGD and hard-margin SVC fitting, and that
-            # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
             self.model = LinearSVC()
-            # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
-            self.model.fit(embeddings[topic_scaling == 1], [labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])
+            self.model.fit(embeddings, labels)
 
     def __call__(self, input):
         embeddings = adatest.embed([input])[0]
