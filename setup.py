@@ -27,8 +27,8 @@ setup(
     description='Adaptively test and debug any natural language machine learning model.',
     packages=find_packages(exclude=['user_studies', 'notebooks', 'client']),
     package_data={'adatest': ['resources/*']},
-    install_requires= {
+    install_requires = [
         "nest_asyncio", "aiohttp", "aiohttp_session", "aiohttp_security"
         "numpy", "pandas", "scikit-learn", "shap", "profanity", "appdirs", "diskcache"
-    }
+    ]
 )
