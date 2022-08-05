@@ -11,6 +11,7 @@ import os
 import adatest
 import spacy
 from ._embedding import cos_sim
+import urllib
 
 try:
     import clip
@@ -332,7 +333,7 @@ class TestTreeSource(Generator):
             for id, test in self.source.iterrows():
                 # check if requested topic is *direct* parent of test topic
                 if test.label == "topic_marker" and topic == test.topic[0:test.topic.rfind('/')] and test.topic != "":
-                    proposals.append(test.topic.rsplit("/", 2)[1])
+                    proposals.append(urllib.parse.unquote(test.topic.rsplit("/", 2)[1]))
             return proposals
 
         # Find tests closest to the proposals in the embedding space

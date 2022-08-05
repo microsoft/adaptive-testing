@@ -67,6 +67,11 @@ class TopicLabelingModel:
             topic_scaling /= topic_scaling.max()
             topic_scaling *= topic_scaling == 1 # TODO: this is a hack to turn off our dependenence on out-of-topic samples (unless we have zero in-topic samples)
 
+            # this is a hack right now, not sure why it's necessary since it should be caught above
+            if len(set([labels[i] for i in range(len(labels)) if topic_scaling[i] == 1])) <= 1:
+                self.model = ConstantModel(labels[0])
+                return
+
             # check if the labels are perfectly determined by the output value
             output_map = {}
             perfect_output_map = True

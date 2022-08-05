@@ -141,6 +141,9 @@ class TestTree():
         # drop any duplicate index values
         self._tests = self._tests.groupby(level=0).first()
 
+        # fix spaces in topics names that are not URI encoded
+        self._tests['topic'] = self._tests['topic'].apply(lambda x: x.replace(" ", "%20"))
+
         # drop any duplicate rows
         self._tests.drop_duplicates(["topic", "input", "output", "labeler"], inplace=True)
 
