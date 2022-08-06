@@ -321,14 +321,15 @@ class TestTreeBrowser():
                 if action == "redraw":
                     self._refresh_interface()
                 
-                # generate a new set of suggested tests/topics
-                elif action == "generate_suggestions":
+                # generate a new set of suggested tests
+                # elif action == "generate_suggestions":
+                elif action == "generate_test_suggestions":
                     self._clear_suggestions()
                     self.test_tree.retrain_topic_labeling_model(self.current_topic)
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
                     # self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # crv
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",1))
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",1), mode="tests")
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
                     # else:
@@ -352,6 +353,12 @@ class TestTreeBrowser():
                         #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
                         #     self._suggestions_error = True
                     self._refresh_interface()
+
+                # generate a new set of suggested topics
+                elif action == "generate_topic_suggestions":
+                    self._clear_suggestions()
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",1), mode="topics")
+                    self._refresh_interface()
                 
                 # change the current topic
                 elif action == "change_topic":
@@ -367,10 +374,10 @@ class TestTreeBrowser():
                                 has_direct_tests = True
                         elif is_subtopic(self.current_topic, test["topic"]):
                             has_known_subtopics = True
-                    if not has_direct_tests and has_known_subtopics:
-                        self.mode = "topics"
-                    else:
-                        self.mode = "tests"
+                    # if not has_direct_tests and has_known_subtopics:
+                    #     self.mode = "topics"
+                    # else:
+                    #     self.mode = "tests"
 
                     self._refresh_interface()
                 
@@ -680,7 +687,7 @@ class TestTreeBrowser():
 
         self.comm.send(data)
 
-    def _clear_suggestions(self):
+    def _clear_suggestions(self):#, mode):
         """ Clear the suggestions for the current topic.
         """
         ids = list(self.test_tree.index)
@@ -696,7 +703,7 @@ class TestTreeBrowser():
         self.test_tree.retrain_topic_membership_model(self.current_topic)
         self._generate_suggestions(filter=filter)
     #crv
-    def _generate_suggestions(self, filter,temperature, user_prompt):
+    def _generate_suggestions(self, filter,temperature, user_prompt, mode):
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -734,7 +741,7 @@ class TestTreeBrowser():
             score_column=self.score_columns[0],
             repetitions=suggestion_threads,
             filter=filter,
-            suggest_topics=self.mode == "topics"
+            suggest_topics=mode == "topics"
         )
 
         # get the current topic description
@@ -749,13 +756,13 @@ class TestTreeBrowser():
         generators = [self._active_generator_obj] + list(self.generators.values())
         for generator in generators:
             try:
-                proposals = generator(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, temperature=temperature , user_prompt = user_prompt)
+                proposals = generator(prompts, self.current_topic, desc, mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, temperature=temperature , user_prompt = user_prompt)
                 break
             except ValueError:
                 pass # try the next generator
         
         # all topics should be URI encoded
-        if self.mode == "topics":
+        if mode == "topics":
             proposals = [urllib.parse.quote(x) for x in proposals]
         
         # Build up suggestions catalog, unless generating from a test tree source.
@@ -770,7 +777,7 @@ class TestTreeBrowser():
             # suggestions = []
             test_map_tmp = copy.copy(test_map)
             for input in proposals:
-                if self.mode == "topics" and ("/" in input or "\n" in input):
+                if mode == "topics" and ("/" in input or "\n" in input):
                     input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
                     input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
                     str_val = self.current_topic + "/" + input + " __topic_marker__"
@@ -778,10 +785,10 @@ class TestTreeBrowser():
                     str_val = self.current_topic + " __JOIN__ " + input
                 if str_val not in test_map_tmp:
                     id = uuid.uuid4().hex
-                    self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
-                    self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
+                    self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if mode == "topics" else "")
+                    self.test_tree.loc[id, "input"] = "" if mode == "topics" else input
                     self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
-                    self.test_tree.loc[id, "label"] = "topic_marker" if self.mode == "topics" else ""
+                    self.test_tree.loc[id, "label"] = "topic_marker" if mode == "topics" else ""
                     self.test_tree.loc[id, "labeler"] = "imputed"
                     self.test_tree.loc[id, "description"] = ""
                     for c in self.score_columns:

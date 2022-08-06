@@ -57,8 +57,9 @@ export default class FolderBrowser extends React.Component{
 
     moveFolder(e, key){
         if(this.props.not_move!=true){
-            var cur_obs_state = JSON.stringify(this.state.observe_state)
-            window.location.href = window.location.origin+key+'?obs='+cur_obs_state
+            // var cur_obs_state = JSON.stringify(this.state.observe_state);
+            // window.location.href = window.location.origin+key+'?obs='+cur_obs_state;
+            this.props.onClick(key);
         }else{
             var sel_idx = this.props.selected_concepts.indexOf(key)
             if(sel_idx==-1){
@@ -73,7 +74,6 @@ export default class FolderBrowser extends React.Component{
         }
         // this.props.history.push(this.props.prefix + key)
         // this.props.onOpen(key);
-        
     }
 
     DragOver(e){
@@ -131,7 +131,7 @@ export default class FolderBrowser extends React.Component{
             return (
             <div> 
                 <div onDrop={e => this.Drop(e, key)} onDragOver={e => this.DragOver(e)}
-                onMouseEnter={e => this.mouseEnter(e, key)} onMouseOut={e => this.mouseOut(e, key)}
+                    onMouseEnter={e => this.mouseEnter(e, key)} onMouseOut={e => this.mouseOut(e, key)}
                     style={{backgroundColor:bc, borderRadius: 5, padding: 2}}> 
 
                     {Object.keys(structure[key]).length>1 && <span onClick={e => this.toggleItem(e, key)} onMouseEnter={e => this.mouseEnter(e, key)} onMouseOut={e => this.mouseOut(e, key)}>{this.state.observe_state[key]?"▾":"▸"}</span>}

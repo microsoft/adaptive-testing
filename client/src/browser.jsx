@@ -12,6 +12,7 @@ import ContentEditable from './content-editable';
 import {  Slider, Input } from "antd";
 import "antd/dist/antd.css";
 import FolderBrowser from './folder_browser';
+import TopicSuggestion from './topic-suggestion';
 
 export default class Browser extends React.Component {
   constructor(props) {
@@ -138,6 +139,9 @@ export default class Browser extends React.Component {
 
     const inFillin = this.state.topic.startsWith("/Fill-ins");
 
+    const topicSuggestions = this.state.suggestions.filter(id => id.includes("/__suggestions__/"));
+    const testSuggestions = this.state.suggestions.filter(id => !id.includes("/__suggestions__/"));
+
     // console.log("location.pathname", location.pathname);
 
     let totalPasses = {};
@@ -181,10 +185,21 @@ export default class Browser extends React.Component {
     {/* john edit */}
 
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
-        <div style={{gridArea: "folders"}}>
-          <div id="folderbrowser" >
+        <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
+          <div id="folderbrowser" style={{height: "50%"}} >
             <FolderBrowser not_move={false} structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts} mother_this={this} 
-              hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} onDrop={this.onDrop}></FolderBrowser>
+              hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} onDrop={this.onDrop} onClick={this.setLocation}></FolderBrowser>
+          </div>
+          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%"}}>
+            <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+              <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
+              <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
+            </div>
+            { topicSuggestions.map((id, index) => {
+                return <TopicSuggestion topicId={id} 
+                          topic={this.state.topic}
+                          comm={this.comm} />
+            })}
           </div>
         </div>
 
@@ -259,16 +274,16 @@ export default class Browser extends React.Component {
           </div>
         </div>
 
-        {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${this.state.suggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }
+        {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${testSuggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }
           onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
           <div className="adatest-suggestions-control-bar" style={{width: "100%"}}>
             {!this.state.disable_suggestions && 
               <>
                 <div onClick={this.clearSuggestions} className="adatest-hover-opacity" style={{marginLeft: "20px", cursor: "pointer"}}>
-                  { this.state.suggestions.length > 1 && <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} /> }
+                  { testSuggestions.length > 1 && <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} /> }
                 </div>
-                <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                <div onClick={this.refreshTestSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                   <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
                   <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested tests</span>
                   {/* <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
@@ -298,43 +313,43 @@ export default class Browser extends React.Component {
             } */}
           </div>
           <div className="adatest-scroll-wrap adatest-suggestions-box-content" ref={(el) => this.suggestionsScrollWrapRef = el}>
-            {this.state.suggestions
+            {   //this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
                 // .filter(id => {
                 //   //console.log("Math.max(...this.comm.data[id].scores.map(x => x[1]))", Math.max(...this.comm.data[id].scores.map(x => x[1])))
                 //   return this.comm.data[id] && this.comm.data[id].scores && Math.max(...this.comm.data[id].scores.map(x => x[1])) > 0.3
                 // })
-                .map((id, index) => {
-              return <React.Fragment key={id}>
-                <Row
-                  id={id}
-                  ref={(el) => this.rows[id] = el}
-                  topic={this.state.topic}
-                  isSuggestion={true}
-                  topicFilter={this.state.topicFilter}
-                  value1Filter={this.state.value1Filter}
-                  comparatorFilter={this.state.comparatorFilter}
-                  value2Filter={this.state.value2Filter}
-                  value1Default="New value"
-                  value2Default="New value"
-                  value2Edited={this.value2Edited}
-                  selected={this.state.selections[id]}
-                  soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
-                  onSelectToggle={this.toggleSelection}
-                  comm={this.comm}
-                  scoreFilter={this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 && this.state.score_filter}
-                  selectWidth={maxSelectWidth}
-                  forceRelayout={this.debouncedForceUpdate}
-                  inFillin={inFillin}
-                  scrollParent={this.suggestionsScrollWrapRef}
-                  giveUpSelection={this.removeSelection}
-                  scoreColumns={this.state.score_columns}
-                  test_types={this.state.test_types}
-                  test_type_parts={this.state.test_type_parts}
-                  user={this.state.user}
-                  outputColumnWidth={outputColumnWidth}
-                />
-              </React.Fragment>
+                testSuggestions.map((id, index) => {
+                return <React.Fragment key={id}>
+                  <Row
+                    id={id}
+                    ref={(el) => this.rows[id] = el}
+                    topic={this.state.topic}
+                    isSuggestion={true}
+                    topicFilter={this.state.topicFilter}
+                    value1Filter={this.state.value1Filter}
+                    comparatorFilter={this.state.comparatorFilter}
+                    value2Filter={this.state.value2Filter}
+                    value1Default="New value"
+                    value2Default="New value"
+                    value2Edited={this.value2Edited}
+                    selected={this.state.selections[id]}
+                    soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
+                    onSelectToggle={this.toggleSelection}
+                    comm={this.comm}
+                    scoreFilter={this.state.do_score_filter && testSuggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 && this.state.score_filter}
+                    selectWidth={maxSelectWidth}
+                    forceRelayout={this.debouncedForceUpdate}
+                    inFillin={inFillin}
+                    scrollParent={this.suggestionsScrollWrapRef}
+                    giveUpSelection={this.removeSelection}
+                    scoreColumns={this.state.score_columns}
+                    test_types={this.state.test_types}
+                    test_type_parts={this.state.test_type_parts}
+                    user={this.state.user}
+                    outputColumnWidth={outputColumnWidth}
+                  />
+                </React.Fragment>
             })}
             {/* {this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions &&
               <div onClick={e => this.removeScoreFilter(e)} className="adatest-row-add-button adatest-hover-opacity" style={{lineHeight: "25px", display: "inline-block",}}>
@@ -806,7 +821,7 @@ export default class Browser extends React.Component {
 
 
 
-  refreshSuggestions(e) {
+  refreshTestSuggestions(e) {
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
@@ -818,7 +833,30 @@ export default class Browser extends React.Component {
     }
     this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
     this.comm.send(this.id, {
-      action: "generate_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
+      action: "generate_test_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
+      comparator_filter: this.state.comparatorFilter,
+      suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
+      suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
+      suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
+      checklist_mode: !!this.suggestionsTemplateRow,
+      temperature: this.state.active_temperature,
+      user_prompt: this.state.user_prompt
+    });
+  }
+
+  refreshTopicSuggestions(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("refreshSuggestions");
+    if (this.state.loading_suggestions) return;
+    for (let k in Object.keys(this.state.selections)) {
+      if (this.state.suggestions.includes(k)) {
+        delete this.state.selections[k];
+      }
+    }
+    this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.comm.send(this.id, {
+      action: "generate_topic_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
       suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
       suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
