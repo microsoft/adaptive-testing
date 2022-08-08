@@ -55,25 +55,8 @@ export default class FolderBrowser extends React.Component{
         this.setState({})
     }
 
-    moveFolder(e, key){
-        if(this.props.not_move!=true){
-            // var cur_obs_state = JSON.stringify(this.state.observe_state);
-            // window.location.href = window.location.origin+key+'?obs='+cur_obs_state;
-            this.props.onClick(key);
-        }else{
-            var sel_idx = this.props.selected_concepts.indexOf(key)
-            if(sel_idx==-1){
-                this.props.selected_concepts.push(key)
-                this.props.selected_concepts.sort()
-                this.props.mother_this.setState({})
-            
-            }else{
-                this.props.selected_concepts.splice(sel_idx, 1)
-                this.props.mother_this.setState({})
-            }
-        }
-        // this.props.history.push(this.props.prefix + key)
-        // this.props.onOpen(key);
+    changeTopic(e, key){
+        this.props.onClick(key);
     }
 
     DragOver(e){
@@ -82,7 +65,7 @@ export default class FolderBrowser extends React.Component{
 
     Drop(e, key){
         const id = e.dataTransfer.getData("id");
-        console.log('drop', id, key, this.props.mother_this.state.hovered_part)
+        // console.log('drop', id, key, this.props.mother_this.state.hovered_part)
         var key_split = key.split('/')
         var cur_key = ''
         var k = ''
@@ -96,13 +79,13 @@ export default class FolderBrowser extends React.Component{
         this.props.onDrop(id, {topic:k, type:'data_in_out|'+concept_origin})
     }
 
-    mouseEnter(e, key){
-        this.props.mother_this.setState({hovered_concept: key, hovered_part: 'folder'})
-    }
+    // mouseEnter(e, key){
+    //     this.props.mother_this.setState({hovered_concept: key, hovered_part: 'folder'})
+    // }
 
-    mouseOut(e, key){
-        this.props.mother_this.setState({hovered_concept: undefined, hovered_part: undefined, dropped:false})
-    }
+    // mouseOut(e, key){
+    //     this.props.mother_this.setState({hovered_concept: undefined, hovered_part: undefined, dropped:false})
+    // }
 
 
     // dragOut(e, key){
@@ -114,48 +97,53 @@ export default class FolderBrowser extends React.Component{
     renderFolder(structure){
         console.log('structure:', structure)
         return Object.keys(structure).map((key, idx)=>{
-            var k_list = key.split('/')
-
-            var bc = ''
-            if(this.props.not_move!=true){
-
-            }else{
-                if(this.props.hovered_concept==key){
-                    bc = '#cfebff'
-                }else if(this.props.selected_concepts.indexOf(key)!=-1){
-                    bc = '#9fd7ff'
-                }
+            // TODO: Restructure the structure object to have a count field & a folders array
+            if (key === "count") {
+                return null
             }
-            if (key=='count'){} // edit here charvi
-            else{
-            return (
-            <div> 
-                <div onDrop={e => this.Drop(e, key)} onDragOver={e => this.DragOver(e)}
-                    onMouseEnter={e => this.mouseEnter(e, key)} onMouseOut={e => this.mouseOut(e, key)}
-                    style={{backgroundColor:bc, borderRadius: 5, padding: 2}}> 
+            const k_list = key.split('/')
+            const bc = ''
 
-                    {Object.keys(structure[key]).length>1 && <span onClick={e => this.toggleItem(e, key)} onMouseEnter={e => this.mouseEnter(e, key)} onMouseOut={e => this.mouseOut(e, key)}>{this.state.observe_state[key]?"▾":"▸"}</span>}
-                    {Object.keys(structure[key]).length==1 && <span style={{opacity:0}}>{this.state.observe_state[key]?"▾":"▸"}</span>}
-                    <span onClick={e => this.moveFolder(e, key)} onDrop={e => console.log('drop', key)} onMouseEnter={e => this.mouseEnter(e, key)} onMouseOut={e => this.mouseOut(e, key)}>
-                    <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", marginRight:'3px', color: "rgb(84, 174, 255)", display: "inline-block"}} />    
-                        {k_list[k_list.length-1]}
-                    </span> 
-                     <span style={{color:"green"}}> {structure[key]['count'][0]} </span> <span> / </span>
-                        <span style={{color:"red"}}> {structure[key]['count'][1]} </span>
+            // TODO: Color background based on selected folder (current topic)
+            // if(this.props.hovered_concept==key){
+            //     bc = '#cfebff'
+            // } else if (this.props.selected_concepts.indexOf(key)!=-1) {
+            //     bc = '#9fd7ff'
+            // }
+
+            const numFolders = structure[key] != null ? Object.keys(structure[key]).length : 0
+            const testCounts = structure[key]['count']
+            const passCount = testCounts != null ? testCounts[0] : 0
+            const failCount = testCounts != null ? testCounts[1] : 0
+
+            return (
+                <div>
+                    <div onDrop={e => this.Drop(e, key)} onDragOver={e => this.DragOver(e)}
+                        style={{backgroundColor:bc, borderRadius: 5, padding: 2}}> 
+
+                        { numFolders > 1 && <span style={{cursor: "pointer"}} onClick={e => this.toggleItem(e, key)}>{this.state.observe_state[key]?"▾":"▸"}</span>}
+                        <span style={{cursor: "pointer", marginLeft: numFolders > 1 ? "0px" : "11px"}} onClick={e => this.changeTopic(e, key)} onDrop={e => console.log('drop', key)}>
+                            <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", marginRight:'3px', color: "rgb(84, 174, 255)", display: "inline-block"}} />
+                            {k_list[k_list.length-1]}
+                        </span> 
+                        <span style={{color:"green"}}> {passCount} </span>
+                        <span> / </span>
+                        <span style={{color:"red"}}> {failCount} </span>
+                    </div>
+                    <div style={{marginLeft: '10px'}}>
+                        {numFolders > 0 && this.state.observe_state[key] && this.renderFolder(structure[key])}
+                    </div>
                 </div>
-                <div style={{marginLeft: '10px'}}>
-                    {structure[key]!=undefined && Object.keys(structure[key]).length>0 && this.state.observe_state[key] && 
-                    this.renderFolder(structure[key])}
-                </div>
-            </div>)
-        }
+            )
         })
     }
 
     render(){
-        return (<div style={{textAlign:'left', padding: '5px'}} className={"unselectable"}>
-            <div onClick={e => this.moveFolder(e, '')}>Home</div>
-            {this.props.structure!=undefined && this.renderFolder(this.props.structure)}
-        </div>)
+        return (
+            <div style={{textAlign:'left', padding: '5px'}} className={"unselectable"}>
+                <div style={{cursor: "pointer"}} onClick={e => this.changeTopic(e, '')}>Home</div>
+                {this.props.structure!=undefined && this.renderFolder(this.props.structure)}
+            </div>
+        )
     }
 }

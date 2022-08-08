@@ -187,8 +187,10 @@ export default class Browser extends React.Component {
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
         <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
           <div id="folderbrowser" style={{height: "50%"}} >
-            <FolderBrowser not_move={false} structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts} mother_this={this} 
-              hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} onDrop={this.onDrop} onClick={this.setLocation}></FolderBrowser>
+            <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts}
+               onDrop={this.onDrop} onClick={this.setLocation}>
+              { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
+            </FolderBrowser>
           </div>
           <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%"}}>
             <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
