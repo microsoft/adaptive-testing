@@ -32,6 +32,33 @@ class TestTransformers:
             assert isinstance(item, str)
 
 
+class TestPipelines:
+    @pytest.mark.parametrize("model_name", ["facebook/opt-125m"])
+    def test_smoke(self, model_name):
+        hf_pipeline = pipeline("text-generation", model=model_name)
+        target = generators.Pipelines(hf_pipeline)
+
+        prompts = [
+            ("id A", "", "Great hotel"),
+            ("id B", "", "Bathroom too small"),
+        ]
+
+        desired_result_count = 2
+
+        results = target(
+            prompts,
+            "",
+            mode="tests",
+            topic_description="",
+            num_samples=desired_result_count,
+        )
+        assert results is not None
+        assert len(results) == desired_result_count
+        for item in results:
+            assert isinstance(item, str)
+
+
+
 class TestOpenAI:
     def test_smoke(self, mocker):
         OPENAI_API_KEY = "Not for you, CredScan"

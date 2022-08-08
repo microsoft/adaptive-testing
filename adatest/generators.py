@@ -227,6 +227,45 @@ class Transformers(HuggingFace):
         return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
+class Pipelines(HuggingFace):
+    import transformers
+    def __init__(self, pipeline: transformers.pipelines.base.Pipeline , sep="\n", subsep=" ", quote="\"", filter_profanity=True):
+        super().__init__(source=pipeline, sep=sep, subsep=subsep, quote=quote)
+        self.gen_type = "model"
+        self.stop_sequence = self.quote + self.sep
+        self._sep_stopper = HuggingFace.StopAtSequence(self.stop_sequence, pipeline.tokenizer)
+
+    def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
+        if len(prompts) == 0:
+            raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
+        prompts, prompt_ids = self._validate_prompts(prompts)
+        prompt_strings = self._create_prompt_strings(prompts, topic)
+
+        suggestion_texts = []
+        for p in prompt_strings:
+            prompt_length = len(self.source.tokenizer.tokenize(p))
+            self._sep_stopper.prompt_length = prompt_length
+            self._sep_stopper.max_length = max_length
+            generations = self.source(p,
+                        do_sample=True,
+                        max_length=prompt_length + max_length,
+                        num_return_sequences=num_samples,
+                        pad_token_id=self.source.model.config.eos_token_id,
+                        stopping_criteria=[self._sep_stopper])
+            for gen in generations:
+                generated_text: str = gen['generated_text'][len(p):]
+                # Trim off text after stop_sequence
+                stop_seq_index = generated_text.find(self.stop_sequence)
+                if (stop_seq_index != -1):
+                    generated_text = generated_text[:stop_seq_index]
+                elif generated_text[-1] == self.quote:
+                    # Sometimes the quote is at the end without a trailing newline
+                    generated_text = generated_text[:-1]
+                suggestion_texts.append(generated_text)
+
+        return self._parse_suggestion_texts(suggestion_texts, prompts)
+
+
 class OpenAI(TextCompletionGenerator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
