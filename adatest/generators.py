@@ -154,7 +154,12 @@ class TextCompletionGenerator(Generator):
         return list(set(samples))
 
 class  HuggingFace(TextCompletionGenerator):
+    """This class exists to embed the StopAtSequence class."""
     import transformers
+
+    def __init__(self, source, sep, subsep, quote, filter):
+        super().__init__(source, sep, subsep, quote, filter)
+        
 
     class StopAtSequence(transformers.StoppingCriteria):
         def __init__(self, stop_string, tokenizer, window_size=10):
@@ -229,17 +234,17 @@ class Transformers(HuggingFace):
 
 class Pipelines(HuggingFace):
     import transformers
-    def __init__(self, pipeline: transformers.pipelines.base.Pipeline , sep="\n", subsep=" ", quote="\"", filter_profanity=True):
-        super().__init__(source=pipeline, sep=sep, subsep=subsep, quote=quote)
+    def __init__(self, pipeline: transformers.pipelines.base.Pipeline , sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
+        super().__init__(pipeline, sep, subsep, quote, filter)
         self.gen_type = "model"
         self.stop_sequence = self.quote + self.sep
         self._sep_stopper = HuggingFace.StopAtSequence(self.stop_sequence, pipeline.tokenizer)
 
-    def __call__(self, prompts, topic, test_type, scorer, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
         if len(prompts) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
         prompts, prompt_ids = self._validate_prompts(prompts)
-        prompt_strings = self._create_prompt_strings(prompts, topic)
+        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
 
         suggestion_texts = []
         for p in prompt_strings:
