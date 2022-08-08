@@ -58,7 +58,6 @@ class TestPipelines:
             assert isinstance(item, str)
 
 
-
 class TestOpenAI:
     def test_smoke(self, mocker):
         OPENAI_API_KEY = "Not for you, CredScan"
