@@ -13,6 +13,10 @@ module.exports = {
         test: /\.css$/i,
         use: ["style-loader", "css-loader"],
       },
+      {
+        test: /\.(png|woff|woff2|eot|ttf|svg)$/,
+        use: ['url-loader'],
+      },
       { // this allows font-awesome to be used during development mode... (since we print to the page in a script tag)
         test: /\.js$/,
         loader: 'string-replace-loader',

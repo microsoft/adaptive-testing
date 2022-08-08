@@ -3,17 +3,9 @@ import re
 import logging
 import uuid
 import itertools
-import openai
-import scipy.stats
-import transformers
 import shap
-
-import adatest
 from ._model import Model
-from ._embedding import cos_sim
-from .utils import isinstance_ipython
-#from transformers.tokenization_utils_base import ExplicitEnum
-#from ._explorer import file_log
+import adatest
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +13,7 @@ class Scorer():
     def __new__(cls, model, *args, **kwargs):
         """ If we are wrapping an object that is already a Scorer, we just return it.
         """
-        if isinstance_ipython(model, Scorer):
+        if shap.utils.safe_isinstance(model, "adatest.Scorer"):
             return model
         else:
             return super().__new__(cls)
@@ -31,9 +23,9 @@ class Scorer():
         """
 
         # ensure we have a model of type Model
-        if isinstance_ipython(getattr(self, "model", None), Model) or isinstance_ipython(getattr(self, "model", None), shap.models.Model):
+        if shap.utils.safe_isinstance(getattr(self, "model", None), "adatest.Model") or shap.utils.safe_isinstance(getattr(self, "model", None), "shap.models.Model"):
             pass
-        elif isinstance_ipython(model, Model) or isinstance_ipython(model, shap.models.Model):
+        elif shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             self.model = model
         else:
             self.model = Model(model)
@@ -42,7 +34,7 @@ class Scorer():
         if self.__class__ is Scorer:
 
             # finish early if we are wrapping an object that is already a Scorer (__new__ will have already done the work)
-            if isinstance_ipython(model, Scorer):
+            if shap.utils.safe_isinstance(model, "adatest.Scorer"):
                 return
             
             # see if we are scoring a generator or a classifier
@@ -150,6 +142,9 @@ class ClassifierScorer(Scorer):
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
             out_probs[i] = np.column_stack(out_probs[i]) # the probability of a set of items is the prob of the min item
 
+        # compute the embeddings as a batch (this fills a cache we will use when scoring below)
+        adatest.embed(list(tests.loc[eval_ids, "input"]))
+
         # score all the tests
         scores = []
         outputs = []
@@ -187,20 +182,6 @@ class ClassifierScorer(Scorer):
                 return fail_prob / (pass_prob + fail_prob)
         else:
             raise NotImplementedError("TODO: implement classifer scoring for templated tests")
-
-    def suggest_outputs(self, current, num_suggestions=20):
-        prompt = ""
-        for c in current:
-            prompt += '"'+c+'"\n'
-        prompt += '"{output}'
-        response = openai.Completion.create(
-            engine='curie-instruct-beta', prompt=[prompt.format(output=o) for o in self.output_names], max_tokens=0, # self.engine
-            temperature=0, n=1, stop='\"', logprobs=0, echo=True
-        )
-        lines = [sum(choice["logprobs"]["token_logprobs"][11:]) for choice in response["choices"]]
-        pairs = list([v for v in zip(lines, self.output_names) if v[1] not in current])
-        pairs.sort()
-        return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
 
 class GeneratorScorer(Scorer):
     """ Wraps a text generation model as a callable scorer that can be applied to a test tree.
