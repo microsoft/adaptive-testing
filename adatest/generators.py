@@ -153,33 +153,34 @@ class TextCompletionGenerator(Generator):
             #     samples.append(tuple(suggestion))
         return list(set(samples))
 
-           
-class Transformers(TextCompletionGenerator):
-    def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
-        import transformers
+class  HuggingFace(TextCompletionGenerator):
+    import transformers
 
+    class StopAtSequence(transformers.StoppingCriteria):
+        def __init__(self, stop_string, tokenizer, window_size=10):
+            self.stop_string = stop_string
+            self.tokenizer = tokenizer
+            self.window_size = 10
+            self.max_length = None
+            self.prompt_length = 0
+            
+        def __call__(self, input_ids, scores):
+            if len(input_ids[0]) > self.max_length + self.prompt_length:
+                return True
+
+            # we need to decode rather than check the ids directly because the stop_string may get enocded differently in different contexts
+            return self.tokenizer.decode(input_ids[0][-self.window_size:])[-len(self.stop_string):] == self.stop_string
+
+           
+class Transformers(HuggingFace):
+    def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
         self.tokenizer = tokenizer
         self.device = self.source.device
 
-        class StopAtSequence(transformers.StoppingCriteria):
-            def __init__(self, stop_string, tokenizer, window_size=10):
-                self.stop_string = stop_string
-                self.tokenizer = tokenizer
-                self.window_size = 10
-                self.max_length = None
-                self.prompt_length = 0
-                
-            def __call__(self, input_ids, scores):
-                if len(input_ids[0]) > self.max_length + self.prompt_length:
-                    return True
-
-                # we need to decode rather than check the ids directly because the stop_string may get enocded differently in different contexts
-                return self.tokenizer.decode(input_ids[0][-self.window_size:])[-len(self.stop_string):] == self.stop_string
-
-        self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
+        self._sep_stopper = HuggingFace.StopAtSequence(self.quote+self.sep, self.tokenizer)
     
     def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
