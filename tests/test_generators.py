@@ -33,7 +33,9 @@ class TestTransformers:
 
 
 class TestPipelines:
-    @pytest.mark.parametrize("model_name", ["facebook/opt-125m"])
+    @pytest.mark.parametrize(
+        "model_name", ["facebook/opt-125m", "EleutherAI/gpt-neo-125M"]
+    )
     def test_smoke(self, model_name):
         hf_pipeline = pipeline("text-generation", model=model_name)
         target = generators.Pipelines(hf_pipeline)
