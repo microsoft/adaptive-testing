@@ -62,8 +62,9 @@ class TestOpenAI:
         assert "Ret 1" in results
         assert "Ret 2" in results
         openai_completion.create.assert_called_with(
-            engine="curie",
+            model="curie",
             prompt=['"Great hotel"\n"Bathroom too small"\n"'],
+            user="adatest",
             max_tokens=100,
             temperature=1.0,
             top_p=0.95,
