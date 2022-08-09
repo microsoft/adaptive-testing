@@ -58,7 +58,8 @@ class TestTransformers:
 
 class TestPipelines:
     @pytest.mark.parametrize(
-        "model_name", ["facebook/opt-125m", "EleutherAI/gpt-neo-125M"]
+        "model_name",
+        ["facebook/opt-125m", "facebook/opt-350m", "EleutherAI/gpt-neo-125M"],
     )
     def test_smoke(self, model_name):
         hf_pipeline = pipeline("text-generation", model=model_name)
@@ -84,7 +85,8 @@ class TestPipelines:
             assert isinstance(item, str)
 
     @pytest.mark.parametrize(
-        "model_name", ["facebook/opt-125m", "EleutherAI/gpt-neo-125M"]
+        "model_name",
+        ["facebook/opt-125m", "facebook/opt-350m", "EleutherAI/gpt-neo-125M"],
     )
     def test_with_topics(self, model_name):
         hf_pipeline = pipeline("text-generation", model=model_name)
