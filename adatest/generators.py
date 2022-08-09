@@ -263,7 +263,7 @@ class OpenAI(TextCompletionGenerator):
         
         # substitute user provided prompt/temperature if available
         call_temp = temperature if temperature is not None else self.temperature
-        call_prompt = prompt_strings if user_prompt is '' else user_prompt
+        call_prompt = prompt_strings if user_prompt == '' else user_prompt
 
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(

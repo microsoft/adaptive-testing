@@ -197,10 +197,10 @@ export default class Browser extends React.Component {
           <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", flexDirection: "column"}}>
             <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span>
             <AutoComplete 
-              style={{width: "185px"}}
-              placeholder={"Give me topics about..."}
+              style={{width: "185px", textAlign: "right"}}
+              placeholder={"▼"}
               allowClear={true}
-              onChange={this.changeTestPrompt} 
+              onChange={this.changeTopicPrompt} 
               id={"topic_prompt_input_box"}
               options={[
                   {
@@ -265,9 +265,9 @@ export default class Browser extends React.Component {
           <div style={{display: "flex"}} >  
             <AutoComplete 
               style={{width:"auto", flexGrow: "1"}}
-              placeholder={"Give me a list of ... such as ..." }
+              placeholder={"▼"}
               allowClear={true}
-              onChange={this.changeTopicPrompt} 
+              onChange={this.changeTestPrompt} 
               id={"test_prompt_input_box"}
               options={[
                   {
@@ -891,14 +891,14 @@ export default class Browser extends React.Component {
     this.setState({ active_temperature: e });
   }
 
-  changeTestPrompt(e) {
-    console.log("changeTestPrompt", e);
-    this.setState({testPrompt: e.target.value});
+  changeTestPrompt(value) {
+    console.log("changeTestPrompt", value);
+    this.setState({testPrompt: value});
   }
 
-  changeTopicPrompt(e) {
-    console.log("changeTopicPrompt", e);
-    this.setState({topicPrompt: e.target.value});
+  changeTopicPrompt(value) {
+    console.log("changeTopicPrompt", value);
+    this.setState({topicPrompt: value});
   }
 
   clearSuggestions(e) {

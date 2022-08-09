@@ -226,6 +226,8 @@ class PromptBuilder():
                 if suggest_topics:
                     if row["topic"] == "":
                         continue # we can't use the root to help suggest topic names
+                    if "NotSure" in row["topic"]:
+                        continue # USER STUDY - Ignore the NotSure special topic when crafting prompts
                     parents,child = row["topic"].rsplit("/", 1)
                     prompt.append((k, parents, urllib.parse.unquote(child)))
                 else:

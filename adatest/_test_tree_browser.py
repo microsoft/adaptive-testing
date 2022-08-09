@@ -329,7 +329,7 @@ class TestTreeBrowser():
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
                     # self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # crv
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",""), mode="tests")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_test_prompt",""), mode="tests")
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
                     # else:
@@ -357,7 +357,7 @@ class TestTreeBrowser():
                 # generate a new set of suggested topics
                 elif action == "generate_topic_suggestions":
                     self._clear_suggestions()
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",""), mode="topics")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_topic_prompt",""), mode="topics")
                     self._refresh_interface()
                 
                 # change the current topic
