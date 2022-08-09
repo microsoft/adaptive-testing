@@ -159,15 +159,15 @@ export default class Browser extends React.Component {
       <div style={{width: "210px", paddingTop: "20px", paddingRight: "10px"}}>
         <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px"}}>Tags</div>
         <div style={{marginLeft: "-22px"}}>
-          <Tree topic="" children={this.state.topic_tree} level={0} show_label={false} open={true} onClick={this.setLocation} />
+          <Tree id="" comm={this.comm} level={0} show_label={false} onClick={this.setLocation} />
         </div>
-        {/* <div style={{paddingTop: "15px", paddingBottom: "15px", marginLeft: "-18px"}}>
+        <div style={{paddingTop: "15px", paddingBottom: "15px", marginLeft: "-18px"}}>
           <div style={{background: "#dddddd", height: "1px"}}></div>
         </div>
         <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px", marginTop: "5px"}}>Expectation</div>
         <div style={{marginLeft: "-22px"}}>
-          <Tree topic="" children={data} level={0} show_label={false} open={true} onClick={this.setLocation} />
-        </div> */}
+          <Tree id="/Fairness" comm={this.comm} level={0} show_label={false} onClick={this.setLocation} />
+        </div>
       </div>
       <div style={{flexGrow: 1}}>
       <div style={{display: "flex"}}>

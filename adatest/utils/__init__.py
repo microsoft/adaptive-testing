@@ -57,3 +57,24 @@ def is_subtopic(topic, candidate):
     # Both arguments are strings, which look like UNIX paths
     # Return is boolean
     return True if re.search(r"^%s(/|$)" % re.escape(topic), candidate) else False
+
+
+def has_tag(test_tree, tag):
+    """ Return a mask of rows that match the tag.
+    """
+    return test_tree["topic"].str.match(r"(^|:)%s($|:)" % re.escape(tag))
+
+def has_tags(test_tree, tags):
+    mask = has_tag(test_tree, tags[0])
+    for tag in tags[1:]:
+        mask = mask & has_tag(test_tree, tag)
+    return mask
+
+def has_subtag(test_tree, tag):
+    return test_tree["topic"].str.match(r"(^|:)%s(/|$|:)" % re.escape(tag))
+
+def has_subtags(test_tree, tags):
+    mask = has_tag(test_tree, tags[0])
+    for tag in tags[1:]:
+        mask = mask & has_subtag(test_tree, tag)
+    return mask

@@ -18,70 +18,15 @@ from threading import Timer
 from ._scorer import expand_template, clean_template, Scorer
 import adatest # Need to import like this to prevent circular dependencies
 import urllib.parse
-from .utils import is_subtopic
-
-# from https://gist.github.com/walkermatt/2871026
-def throttle(interval):
-    """ Decorator that will postpone a functions
-        execution so it does not run more than once per
-        interval of time.
-    """
-    def decorator(fn):
-        def throttled(*args, **kwargs):
-            if not hasattr(throttled, "t") or not throttled.t.is_alive():
-                def call_it():
-                    fn(*args, **kwargs)
-                throttled.t = Timer(interval, call_it)
-                throttled.t.start()
-        return throttled
-    return decorator
+from .utils import has_subtags, has_tags
 
 log = logging.getLogger(__name__)
-
-# import sys
-# sys.stderr = open('/tmp/err.txt', 'w')
-
-def file_log(*args):
-    """ Used for logging when we don't have a stdout.
-
-    This is used for debugging when we are being called from the javascript client. When we are
-    called from the client we don't have a stdout attached to any cell in the notebook.
-
-    Note to also catch errors you could do:
-    import sys
-    sys.stderr = open('err.txt', 'w')
-    """
-    #print(*args)
-    f = open("log.txt", "a")  # append mode
-    f.write(" ".join([str(msg) for msg in args])+"\n")
-    f.flush()
-    f.close()
-
 
 def matches_filter(test, filter_text):
     if filter_text is None or filter_text == "":
         return True
     else:
         return filter_text in test["input"] or filter_text in test["output"]
-
-
-special_outputs = [
-    "{MAX}"
-]
-
-valid_comparators = [
-    "should not be",
-    "should be",
-    "should be the same as for"
-]
-FILLIN_PREFIX = '/Fill-ins'
-
-
-# model("this is english") => []
-# output_sampling="topk(10)"
-# output_sampling="topp(10)"
-# output_sampling="max"
-# output_sampling="temperature(0.9)"
 
 class TestTreeBrowser():
     """ Used for browsing and expanding a test tree.
@@ -106,7 +51,7 @@ class TestTreeBrowser():
         self.suggestion_thread_budget = suggestion_thread_budget
         self.prompt_builder = prompt_builder
         self.active_generator = active_generator
-        self.current_topic = starting_path
+        self.current_tags = starting_path
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
@@ -115,7 +60,8 @@ class TestTreeBrowser():
         if not isinstance(self.generators, dict):
             self.generators = {'generator': self.generators}
 
-        if adatest.default_generators is not None: # Merge default generators into generators
+        # merge any default generators into generators
+        if adatest.default_generators is not None:
             self.generators = {**self.generators, **adatest.default_generators}
 
         # Find and cast any TestTrees in generators to TestTreeSource
@@ -125,10 +71,7 @@ class TestTreeBrowser():
 
         # get a reference to the active backend object
         if self.active_generator == "default":
-            if isinstance(self.generators, dict):
-                self._active_generator_obj = next(iter(self.generators.items()))[1]
-            else:
-                self._active_generator_obj = self.generators
+            self._active_generator_obj = next(iter(self.generators.items()))[1]
         else:
             self._active_generator_obj = self.generators[self.active_generator]
 
@@ -139,19 +82,13 @@ class TestTreeBrowser():
                     self.test_tree.drop(c, axis=1, inplace=True)
 
         # convert single scorer args to the multi-scorer format
-        if callable(self.scorer):
-            self.scorer = {"model": self.scorer}
+        if not isinstance(self.scorer, dict):
+            self.scorer = {} if self.scorer is None else {"model": self.scorer}
 
         # note the score column of each scorer
-        if isinstance(self.scorer, dict):
-            self.score_columns = [k+" score" for k in self.scorer]
-            for k in self.scorer:
-                self.scorer[k] = Scorer(self.scorer[k])
-        elif self.scorer is not None:
-            self.score_columns = ["model score"]
-            self.scorer = {"model": Scorer(self.scorer)}
-        else:
-            self.score_columns = []
+        self.score_columns = [k+" score" for k in self.scorer]
+        for k in self.scorer:
+            self.scorer[k] = Scorer(self.scorer[k])
 
         # find score columns that are not associated with a scorer
         for c in self.test_tree.columns:
@@ -166,70 +103,49 @@ class TestTreeBrowser():
             if c not in self.test_tree.columns:
                 self.test_tree[c] = [np.nan for _ in range(self.test_tree.shape[0])]
 
-        # a unique identifier for this test set instance, used for UI connections
+        # a unique identifier for this test set instance (used for UI connections)
         self._id = uuid.uuid4().hex
 
         # these are all temporary state
         self._hidden_topics = {}
         self.comm = None
 
-        # define our current mode, and set of supported modes
-        self.mode = "tests" if self.test_tree.shape[0] > 0 else "topics"
-        self.mode_options = [
-            # "validity focused", # focus first on making valid in-topic tests, then secondarily on making those tests high scoring
-            # "failure focused", # focus on making high scoring (failing) tests, then secondarily on making those tests valid and in-topic
-            "tests", # suggest new tests
-            "topics" # suggest new subtopics
-        ]
-
         # apply all the scorers to the test tree (this updates the test tree)
-        self._compute_embeddings_and_scores(self.test_tree, self.recompute_scores, overwrite_outputs=False, save_outputs=True)
-
-        # # make sure all the tests have scores (if we have a scorer)
-        # self._compute_embeddings_and_scores(self.test_tree)
-
-        # ensure any test tree based generator has embeddings calculated
-        if isinstance(self.generators, dict):
-            for name, gen in self.generators.items():
-                if getattr(gen, "gen_type", "") == "test_tree":
-                    gen.source._cache_embeddings()
+        self._compute_scores(self.test_tree, self.recompute_scores, overwrite_outputs=False, save_outputs=True)
 
         # save the current state of the test tree
         self._auto_save()
 
-        # init a blank set of suggetions
-        # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-        self._suggestions_error = "" # tracks if we failed to generate suggestions
+        # track if we failed to generate suggestions
+        self._suggestions_error = ""
 
-    def auto_optimize(self, rounds=10, topic=""):
-        """ Run the testing loop for a topic without user involvement.
+    def auto_optimize(self, rounds=10, tags=["/Topic", "/Expectation"]):
+        """ Run the testing loop for a given set of tags without user involvement.
         
-        Note that this assumes the labeling model is always correct.
+        Note that this assumes the labeling model and membership model are both always correct.
         """
 
         for _ in tqdm(list(range(rounds))):
     
             # create new suggestions in the topic
-            self.generate_suggestions(topic)
+            self.generate_suggestions(tags)
             
-            # get the ids of the on-topic suggestions
+            # get the ids of the on-topic and off-topic suggestions
             keep_ids = []
             drop_ids = []
-            for k, test in self.test_tree.iterrows():
+            mask = has_tags(self.test_tree, ["/__suggestion__"] + tags)
+            tag_match_ids = self.test_tree.index[mask]
+            for k in tag_match_ids:
+                test = self.test_tree.loc[k]
                 main_score = test[self.score_columns[0]]
-                if test.topic == topic+"/__suggestions__":
-                    if test.label != "off_topic" and not isinstance(main_score, str) and not np.isnan(main_score):
-                        keep_ids.append(k)
-                    else:
-                        drop_ids.append(k)
-            
-            # print(tests.loc[top10_ids[0], "model score"])
-            # print(tests.loc[top10_ids[0], "input"])
-            # print()
+                if test.label != "off_topic" and not isinstance(main_score, str) and not np.isnan(main_score):
+                    keep_ids.append(k)
+                else:
+                    drop_ids.append(k)
             
             # label and move these top suggestions to the root topic
             self.test_tree.loc[keep_ids, "labeler"] = "auto_optimize"
-            self.test_tree.loc[keep_ids, "topic"] = topic
+            self.test_tree.loc[keep_ids, "tags"] = ":".join(tags)
             self.test_tree.drop(drop_ids, inplace=True)
 
     def _repr_html_(self, prefix="", environment="jupyter", websocket_server=None):
@@ -258,7 +174,7 @@ class TestTreeBrowser():
   {js_data};
   AdaTestReactDOM.render(
     AdaTestReact.createElement(AdaTest, {{
-      interfaceId: "{self._id}", environment: "{environment}", startingTopic: "{self.current_topic}", prefix: "{prefix}",
+      interfaceId: "{self._id}", environment: "{environment}", startingTopic: "{self.current_tags}", prefix: "{prefix}",
       websocket_server: {"undefined" if websocket_server is None else '"'+websocket_server+'"'},\
     }}, null),
     document.getElementById('adatest_container_{self._id}')
@@ -297,8 +213,8 @@ class TestTreeBrowser():
                 # generate a new set of suggested tests/topics
                 elif action == "generate_suggestions":
                     self._clear_suggestions()
-                    self.test_tree.retrain_topic_labeling_model(self.current_topic)
-                    self.test_tree.retrain_topic_membership_model(self.current_topic)
+                    self.test_tree.retrain_topic_labeling_model(self.current_tags)
+                    self.test_tree.retrain_topic_membership_model(self.current_tags)
                     self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
@@ -308,9 +224,9 @@ class TestTreeBrowser():
                         # self.suggestions = self._generate_suggestions(filter=msg[k].get("filter", ""))
                         # # filter suggestions to relevant types
                         # if self.mode == "topics":
-                        #     self.suggestions = self.suggestions[self.suggestions['type'] == "topic_marker"]
+                        #     self.suggestions = self.suggestions[self.suggestions['type'] == "tag_marker"]
                         # elif self.mode == "tests":
-                        #     self.suggestions = self.suggestions[self.suggestions['type'] != "topic_marker"]
+                        #     self.suggestions = self.suggestions[self.suggestions['type'] != "tag_marker"]
 
                         # # Ensure valid suggestions exist.
                         # if self.suggestions.shape[0] > 0:  
@@ -326,17 +242,17 @@ class TestTreeBrowser():
                 
                 # change the current topic
                 elif action == "change_topic":
-                    self.current_topic = msg[k]["topic"]
+                    self.current_tags = msg[k]["topic"]
                     # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
 
                     # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
                     has_direct_tests = False
                     has_known_subtopics = False
                     for k, test in self.test_tree.iterrows():
-                        if test["topic"] == self.current_topic:
-                            if test["label"] != "topic_marker":
+                        if test["topic"] == self.current_tags:
+                            if test["label"] != "tag_marker":
                                 has_direct_tests = True
-                        elif is_subtopic(self.current_topic, test["topic"]):
+                        elif has_subtags(self.current_tags, test["topic"]):
                             has_known_subtopics = True
                     if not has_direct_tests and has_known_subtopics:
                         self.mode = "topics"
@@ -354,14 +270,14 @@ class TestTreeBrowser():
                 # add a new empty subtopic to the current topic
                 elif action == "add_new_topic":
                     self.test_tree.loc[uuid.uuid4().hex] = {
-                        "topic": self.current_topic + "/New topic",
-                        "label": "topic_marker",
+                        "topic": self.current_tags + "/New topic",
+                        "label": "tag_marker",
                         "input": "",
                         "output": "",
                         "labeler": self.user,
                         "description": ""
                     }
-                    self._compute_embeddings_and_scores(self.test_tree)
+                    self._compute_scores(self.test_tree)
                     self._auto_save()
                     self._refresh_interface()
                 
@@ -370,7 +286,7 @@ class TestTreeBrowser():
 
                     # add the new test row
                     row = {
-                        "topic": self.current_topic,
+                        "topic": self.current_tags,
                         "input": "New test", # The special value "New test" causes the interface to auto-select the text
                         "output": "",
                         "label": "",
@@ -382,7 +298,7 @@ class TestTreeBrowser():
                         row[c[:-6] + " raw outputs"] = "{}"
                     self.test_tree.loc[uuid.uuid4().hex] = row
 
-                    self._compute_embeddings_and_scores(self.test_tree)
+                    self._compute_scores(self.test_tree)
                     self._auto_save()
                     self._refresh_interface()
 
@@ -413,12 +329,12 @@ class TestTreeBrowser():
                     self.mode = msg[k]["mode"]
 
                 elif action == 'change_description':
-                    id = msg[k]['topic_marker_id']
+                    id = msg[k]['tag_marker_id']
                     if id not in self.test_tree.index:
                         self.test_tree.loc[id, 'topic'] = "" # only the root topic would be missing from the tree
                         self.test_tree.loc[id, 'input'] = ""
                         self.test_tree.loc[id, 'output'] = ""
-                        self.test_tree.loc[id, 'label'] = "topic_marker"
+                        self.test_tree.loc[id, 'label'] = "tag_marker"
                     self.test_tree.loc[id, 'description'] = msg[k]['description']
                     self._auto_save()
 
@@ -443,13 +359,13 @@ class TestTreeBrowser():
                     self.test_tree.loc[k, k2] = msg[k][k2]
                 if "input" in msg[k] or "output" in msg[k]:
                     self.test_tree.loc[k, self.score_columns] = "__TOEVAL__"
-                    self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
+                    self._compute_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
                 elif "label" in msg[k]:
-                    #self.test_tree.retrain_topic_model(self.current_topic)
+                    #self.test_tree.retrain_topic_model(self.current_tags)
                     pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
                     # sign = -1 if msg[k]["label"] == "pass" else 1
                     # self.test_tree.loc[k, self.score_columns] = ""#abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
-                    # self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs=False)
+                    # self._compute_scores(self.test_tree, overwrite_outputs=False)
 
                 # send just the data that changed back to the frontend
                 sendback_data["scores"] = {c: [[k, v] for v in ui_score_parts(self.test_tree.loc[k, c], self.test_tree.loc[k, "label"])] for c in self.score_columns}
@@ -478,14 +394,14 @@ class TestTreeBrowser():
                 # move a whole topic around
                 else:
                     for id, test in self.test_tree.iterrows():
-                        if is_subtopic(k, test.topic):
+                        if has_subtags(k, test.topic):
                             if msg[k]["topic"] == "_DELETE_":
                                 self.test_tree.drop(id, inplace=True)
                             else:
                                 self.test_tree.loc[id, "topic"] = msg[k]["topic"] + test.topic[len(k):]
 
                 # Recompute any missing embeddings to handle any changes
-                self._compute_embeddings_and_scores(self.test_tree)
+                self._compute_scores(self.test_tree)
                 self._refresh_interface()
                 self._auto_save()
 
@@ -499,32 +415,35 @@ class TestTreeBrowser():
         # get the children of the current topic
         data = {}
 
-        def create_children(data, tests, topic):
-            children = []
+        def create_children(data, tests, topics):
                     
-            # add tests and topics to the data lookup structure
-            subtopic_ids = tests.index[tests["topic"].str.match(r"^%s(/|$)" % re.escape(topic))]
-            for k in subtopic_ids:
+            # find tests that are each in all of the given topics
+            masks = [tests["topic"].str.match(r"(^|:)%s($|:)" % re.escape(topic)) for topic in topics]
+            joint_mask = masks[0]
+            for i in range(1, len(masks)):
+                joint_mask &= masks[i]
+            children = tests.index[joint_mask]
+            for k in children:
                 test = tests.loc[k]
 
                 # add a topic
-                if test.label == "topic_marker":
-                    if test.topic != topic and False:
-                        name = test.topic[len(topic)+1:]
-                        if "/" not in name: # only add direct children
-                            data[test.topic] = {
-                                "label": test.label,
-                                "labeler": test.labeler,
-                                "description": "",
-                                "scores": {c: [] for c in self.score_columns},
-                                "topic_marker_id": k,
-                                "topic_name": name,
-                                "editing": test.topic.endswith("/New topic")
-                            }
-                            children.append(test.topic)
+                # if test.label == "tag_marker":
+                #     if test.topic != topic and False:
+                #         name = test.topic[len(topic)+1:]
+                #         if "/" not in name: # only add direct children
+                #             data[test.topic] = {
+                #                 "label": test.label,
+                #                 "labeler": test.labeler,
+                #                 "description": "",
+                #                 "scores": {c: [] for c in self.score_columns},
+                #                 "tag_marker_id": k,
+                #                 "topic_name": name,
+                #                 "editing": test.topic.endswith("/New topic")
+                #             }
+                #             children.append(test.topic)
                 
                 # add a test
-                elif matches_filter(test, self.filter_text):
+                if test.label != "tag_marker" and matches_filter(test, self.filter_text):
                     data[k] = {
                         "input": test.input,
                         "output": test.output,
@@ -536,18 +455,18 @@ class TestTreeBrowser():
                     }
 
                     data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
-                    data[k].update(self.test_display_parts(test))
-                    if test.topic == topic:
-                        children.append(k)
+                    # data[k].update(self.test_display_parts(test))
+                    # if test.topic == topic:
+                    #     children.append(k)
             
             # fill in the scores for the child topics
-            for k in subtopic_ids:
-                test = tests.loc[k]
-                if "/__suggestions__" not in test.topic and is_subtopic(topic, test.topic) and test.topic != topic:
-                    child_topic = test.topic[len(topic):].split("/", 2)[1]
-                    scores = data[topic+"/"+child_topic]["scores"]
-                    for c in self.score_columns:
-                        scores[c].extend([[k, v] for v in ui_score_parts(test[c], test.label)])
+            # for k in subtopic_ids:
+            #     test = tests.loc[k]
+            #     if "/__suggestions__" not in test.topic and has_subtags(topic, test.topic) and test.topic != topic:
+            #         child_topic = test.topic[len(topic):].split("/", 2)[1]
+            #         scores = data[topic+"/"+child_topic]["scores"]
+            #         for c in self.score_columns:
+            #             scores[c].extend([[k, v] for v in ui_score_parts(test[c], test.label)])
 
             # sort by score and always put new topics first
             def sort_key(id):
@@ -569,41 +488,115 @@ class TestTreeBrowser():
                     print(id)
                     print(val)
             sorted_children = sorted(children, key=sort_key)
-            sorted_children = sorted(sorted_children, key=lambda id: 0 if data[id].get("label", "") == "topic_marker" else 1) # put folders first
+            sorted_children = sorted(sorted_children, key=lambda id: 0 if data[id].get("label", "") == "tag_marker" else 1) # put folders first
             sorted_children = sorted(sorted_children, key=lambda id: 1 if data[id].get("label", "") == "off_topic" else 0) # off topic last
             sorted_children = sorted(sorted_children, key=lambda id: 0 if id.endswith("/New topic") or data[id].get("value1", "") == "New test" else 1) # put new items first
 
             return sorted_children
         
-        # get the children of the current topic
-        children = create_children(data, self.test_tree, self.current_topic)
-        suggestions_children = create_children(data, self.test_tree, self.current_topic + "/__suggestions__")
+        # get the children of the current topics
+        children = create_children(data, self.test_tree, self.current_tags)
+        suggestions_children = create_children(data, self.test_tree, [t + "/__suggestions__" for t in self.current_tags])
 
-        # build the full topic tree as nested dictionaries
-        all_children = {}
-        for k, test in self.test_tree.iterrows():
-            if test.label == "topic_marker":
-                parts = test.topic.rsplit("/", 1)
-                if len(parts) == 2:
-                    parent,name = parts
-                    all_children[parent] = all_children.get(parent, []) + [test.topic]
-                    all_children[test.topic] = all_children.get(test.topic, [])
-        def build_tree(topic):
-            if topic in all_children:
-                children_list = [build_tree(c) for c in all_children[topic]]
-            else:
-                children_list = []
-            if len(children_list) > 0:
-                children_list.append(build_tree(topic + "/Uncategorized"))
-            tree_dict = {
-                "child_selected": self.current_topic.startswith(topic) and (topic != self.current_topic),
-                "selected": topic == self.current_topic,
-                "name": topic.rsplit("/", 1)[1] if topic != "" else "Root",
-                "topic": topic,
-                "children": children_list
+        # get topics
+        topic_ids = self.test_tree.index[self.test_tree["label"] == "tag_marker"]
+        # for k in topic_ids:
+        #     test = self.test_tree.loc[k]
+
+        #     # add a topic
+        #     name = test.topic.rsplit("/", 1)[-1] if test.topic != "" else "Root",
+        #     data[test.topic] = {
+        #         "label": test.label,
+        #         "labeler": test.labeler,
+        #         "description": "",
+        #         "scores": {c: [] for c in self.score_columns},
+        #         "tag_marker_id": k,
+        #         "topic_name": name,
+        #         "editing": test.topic.endswith("/New topic"),
+        #         "child_selected": any([re.match(r"(^|:)%s(/|$|:)" % re.escape(test.topic), t) for t in self.current_tags]) and test.topic not in self.current_tags,
+        #         "selected": test.topic in self.current_tags
+        #     }
+
+        for k in topic_ids:
+            test = self.test_tree.loc[k]
+
+            # add a topic
+            data[test.topic] = {
+                "label": test.label,
+                "labeler": test.labeler,
+                "description": "",
+                "scores": {c: [] for c in self.score_columns},
+                "tag_marker_id": k,
+                "topic_name": test.topic.rsplit("/", 1)[-1] if test.topic != "" else "Root",
+                "editing": test.topic.endswith("/New topic"),
+                "child_selected": any([re.match(r"(^|:)%s(/|$|:)" % re.escape(test.topic), t) for t in self.current_tags]) and test.topic not in self.current_tags,
+                "selected": test.topic in self.current_tags,
+                "children": []
             }
-            return tree_dict
-        topic_tree = build_tree("")["children"]
+
+        for k in topic_ids:
+            test = self.test_tree.loc[k]
+
+            # add ourselves to our parent topic's children list
+            parts = test.topic.rsplit("/", 1)
+            if len(parts) > 1:
+                parent = parts[0]
+                data[parent]["children"].append(test.topic)
+
+                # create an 'Uncatagorized' topic if we don't have one
+                if len(data[parent]["children"]) == 1:
+                    subtopic = parent + "/Uncategorized"
+                    data[subtopic] = {
+                        "label": "tag_marker",
+                        "labeler": "generated",
+                        "description": "",
+                        "scores": {c: [] for c in self.score_columns},
+                        "tag_marker_id": subtopic,
+                        "topic_name": "Uncategorized",
+                        "editing": False,
+                        "child_selected": False, # uncategorized topics cannot have children
+                        "selected": subtopic in self.current_tags,
+                    }
+                    data[parent]["children"].append(subtopic)
+
+        # build the full topic tree
+        # all_children = {}
+        # for k, test in self.test_tree.iterrows():
+        #     if test.label == "tag_marker":
+        #         parts = test.topic.rsplit("/", 1)
+        #         if len(parts) == 2:
+        #             parent,name = parts
+        #             all_children[parent] = all_children.get(parent, []) + [test.topic]
+        #             all_children[test.topic] = all_children.get(test.topic, [])
+        # def build_tree(topic, data):
+
+        #     # get the children of this topic
+        #     children_list = all_children.get(topic, [])
+            
+        #     # add 'Uncategorized' topic if there are children
+        #     if len(children_list) > 0:
+        #         subtopic = topic + "/Uncategorized"
+        #         children_list.append(subtopic + "/Uncategorized")
+        #         data[subtopic] = {
+        #             "label": test.label,
+        #             "labeler": test.labeler,
+        #             "description": "",
+        #             "scores": {c: [] for c in self.score_columns},
+        #             "tag_marker_id": k,
+        #             "topic_name": name,
+        #             "editing": subtopic.endswith("/New topic"),
+        #             "child_selected": False, # uncategorized topics cannot have children
+        #             "selected": subtopic in self.current_tags,
+        #         }
+            
+        #     # build out all the children
+        #     for child in children_list:
+        #         build_tree(child, data)
+
+        #     # build the full topic tree
+        #     data[topic]["children"] = all_children.get(topic, [])
+        
+        # build_tree("", data)
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
@@ -627,16 +620,17 @@ class TestTreeBrowser():
         #     test_types = []
         #     test_type_parts = {}
 
-        topic_marker_id = self._get_topic_marker_id(self.current_topic)
+        # tag_marker_id = self._get_tag_marker_id(self.current_tags)
         # compile the global browser state for the frontend
         data["browser"] = {
             "suggestions": suggestions_children,
             "tests": children,
-            "topic_tree": topic_tree,
+            # "topic_tree": topic_tree,
+            # "expectation_tree": topic_tree,
             "user": self.user,
-            "topic": self.current_topic,
-            "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",
-            "topic_marker_id": topic_marker_id if topic_marker_id is not None else uuid.uuid4().hex,
+            "topics": self.current_tags,
+            # "topic_description": self.test_tree.loc[tag_marker_id]["description"] if tag_marker_id is not None else "",
+            # "tag_marker_id": tag_marker_id if tag_marker_id is not None else uuid.uuid4().hex,
             "score_filter": score_filter,
             "disable_suggestions": False,
             "read_only": False,
@@ -653,22 +647,20 @@ class TestTreeBrowser():
         self.comm.send(data)
 
     def _clear_suggestions(self):
-        """ Clear the suggestions for the current topic.
+        """ Clear the suggestions for the current topics.
         """
-        ids = list(self.test_tree.index)
-        for k in ids:
-            if self.test_tree.loc[k, "topic"].startswith(self.current_topic + "/__suggestions__"):
-                self.test_tree.drop(k, inplace=True)
+        ids = self.test_tree.index[has_subtags(self.test_tree, self.current_tags + ["/__suggestion__"])]
+        self.test_tree.drop(ids, inplace=True)
 
-    def generate_suggestions(self, topic=None, filter=""):
-        if topic is not None:
-            self.current_topic = topic
+    def generate_suggestions(self, tags=None, filter=""):
+        if tags is not None:
+            self.current_tags = tags
         self._clear_suggestions()
-        self.test_tree.retrain_topic_labeling_model(self.current_topic)
-        self.test_tree.retrain_topic_membership_model(self.current_topic)
+        self.test_tree.retrain_topic_labeling_model(self.current_tags)
+        self.test_tree.retrain_topic_membership_model(self.current_tags)
         self._generate_suggestions(filter=filter)
 
-    def _generate_suggestions(self, filter):
+    def _generate_suggestions(self, filter, mode="examples"):
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -677,22 +669,13 @@ class TestTreeBrowser():
             The filter to apply to the tests while generating suggestions.
         """
 
-        #--Backend-driven suggestions--
-
         # save a lookup we can use to detect duplicate tests
         test_map = {}
         for _, test in self.test_tree.iterrows():
-            if test.label == "topic_marker":
-                test_map[test.topic + " __topic_marker__"] = True
+            if test.label == "tag_marker":
+                test_map[test.tags + " __tag_marker__"] = True
             else:
-                test_map[test.topic + " __JOIN__ " + test.input] = True
-
-        
-        # validity focused (focus first on making valid in-topic tests, then secondarily on making those tests high scoring)
-        # failure focused (focus on making high scoring (failing) tests, then secondarily on making those tests valid and in-topic)
-        # topics (suggest new sub-topics)
-        # file_name dataset (suggest tests based on samples from the provided dataset)
-
+                test_map[test.tags + " __JOIN__ " + test.input] = True
 
         # compute the maximum number of suggestion threads we can use given our suggestion_thread_budget
         p = self.prompt_builder.prompt_size
@@ -702,25 +685,25 @@ class TestTreeBrowser():
         # generate the prompts for the backend
         prompts = self.prompt_builder(
             test_tree=self.test_tree,
-            topic=self.current_topic,
+            tags=self.current_tags,
             score_column=self.score_columns[0],
             repetitions=suggestion_threads,
             filter=filter,
-            suggest_topics=self.mode == "topics"
+            suggest_tags=mode == "tags"
         )
 
         # get the current topic description
-        curr_topic_mask = (self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")
+        curr_topic_mask = (self.test_tree["topic"] == self.current_tags) & (self.test_tree["label"] == "tag_marker")
         if curr_topic_mask.sum() == 0:
             desc = ""
         else:
-            desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_topic) & (self.test_tree["label"] == "topic_marker")]["description"][0]
+            desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_tags) & (self.test_tree["label"] == "tag_marker")]["description"][0]
 
         # generate the suggestions
         generators = [self._active_generator_obj] + list(self.generators.values())
         for generator in generators:
             try:
-                proposals = generator(prompts, self.current_topic, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+                proposals = generator(prompts, self.current_tags, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
                 break
             except ValueError:
                 pass # try the next generator
@@ -733,7 +716,7 @@ class TestTreeBrowser():
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
-            suggestions['topic'] = self.current_topic + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_topic):] if x != "" else "")
+            suggestions['topic'] = self.current_tags + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_tags):] if x != "" else "")
             self.test_tree.append(suggestions)
             print("appended suggestions into self.test_tree")
             # assert False, "This needs to be fixed to dump into /__suggestions__"
@@ -744,22 +727,22 @@ class TestTreeBrowser():
                 if self.mode == "topics" and ("/" in input or "\n" in input):
                     input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
                     input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
-                    str_val = self.current_topic + "/" + input + " __topic_marker__"
+                    str_val = self.current_tags + "/" + input + " __tag_marker__"
                 else:
-                    str_val = self.current_topic + " __JOIN__ " + input
+                    str_val = self.current_tags + " __JOIN__ " + input
                 if str_val not in test_map_tmp:
                     id = uuid.uuid4().hex
-                    self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
+                    self.test_tree.loc[id, "topic"] = self.current_tags + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
                     self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
                     self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
-                    self.test_tree.loc[id, "label"] = "topic_marker" if self.mode == "topics" else ""
+                    self.test_tree.loc[id, "label"] = "tag_marker" if self.mode == "topics" else ""
                     self.test_tree.loc[id, "labeler"] = "imputed"
                     self.test_tree.loc[id, "description"] = ""
                     for c in self.score_columns:
                         self.test_tree.loc[id, c] = "__TOEVAL__"
 
                     # s = {
-                    #     "topic": self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else ""),
+                    #     "topic": self.current_tags + "/__suggestions__" + ("/"+input if self.mode == "topics" else ""),
                     #     "input": "" if self.mode == "topics" else input,
                     #     "output": "",
                     #     "label": "",
@@ -777,7 +760,7 @@ class TestTreeBrowser():
             self.test_tree.deduplicate()
             
             # compute the scores for the new tests
-            self._compute_embeddings_and_scores(self.test_tree)
+            self._compute_scores(self.test_tree)
 
         # Filter invalid suggestions
         # if self.mode != "topics":
@@ -797,14 +780,14 @@ class TestTreeBrowser():
         #     self._add_topic_model_score(suggestions, topic_model_scale=self.topic_model_scale)
         # return suggestions
 
-    def _get_topic_marker_id(self, topic):
+    def _get_tag_marker_id(self, topic):
         """
         Returns the id of the topic marker row for the given topic.
         Returns None if not found.
         """
-        topic_marker_index_df = self.test_tree.index[(self.test_tree['topic'] == topic) & (self.test_tree['label'] == 'topic_marker')]
-        topic_marker_index = topic_marker_index_df.tolist()[0] if len(topic_marker_index_df) > 0 else None
-        return topic_marker_index
+        tag_marker_index_df = self.test_tree.index[(self.test_tree['topic'] == topic) & (self.test_tree['label'] == 'tag_marker')]
+        tag_marker_index = tag_marker_index_df.tolist()[0] if len(tag_marker_index_df) > 0 else None
+        return tag_marker_index
 
     def _add_topic_model_score(self, df, topic_model_scale):
         """ This is an old experimental funciton that is not meant to be used anymore.
@@ -821,7 +804,7 @@ class TestTreeBrowser():
             documents.append(f'"{s["value1"]}" > "{max_output_name}"')
 
         query = self._make_prompt(
-            self.current_topic,
+            self.current_tags,
             prompt_size=20,
             include_value2=True
         )["prompt"]
@@ -838,16 +821,13 @@ class TestTreeBrowser():
         for i, (k, row) in enumerate(df.iterrows()):
             row["score"] = float(row["score"]) + topic_model_scale * sim_scores[i]
 
-    def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False, save_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
+    def _compute_scores(self, tests, recompute=False, overwrite_outputs=False, save_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
 
         for k in self.scorer:
+
             # determine which rows we need to evaluate
-            # eval_ids = []
-            # for i, (id, test) in enumerate(tests.iterrows()):
-            #     if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "__TOOVERWRITE__") and test.label != "topic_marker" and test.label != "off_topic":
-            #         eval_ids.append(id)
-            eval_ids = tests.index[(tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__") & (tests["label"] != "topic_marker") & (tests["label"] != "off_topic")]
+            eval_ids = tests.index[((tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__")) & (tests["label"] != "tag_marker") & (tests["label"] != "off_topic")]
 
             if len(eval_ids) > 0:
 
@@ -857,7 +837,6 @@ class TestTreeBrowser():
                 # update the scores in the test tree
                 current_outputs = tests["output"]
                 for i,id in enumerate(eval_ids):
-                    # tests.loc[id, k+" score"] = scores[i]
 
                     if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
 
@@ -867,7 +846,7 @@ class TestTreeBrowser():
                         # add a new test where the model output does match if we are saving outputs
                         if save_outputs:
                             id_new = uuid.uuid4().hex
-                            tests.loc[id_new, "topic"] = tests.loc[id, "topic"]
+                            tests.loc[id_new, "tags"] = tests.loc[id, "tags"]
                             tests.loc[id_new, "input"] = tests.loc[id, "input"]
                             tests.loc[id_new, "output"] = new_outputs[i]
                             tests.loc[id_new, "labeler"] = "imputed"
@@ -878,199 +857,10 @@ class TestTreeBrowser():
                         tests.loc[id, k+" score"] = scores[i]
 
         # make sure any duplicates we may have introduced are removed
-        # tests.deduplicate()
+        tests.deduplicate()
 
         # reimpute missing labels
-        tests.impute_labels() # TODO: ensure this method caches the local models and only reimputes when needed for each topic
-
-    def _compute_scores(self, tests, recompute):
-        """ Use the scorer(s) to fill in scores in the passed TestTree.
-
-        Parameters
-        ----------
-        tests : TestTree
-            The TestTree to fill in missing scores for.
-
-        recompute : bool
-            If True, recompute all scores. If False, only recompute scores that are missing.
-        """
-        
-        log.debug(f"_compute_scores(tests=<TestTree shape={tests.shape}>, recompute={recompute})")
-
-        # see which rows need scores computed
-        if recompute or len(self.score_columns) == 0:
-            new_score_mask = np.ones(tests.shape[0], dtype=np.bool)
-        else:
-            new_score_mask = np.array(tests[self.score_columns[0]].isnull()) | np.array(tests[self.score_columns[0]] == "")
-        new_score_mask = new_score_mask & np.array(tests["label"] != "topic_marker", dtype=np.bool)
-
-        if new_score_mask.sum() > 0:
-            scores = {}
-            tests_to_score = tests.loc[new_score_mask, ["topic", "input", "output", "label"]]
-            
-            # call the scorers
-            blank_outputs = [{} for _ in range(tests_to_score.shape[0])]
-            for k in self.scorer:
-                scorer_output = self.scorer[k](tests_to_score)
-                scores[k+" score"] = ["|".join(str(vv) for vv in v) for v in scorer_output["scores"]]
-                scores[k+" value1 outputs"] = scorer_output.get("value1_outputs", blank_outputs)
-                scores[k+" value2 outputs"] = scorer_output.get("value2_outputs", blank_outputs)
-                scores[k+" value3 outputs"] = scorer_output.get("value3_outputs", blank_outputs)
-
-            # copy the scores into the TestTree
-            for k in scores:
-                for i, j in enumerate(np.where(new_score_mask)[0]):
-                    tests.loc[tests.index[j], k] = json.dumps(scores[k][i]) if isinstance(scores[k][i], dict) else scores[k][i]
-
-            # copy outputs that may have been generated by the scorers over to the passed test tree
-            for k in tests.index[new_score_mask]:
-                tests.loc[k, "value1"] = tests_to_score.loc[k, "value1"]
-                tests.loc[k, "value2"] = tests_to_score.loc[k, "value2"]
-                tests.loc[k, "value3"] = tests_to_score.loc[k, "value3"]
-
-    # def _load_dataset(self, time_budget=30, min_samples=100):
-    #     '''Evaluate model on dataset and capture useful information.'''
-    #     # TODO: Generalize to more dataset formats
-    #     if self.dataset is None:
-    #         return None
-        
-    #     model = self.scorer['model'].model
-
-    #     # Unpack dataset object
-    #     X, y = self.dataset[0], self.dataset[1]
-    #     output_names = self.scorer['model'].output_names
-        
-    #     unknown_labels = set(y) - set(output_names)
-    #     assert len(unknown_labels) == 0, f"Unknown labels found: {unknown_labels}. \
-    #     Please update the label vector or output names property."
-
-    #     # Time how long inference takes on a single sample
-    #     try:
-    #         start = time.time()
-    #         _ = model(X[0:1])
-    #         end = time.time()
-    #     except Exception as e: # TODO: Improve this message
-    #         raise ValueError(f"Training data cannot be evaluated by model. Error recieved: {e}.")
-
-
-    #     # Ensure min_samples <= n_samples <= len(data) and computes in {time_budget} seconds
-    #     n_samples = int(min(max(time_budget // (end - start), min_samples), len(X)))
-
-    #     if n_samples < len(X):
-    #         print(f"Only using {n_samples} samples to meet time budget of {time_budget} seconds.")
-    #         # TODO: unify input types
-    #         sample_indices = np.random.choice(np.arange(len(X)), n_samples, replace=False)
-    #         X = [X[sample] for sample in sample_indices]
-    #         y = [y[sample] for sample in sample_indices]
-
-    #     # Build output frame
-    #     df = pd.DataFrame(columns=['sample', 'label', 'label_proba', \
-    #                                         'pred', 'pred_proba', 'largest_error', 'largest_error_proba'])
-    #     df['sample'] = X
-    #     df['label'] = y
-
-    #     # model's current prediction
-    #     raw_model_output = model(X)
-    #     pred_indices = np.argsort(raw_model_output, axis=1)
-        
-    #     df['pred_proba'] = raw_model_output[range(len(pred_indices)), pred_indices[:, -1]]
-    #     df['pred'] = [output_names[i] for i in pred_indices[:, -1]]
-
-    #     label_lookup = {output:index for index, output in enumerate(output_names)}
-    #     label_indices = [label_lookup[label] for label in y]
-    #     df['label_proba'] = raw_model_output[range(len(label_indices)), label_indices]
-        
-
-    #     correct_predictions = df['pred'] == df['label']
-    #     mispredictions = ~correct_predictions
-        
-    #     # For mispredicted samples, the largest error is the current prediction.
-    #     df.loc[mispredictions, 'largest_error'] = df.loc[mispredictions, 'pred']
-    #     df.loc[mispredictions, 'largest_error_proba'] = df.loc[mispredictions, 'pred_proba']
-        
-    #     # For correct samples, we use the 2nd highest class as the largest error.
-    #     largest_errors = pred_indices[correct_predictions][:, -2]
-    #     df.loc[correct_predictions, 'largest_error'] = [output_names[i] for i in largest_errors]
-    #     df.loc[correct_predictions, 'largest_error_proba'] = raw_model_output[range(len(largest_errors)), largest_errors]
-
-    #     df.index = [uuid.uuid4().hex for _ in range(len(df))]
-    #     return df
-
-    # def _convert_dataset_to_tests(self, dataset_frame): # TODO: Consider removing from class?
-    #     '''Converts a loaded dataset into test formats.'''
-        
-    #     column_names = ['topic', 'type' , 'value1', 'value2', 'value3', 'author', 'description', \
-    #     'model value1 outputs', 'model value2 outputs', 'model value3 outputs', 'model score']
-
-    #     test_frame = pd.DataFrame(columns=column_names)
-
-    #     # All tests currently formatted as not predicting the largest error.
-    #     test_frame['value1'] = dataset_frame['sample']
-    #     test_frame['type'] = "{} should not output {}"
-    #     test_frame['value2'] = dataset_frame['largest_error']
-
-    #     # Constants
-    #     test_frame['topic'] = ''
-    #     test_frame['author'] = "dataset"
-    #     test_frame['description'] = ''
-
-    #     test_frame.index = dataset_frame.index
-        
-    #     return test_frame # TODO: Cast this as a formal TestTree instead of dataframe
-
-    def test_display_parts(self, test):
-        
-        # # find which template instantiation has the highest score (and so should be displayed)
-        # ui_score_parts = test[self.score_columns[0]].split("|")
-        # if len(ui_score_parts) == 1:
-        #     max_score_ind = 0
-        # else:
-        #     max_score_ind = np.argmax([float(v) for v in test[self.score_columns[0]].split("|")])
-        
-        # if test.type == "{} should not be completed to become {}":
-        #     value1_outputs = safe_json_load(test.get(self.score_columns[0][:-6] + " value1 outputs", "{}")).get("string", [""])
-        #     if not isinstance(value1_outputs, list):
-        #         value1_outputs = [value1_outputs]
-        #     if len(value1_outputs) == 1:
-        #         value1_outputs_str = value1_outputs[0]
-        #     else:
-        #         value1_outputs_str = "{" + "|".join(value1_outputs) + "}"
-
-        #     # hispanic / 95f08d610df74679afc1217f03b9c1b3.template[0] "this is a test of[]" should not be completed to become "toxic"
-        #     # {}
-
-        #     out = []
-        #     for i,option in enumerate(expand_template(test.value1 + "|||" + value1_outputs_str + "|||" + test.value2, keep_braces=False)):
-        #         value1_disp,d_text1b,value2_disp = option.split("|||")
-        #         out.append({
-        #             "d_text1a": '"',
-        #             "d_value1": "{}",
-        #             "value1_disp": value1_disp,
-        #             "d_text1b": d_text1b + '"',
-        #             "d_text2a": '"',
-        #             "d_value2": "{}",
-        #             "value2_disp": value2_disp,
-        #             "d_text2b": '"',
-        #             "d_text3a": '',
-        #             "d_value3": "",
-        #             "d_text3b": ''
-        #         })
-        # else: # this is the default two-value test format that only varies in the select value
-        out = [{
-            "d_text1a": '"',
-            "d_value1": "{}",
-            "d_text1b": '"',
-            "d_text2a": '"',
-            "d_value2": "{}",
-            "d_text2b": '"',
-            "d_text3a": '',
-            "d_value3": "",
-            "d_text3b": ''
-        }]
-        
-        return {
-            "display_parts": out
-        }
+        tests.impute_labels()
 
     def templatize(self, s):
         """ This is an experimental function that is not meant to be used generally.

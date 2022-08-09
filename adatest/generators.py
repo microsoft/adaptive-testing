@@ -316,11 +316,13 @@ class AI21(TextCompletionGenerator):
 
 class TestTreeSource(Generator):
 
-    def __init__(self, test_tree, assistant_generator=None):
+    def __init__(self, test_tree, assistant_generator=None, precompute_embeddings=True):
         # TODO: initialize with test tree
         super().__init__(test_tree)
         self.gen_type = "test_tree"
         self.assistant_generator = assistant_generator
+        if precompute_embeddings:
+            self.source._cache_embeddings()
 
     def __call__(self, prompts, topic, topic_description, test_type=None, scorer=None, num_samples=1, max_length=100): # TODO: Unify all __call__ signatures
         if len(prompts) == 0:
