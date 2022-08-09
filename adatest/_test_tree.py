@@ -15,6 +15,7 @@ import adatest
 from pathlib import Path
 import torch
 
+log = logging.getLogger(__name__)
 # class TestTreeIterator():
 #     def __init__(self, test_tree):
 #         self.test_tree = test_tree

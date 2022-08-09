@@ -11,6 +11,8 @@ import os
 import adatest
 import spacy
 from ._embedding import cos_sim
+import logging
+log = logging.getLogger(__name__)
 
 try:
     import clip
@@ -263,7 +265,7 @@ class OpenAI(TextCompletionGenerator):
         
         # substitute user provided prompt/temperature if available
         call_temp = temperature if temperature is not None else self.temperature
-        call_prompt = prompt_strings if user_prompt is '' else user_prompt
+        call_prompt = prompt_strings if user_prompt == '' else user_prompt
 
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
@@ -272,7 +274,8 @@ class OpenAI(TextCompletionGenerator):
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
         parsed_suggestion =  self._parse_suggestion_texts(suggestion_texts, prompts)
-        if user_prompt== call_prompt: 
+        
+        if user_prompt == call_prompt: 
             print('hello user prompt is being used ')
             parsed_text = []
 

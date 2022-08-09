@@ -324,6 +324,7 @@ class TestTreeBrowser():
                 # generate a new set of suggested tests
                 # elif action == "generate_suggestions":
                 elif action == "generate_test_suggestions":
+                    log.study(f"Request test suggestions\t{self.current_topic}\tN/A")
                     self._clear_suggestions()
                     self.test_tree.retrain_topic_labeling_model(self.current_topic)
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
@@ -356,6 +357,7 @@ class TestTreeBrowser():
 
                 # generate a new set of suggested topics
                 elif action == "generate_topic_suggestions":
+                    log.study(f"Request topic suggestions\t{self.current_topic}\tN/A")
                     self._clear_suggestions()
                     self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",""), mode="topics")
                     self._refresh_interface()
@@ -389,6 +391,7 @@ class TestTreeBrowser():
 
                 # add a new empty subtopic to the current topic
                 elif action == "add_new_topic":
+                    log.study(f"Add new topic\t{self.current_topic}\tN/A")
                     self.test_tree.loc[uuid.uuid4().hex] = {
                         "topic": self.current_topic + "/New topic",
                         "label": "topic_marker",
@@ -403,7 +406,7 @@ class TestTreeBrowser():
                 
                 # add a new empty test to the current topic
                 elif action == "add_new_test":
-
+                    log.study(f"Add new test\t{self.current_topic}\tN/A")
                     # add the new test row
                     row = {
                         "topic": self.current_topic,
@@ -529,6 +532,10 @@ class TestTreeBrowser():
 
                         self.test_tree.loc[k, "topic"] = NOT_SURE_TOPIC
                     else:
+                        # Accepted a test from suggestions, log input + label
+                        if "__suggestions__" in self.test_tree.loc[k, "topic"]:
+                            log.study(f"Accepted test suggestion\t{self.current_topic}\t{self.test_tree.loc[k, 'input']} | {self.test_tree.loc[k, 'label']}")
+
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
                         self.test_tree.loc[k, "author"] = self.user
                 

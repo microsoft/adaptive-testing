@@ -14,3 +14,15 @@ default_generators = {
 }
 text_embedding_model = None
 image_embedding_model = None
+
+# Set up custom logging level for User Study
+# Inspired by Antoine Pitrou: https://bugs.python.org/issue31732#msg307164
+
+import logging
+
+logging.STUDY = logging.INFO + 5
+logging.addLevelName(logging.STUDY, "STUDY")
+def study(self, message, *args, **kws):
+    # Yes, logger takes its '*args' as 'args'.
+    self._log(logging.STUDY, message, args, **kws) 
+logging.Logger.study = study
