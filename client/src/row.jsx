@@ -470,11 +470,13 @@ export default class Row extends React.Component {
   }
 
   labelAsOffTopic(e) {
-    this.props.comm.send(this.props.id, {"label": "off_topic", "labeler": this.props.user});
-    if (this.props.isSuggestion) {
-      this.props.comm.send(this.props.id, {"topic": this.props.topic});
-    }
-    this.setState({label: "off_topic"});
+    // this.props.comm.send(this.props.id, {"label": "off_topic", "labeler": this.props.user});
+    // if (this.props.isSuggestion) {
+    //   this.props.comm.send(this.props.id, {"topic": this.props.topic});
+    // }
+    // this.setState({label: "off_topic"});
+    // User study change: Move to "Not Sure" special folder
+    this.props.comm.send(this.props.id, {"topic": "/NotSure"});
   }
 
   labelAsPass(e) {

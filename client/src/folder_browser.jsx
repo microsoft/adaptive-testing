@@ -1,10 +1,12 @@
 import React from 'react'
+import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faFolder} from '@fortawesome/free-solid-svg-icons'
 
 export default class FolderBrowser extends React.Component{
     constructor(props){
         super(props);
+        autoBind(this);
 
         this.state = {
             observe_state: {}
@@ -95,21 +97,20 @@ export default class FolderBrowser extends React.Component{
 
 
     renderFolder(structure){
-        console.log('structure:', structure)
+        console.log('structure:', structure);
+        const currentTopic = this.props.currentTopic;
         return Object.keys(structure).map((key, idx)=>{
             // TODO: Restructure the structure object to have a count field & a folders array
             if (key === "count") {
                 return null
             }
-            const k_list = key.split('/')
-            const bc = ''
-
-            // TODO: Color background based on selected folder (current topic)
-            // if(this.props.hovered_concept==key){
-            //     bc = '#cfebff'
-            // } else if (this.props.selected_concepts.indexOf(key)!=-1) {
-            //     bc = '#9fd7ff'
-            // }
+            const k_list = key.split('/');
+            const isSelected = currentTopic === key;
+            const backgroundColor = isSelected ? '0078D4' : null;
+            const textColor = isSelected ? 'FFFFFF' : '000000';
+            const folderRowClass = isSelected ? null : 'adatest-folder-hover';
+            const passColor = isSelected ? '#7bdd7b' : '#09b909';
+            const failColor = isSelected ? '#ef6d6d' : '#eb0000';
 
             const numFolders = structure[key] != null ? Object.keys(structure[key]).length : 0
             const testCounts = structure[key]['count']
@@ -119,16 +120,17 @@ export default class FolderBrowser extends React.Component{
             return (
                 <div>
                     <div onDrop={e => this.Drop(e, key)} onDragOver={e => this.DragOver(e)}
-                        style={{backgroundColor:bc, borderRadius: 5, padding: 2}}> 
+                        className={folderRowClass}
+                        style={{backgroundColor: backgroundColor, padding: 2}}> 
 
                         { numFolders > 1 && <span style={{cursor: "pointer"}} onClick={e => this.toggleItem(e, key)}>{this.state.observe_state[key]?"▾":"▸"}</span>}
-                        <span style={{cursor: "pointer", marginLeft: numFolders > 1 ? "0px" : "11px"}} onClick={e => this.changeTopic(e, key)} onDrop={e => console.log('drop', key)}>
+                        <span style={{cursor: "pointer", marginLeft: numFolders > 1 ? "0px" : "11px", color: textColor}} onClick={e => this.changeTopic(e, key)} onDrop={e => console.log('drop', key)}>
                             <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", marginRight:'3px', color: "rgb(84, 174, 255)", display: "inline-block"}} />
                             {k_list[k_list.length-1]}
                         </span> 
-                        <span style={{color:"green"}}> {passCount} </span>
+                        <span style={{color: passColor}}> {passCount} </span>
                         <span> / </span>
-                        <span style={{color:"red"}}> {failCount} </span>
+                        <span style={{color: failColor}}> {failCount} </span>
                     </div>
                     <div style={{marginLeft: '10px'}}>
                         {numFolders > 0 && this.state.observe_state[key] && this.renderFolder(structure[key])}
@@ -141,7 +143,7 @@ export default class FolderBrowser extends React.Component{
     render(){
         return (
             <div style={{textAlign:'left', padding: '5px'}} className={"unselectable"}>
-                <div style={{cursor: "pointer"}} onClick={e => this.changeTopic(e, '')}>Home</div>
+                <div style={{cursor: "pointer"}} onClick={e => this.changeTopic(e, '')}>Tests</div>
                 {this.props.structure!=undefined && this.renderFolder(this.props.structure)}
             </div>
         )

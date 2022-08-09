@@ -329,7 +329,7 @@ class TestTreeBrowser():
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
                     # self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # crv
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",1), mode="tests")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",""), mode="tests")
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
                     # else:
@@ -357,7 +357,7 @@ class TestTreeBrowser():
                 # generate a new set of suggested topics
                 elif action == "generate_topic_suggestions":
                     self._clear_suggestions()
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",1), mode="topics")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_prompt",""), mode="topics")
                     self._refresh_interface()
                 
                 # change the current topic
@@ -503,11 +503,31 @@ class TestTreeBrowser():
 
             # if we are just changing the topic
             elif "topic" in msg[k] and len(msg[k]) == 1:
-                
+                NOT_SURE_TOPIC = "/NotSure"
+
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
                     if msg[k]["topic"] == "_DELETE_": # this means delete the test
                         self.test_tree.drop(k, inplace=True)
+                    elif msg[k]["topic"] == NOT_SURE_TOPIC: # this means move the test to the not sure topic
+                        # See if not sure topic exists, create if not
+                        found_not_sure = False
+                        for k, test in self.test_tree.iterrows():
+                            if test["topic"] == NOT_SURE_TOPIC and test["label"] == "topic_marker":
+                                found_not_sure = True
+                                break
+                        
+                        if not found_not_sure:
+                            self.test_tree.loc[uuid.uuid4().hex] = {
+                                "topic": NOT_SURE_TOPIC,
+                                "label": "topic_marker",
+                                "input": "",
+                                "output": "",
+                                "labeler": self.user,
+                                "description": ""
+                            }
+
+                        self.test_tree.loc[k, "topic"] = NOT_SURE_TOPIC
                     else:
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
                         self.test_tree.loc[k, "author"] = self.user

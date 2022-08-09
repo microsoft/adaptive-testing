@@ -318,3 +318,7 @@
 .adatest-hover-gray:hover {
     background: #dddddd;
 }
+
+.adatest-folder-hover:hover {
+    background-color: #d6dff5;
+}

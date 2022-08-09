@@ -9,7 +9,7 @@ import Row from './row';
 import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
-import {  Slider, Input } from "antd";
+import {  Slider, AutoComplete, Button, Spin } from "antd";
 import "antd/dist/antd.css";
 import FolderBrowser from './folder_browser';
 import TopicSuggestion from './topic-suggestion';
@@ -26,7 +26,9 @@ export default class Browser extends React.Component {
       tests: [],
       selections: {},
       user: "anonymous",
-      loading_suggestions: false,
+      // loading_suggestions: false,
+      loading_test_suggestions: false,
+      loading_topic_suggestions: false,
       max_suggestions: 10,
       suggestions_pos: 0,
       suggestionsDropHighlighted: 0,
@@ -39,8 +41,8 @@ export default class Browser extends React.Component {
       experiment: false,
       value2Filter: "",
       active_temperature: 1,		
-  	  user_prompt: "",
-
+  	  topicPrompt: "",
+      testPrompt: "",
     };
 
     console.log("this.props.location", this.props.location)
@@ -187,21 +189,35 @@ export default class Browser extends React.Component {
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
         <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
           <div id="folderbrowser" style={{height: "50%"}} >
-            <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} selected_concepts={this.state.selected_concepts}
+            <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} currentTopic={decodeURIComponent(this.state.topic)}
                onDrop={this.onDrop} onClick={this.setLocation}>
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
             </FolderBrowser>
           </div>
-          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%"}}>
-            <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-              <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
-              <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
-            </div>
-            { topicSuggestions.map((id, index) => {
-                return <TopicSuggestion topicId={id} 
-                          topic={this.state.topic}
-                          comm={this.comm} />
-            })}
+          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", flexDirection: "column"}}>
+            <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span>
+            <AutoComplete 
+              style={{width: "185px"}}
+              placeholder={"Give me topics about..."}
+              allowClear={true}
+              onChange={this.changeTestPrompt} 
+              id={"topic_prompt_input_box"}
+              options={[
+                  {
+                    value: "Give me topics about plants, such as trees, shrubs, and bushes",
+                  }
+              ]} />
+              <Button onClick={this.refreshTopicSuggestions} type="primary" style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Submit</Button>
+              { this.state.loading_topic_suggestions ? <Spin /> : null }
+              {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
+                <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
+              </div> */}
+              { topicSuggestions.map((id, index) => {
+                  return <TopicSuggestion topicId={id} 
+                            topic={this.state.topic}
+                            comm={this.comm} />
+              })}
           </div>
         </div>
 
@@ -241,24 +257,26 @@ export default class Browser extends React.Component {
             border: "1px solid rgb(170, 170, 170)",
             borderRadius: "5px",
             textAlign: "right",
-            paddingRight: "11px",
-            paddingTop: "5px",
+            paddingRight: "15px",
+            paddingLeft: "15px",
+            paddingTop: "10px",
             paddingBottom: "10px"
-          }}
-        >
-          <div>  
-          <div style={{width:"80%",height:"34px", float:"left", paddingLeft: "10px", color:"rgb(0, 0, 0)" ,marginTop:"8px"    }} >
-            <Input 
-               prefix= {"Prompt: "} 
-               placeholder= {"Give me a list of ... such as ... ," }
-               allowClear= {true}
-               onChange={this.changePrompt} 
-               defaultValue={this.state.user_prompt} 
-               id ={"prompt_input_box"}
-               />
-          </div>
-            <div style={{float:"left",  height: "30px", paddingLeft: "15px"}}>
-              <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
+          }}>
+          <div style={{display: "flex"}} >  
+            <AutoComplete 
+              style={{width:"auto", flexGrow: "1"}}
+              placeholder={"Give me a list of ... such as ..." }
+              allowClear={true}
+              onChange={this.changeTopicPrompt} 
+              id={"test_prompt_input_box"}
+              options={[
+                  {
+                    value: "Give me a list of plants, such as trees, shrubs, and bushes",
+                  }
+              ]}
+              />
+            <Button type="primary" style={{marginLeft: "10px"}} onClick={this.refreshTestSuggestions}>Submit</Button>
+              {/* <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
                   Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
               </div>
               <div style={{textAlign: "right",   paddingRight: "10px",    color: "#999999" , marginBottom: "4px"   }} >
@@ -271,8 +289,7 @@ export default class Browser extends React.Component {
                   defaultValue={this.state.active_temperature}
                   tipFormatter={null}
               />
-              </div>
-            </div>
+              </div> */}
           </div>
         </div>
 
@@ -285,22 +302,19 @@ export default class Browser extends React.Component {
                 <div onClick={this.clearSuggestions} className="adatest-hover-opacity" style={{marginLeft: "20px", cursor: "pointer"}}>
                   { testSuggestions.length > 1 && <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} /> }
                 </div>
-                <div onClick={this.refreshTestSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                <span style={{fontWeight: "bold"}}>Suggested tests</span>
+                <div></div>
+                {/* <div onClick={this.refreshTestSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                   <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
                   <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested tests</span>
-                  {/* <select dir="rtl" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{position: "absolute", color: "rgb(140, 140, 140)", marginTop: "1px", right: "13px"}}>
-                    {(this.state.mode_options || []).map((mode_option) => {
-                      return <option key={mode_option}>{mode_option}</option>
-                    })}
-                  </select> */}
-                </div>
-                {this.state.generator_options && this.state.generator_options.length > 1 ? 
+                </div> */}
+                {/* {this.state.generator_options && this.state.generator_options.length > 1 ? 
                   <select title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{color: "rgb(170, 170, 170)"}}>
                     {this.state.generator_options.map((generator_option) => {
                       return <option key={generator_option}>{generator_option}</option>
                     })}
                   </select> : <div></div>
-                }
+                } */}
               </>
             }
             {this.state.suggestions_error && 
@@ -314,6 +328,7 @@ export default class Browser extends React.Component {
               </div>
             } */}
           </div>
+          { this.state.loading_test_suggestions ? <Spin /> : null }
           <div className="adatest-scroll-wrap adatest-suggestions-box-content" ref={(el) => this.suggestionsScrollWrapRef = el}>
             {   //this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
@@ -574,8 +589,9 @@ export default class Browser extends React.Component {
   newData(data) {
     if (data === undefined) return;
 
-    if (data && "suggestions" in data && !("loading_suggestions" in data)) {
-      data["loading_suggestions"] = false;
+    if (data && "suggestions" in data) { // && !("loading_suggestions" in data)) {
+      data["loading_test_suggestions"] = false;
+      data["loading_topic_suggestions"] = false;
     }
 
     console.log("data", data);
@@ -649,7 +665,7 @@ export default class Browser extends React.Component {
     const offTopicKey = 67;
     console.log("keyCodeXX", e.keyCode);
     {
-    if ( (document.activeElement.id != "prompt_input_box") && (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey)) { // backspace and delete and labeling keys
+    if ( (document.activeElement.id != "test_prompt_input_box") && (document.activeElement.id != "topic_prompt_input_box") && (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey)) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
       const ids = this.state.suggestions.concat(this.state.tests);
       if (keys.length > 0) {
@@ -827,13 +843,13 @@ export default class Browser extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
-    if (this.state.loading_suggestions) return;
+    if (this.state.loading_test_suggestions) return;
     for (let k in Object.keys(this.state.selections)) {
       if (this.state.suggestions.includes(k)) {
         delete this.state.selections[k];
       }
     }
-    this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.setState({suggestions: [], loading_test_suggestions: true, suggestions_pos: 0, do_score_filter: true});
     this.comm.send(this.id, {
       action: "generate_test_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
@@ -842,7 +858,7 @@ export default class Browser extends React.Component {
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
       temperature: this.state.active_temperature,
-      user_prompt: this.state.user_prompt
+      user_test_prompt: this.state.testPrompt
     });
   }
 
@@ -850,13 +866,13 @@ export default class Browser extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
-    if (this.state.loading_suggestions) return;
+    if (this.state.loading_topic_suggestions) return;
     for (let k in Object.keys(this.state.selections)) {
       if (this.state.suggestions.includes(k)) {
         delete this.state.selections[k];
       }
     }
-    this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.setState({suggestions: [], loading_topic_suggestions: true, suggestions_pos: 0, do_score_filter: true});
     this.comm.send(this.id, {
       action: "generate_topic_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
@@ -865,7 +881,7 @@ export default class Browser extends React.Component {
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
       temperature: this.state.active_temperature,
-      user_prompt: this.state.user_prompt
+      user_topic_prompt: this.state.topicPrompt
     });
   }
 
@@ -875,12 +891,15 @@ export default class Browser extends React.Component {
     this.setState({ active_temperature: e });
   }
 
-  changePrompt(e) {
-    console.log("changePrompt", e);
-    this.setState({user_prompt: e.target.value});
-    
+  changeTestPrompt(e) {
+    console.log("changeTestPrompt", e);
+    this.setState({testPrompt: e.target.value});
   }
 
+  changeTopicPrompt(e) {
+    console.log("changeTopicPrompt", e);
+    this.setState({topicPrompt: e.target.value});
+  }
 
   clearSuggestions(e) {
     e.preventDefault();
