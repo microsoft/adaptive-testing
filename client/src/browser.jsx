@@ -1058,6 +1058,10 @@ export default class Browser extends React.Component {
       ids = Object.keys(this.state.selections);
       this.setState({selections: {}});
     } else ids = id;
+
+    if (data["topic"]) {
+      data["topic"] = data["topic"].replaceAll(" ", "%20");
+    }
     this.comm.send(ids, data);
   }
 
