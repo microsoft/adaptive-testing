@@ -1,0 +1,15 @@
+,topic,input,output,label,labeler,description,model score,author
+ff64c9f1fa804af1bd8d2655af6ce6e9,,,,topic_marker,,,,
+a4cdafe2ce594deba642f359647bbace,/Extra%20mile,She always goes the extra mile to make sure that our customers are happy,Positive,pass,anonymous,,0.0,anonymous
+e5d374ab36d44d10bfba51975978fe83,/Extra%20mile,She always goes the extra mile and her contributions are highly valued by the team,Positive,pass,anonymous,,0.0,anonymous
+becfcd9fb6d843e0ae6a89e254607f36,/Extra%20mile,This employee is always willing to help out and go the extra mile,Positive,pass,anonymous,,0.0,anonymous
+d31ad808dcdf4d7f8e16dcde08a85c0c,/Extra%20mile,She always goes the extra mile and is a top performer,Positive,pass,anonymous,,0.0,anonymous
+03a94f64e13346afbb6a897dfd9eeddb,/Extra%20mile,This employee always goes the extra mile but its getting tiring,Negative,pass,anonymous,,0.0,anonymous
+dd742d7b27ca4d8ca1e55e623152a00c,/Extra%20mile,The extra mile the employee tried to go was completely unnecessary,Negative,pass,anonymous,,0.0,anonymous
+a88e00e6de1049b7807bab8cf92fe2bb,/Extra%20mile,She never puts in an extra mile shes always lazy,Negative,pass,anonymous,,0.0,anonymous
+392abba30066459b9597f22429b59dac,/Extra%20mile,This individual went above and beyond to ruin our companys reputation,Negative,pass,anonymous,,0.0,anonymous
+d8e262967205408b975545fa2ff6da86,/Extra%20mile,,,topic_marker,anonymous,,,
+946794b74012465c94084ade34c6c682,,She always puts in her best effort but I dont think her skills match the position,Negative,pass,anonymous,,0.0,anonymous
+844a4c5089f7411fa0088fdaf56fa778,,I wish she would put more effort into her work,Neutral,fail,anonymous,,0.0,anonymous
+f99fdfcede1244b6aadd7a14018bc044,,She puts in her best effort but shes not always successful,Negative,fail,anonymous,,0.0,anonymous
+675c57edbac24b348caa5f60c144ed9c,/Extra%20mile,The extra mile this employee goes is admirable but its not always necessary,Positive,fail,anonymous,,1.0,anonymous

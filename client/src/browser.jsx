@@ -411,14 +411,15 @@ export default class Browser extends React.Component {
           <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
             Output
           </div>
-          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
-            <nobr>Off-topic</nobr>
-          </div>
+         
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Pass
           </div>
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Fail
+          </div>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+            <nobr>Off-topic</nobr>
           </div>
         </div>
         

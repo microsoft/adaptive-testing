@@ -1,7 +1,7 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faCheck, faBan, faFolderMinus, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faCheck, faBan, faFolderMinus, faQuestion,faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
 import { defer } from 'lodash';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
@@ -295,7 +295,8 @@ export default class Row extends React.Component {
             <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden", display: "flex"}}>
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
-            <div onClick={this.clickOutput} style={{textDecoration: this.state.label === "off_topic" ? "line-through" : "none", maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", alignItems: "center", display: "flex"}}>
+            <div onClick={this.clickOutput} style={{ maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", alignItems: "center", display: "flex"}}>
+              {/* {textDecoration: this.state.label === "off_topic" ? "line-through" : "none", */}
               <span>
                 <span style={{width: "0px"}}></span>
                 <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
@@ -354,14 +355,14 @@ export default class Row extends React.Component {
           <svg height="30" width="150">(total_pass / (total_pass + total_fail))
             {scaled_score < 0 &&
               <g opacity="0.05">
-                <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
-                <rect x="50" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(26, 127, 55, 1)", strokeWidth: "1"}} />
+                <line x1="50" y1="15" x2={50 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
+                <rect x="0" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(26, 127, 55, 1)", strokeWidth: "1"}} />
               </g>
             }
             {scaled_score > 0 &&
               <g opacity="0.05">
-                <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 1.0)", strokeWidth: "25"}}></line>
-                <rect x="100" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
+                <line x1="50" y1="15" x2={50 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 1.0)", strokeWidth: "25"}}></line>
+                <rect x="50" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
               </g>
             }
             {this.state.topic_name === null &&
@@ -373,23 +374,23 @@ export default class Row extends React.Component {
                   <line x1="100" y1="15" x2={100 + bar_width/2} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
                 } */}
                 {this.state.labeler === "imputed" && this.state.label === "pass" ?
-                  <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-50px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.labeler === "imputed" && this.state.label === "fail" ?
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="0px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
-                  <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(207, 140, 34, 1.0)" textAnchor="middle" />
+                  <FontAwesomeIcon icon={faQuestion} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(37, 46, 207, 1.0)" textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faQuestion} height="17px" y="7px" x="50px" style={{color: this.state.label === "off_topic" ? "rgb(37, 46, 207, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
-                <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
-                <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
+                <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
+                <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
+                <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
               </React.Fragment>
             }
             {this.state.topic_name !== null && total_pass > 0 &&
