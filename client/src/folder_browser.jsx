@@ -67,18 +67,19 @@ export default class FolderBrowser extends React.Component{
 
     Drop(e, key){
         const id = e.dataTransfer.getData("id");
+        this.props.onDrop(id, {topic: key});
         // console.log('drop', id, key, this.props.mother_this.state.hovered_part)
-        var key_split = key.split('/')
-        var cur_key = ''
-        var k = ''
-        var concept_origin = '/'+key_split[1]
-        for(var i in key_split){
-            if(i==0){continue}
-            cur_key = cur_key + '/'+key_split[i]
-            k = k + cur_key
-            if(i!=key_split.length-1){k=k+'|'}
-        }
-        this.props.onDrop(id, {topic:k, type:'data_in_out|'+concept_origin})
+        // var key_split = key.split('/')
+        // var cur_key = ''
+        // var k = ''
+        // var concept_origin = '/'+key_split[1]
+        // for(var i in key_split){
+        //     if(i==0){continue}
+        //     cur_key = cur_key + '/'+key_split[i]
+        //     k = k + cur_key
+        //     if(i!=key_split.length-1){k=k+'|'}
+        // }
+        // this.props.onDrop(id, {topic:k, type:'data_in_out|'+concept_origin})
     }
 
     // mouseEnter(e, key){
