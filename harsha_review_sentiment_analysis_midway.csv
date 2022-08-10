@@ -1,0 +1,81 @@
+,topic,input,output,label,labeler,description,model score,author
+eac81788d009419f873869ef0320c529,/Performance%20measures,,,topic_marker,anonymous,,,
+a76fd9bf105144709b551c725fe74645,/Constructive%20criticism,,,topic_marker,anonymous,,,
+6166e65f31e74390ac9f86664fa40ce9,/Written%20warning,,,topic_marker,anonymous,,,
+dd4758a5b34f4f54a2104b461ddafda0,/Firing,,,topic_marker,anonymous,,,
+f800702e0e7e425e95699127e89adcc9,/Performance%20measures/KPI,,,topic_marker,anonymous,,,
+b32227afe30548a9854862200eb20690,/Performance%20measures/Sales%20figures,,,topic_marker,anonymous,,,
+7a45dd4753c54750811e53f00d0b53da,/Performance%20measures/Attendance,,,topic_marker,anonymous,,,
+d8423da762c6401b8263fc34bb3f088f,/Performance%20measures/Sales%20figures,His sales figures need to be higher,Neutral,fail,anonymous,,0.0,
+083e9b37d50146558f3e1fb71f6965a1,/Performance%20measures/Productivity,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+d3cc5d9dfd3747d48da2c86cfa04544c,/Performance%20measures/Hours%20worked,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+ec24ff50315f45e7b8f36263364f4f67,/Performance%20measures/Tasks%20completed,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+7f8bda85841f4c14a27028961498dc48,/Performance%20measures/Client%20feedback,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+dbaddda1b454460da7b36aaecf713836,/Performance%20measures/Time%20taken%20to%20complete%20tasks,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+470aa2eb958f4745b9cc88373e79b81c,/Performance%20measures/Total%20billable%20hours,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+71c97235d3c94d4d98b07cdd5e963bd4,/Firing/Stealing,,,topic_marker,anonymous,,,
+0586145444174ae7b986f663db22b289,/Firing/Harassment,,,topic_marker,anonymous,,,
+21c286fda9104064a9bf39dc2fdbe8e2,/Firing/Safety,,,topic_marker,anonymous,,,
+513ea953125a43e0a722ae24bd225d14,/Firing/Hostility,,,topic_marker,anonymous,,,
+a353ab54c27b440ca1dc2bb3ac556c85,/Firing/Drugs,,,topic_marker,anonymous,,,
+664d1e87189143de9b02051b2abbee3c,/Firing/Insubordination,,,topic_marker,anonymous,,,
+071bb7b074174c529b377db7ebb5a13c,/Constructive%20criticism/Mostly%20positive,,,topic_marker,anonymous,,,
+c5052ea2775f44638b9b2b1bbd2fca1a,/Constructive%20criticism/Mostly%20negative,,,topic_marker,anonymous,,,
+cb6ad87f6c6e4148b123f8af13026a57,/Obvious%20positives,,,topic_marker,anonymous,,,
+c96c9377cc7749f5aea1a17982e3c924,/Obvious%20negatives,,,topic_marker,anonymous,,,
+9de69712e4a74850826df5eb3f8cdb28,/Written%20warning/Already%20received%20warning,"Already you have received a warning, and you continue",Neutral,pass,imputed,,0.0,anonymous
+a4a952e68f6e4995a050755fe01a26b7,/Written%20warning/Already%20received%20warning,,,topic_marker,anonymous,,,
+e91d8e4389474ce9854f54818b15f28c,/Written%20warning/To%20receive%20warning,,,topic_marker,anonymous,,,
+743ca666f1f4481180eb31b9396f3fa9,/Constructive%20criticism/Mostly%20positive,"She has stellar numbers, but could work on her presentation skills",Positive,pass,anonymous,,0.0,
+8700d488331d4090942bae2e2638a6e4,/Constructive%20criticism/Mostly%20positive,"He has outstanding billables, but is not very social ",Neutral,fail,anonymous,,0.0,
+a86b56c2549340d58211ccbe90c44d6f,/Constructive%20criticism/Mostly%20positive,"Her team is growing, but they need to work on their team dynamics",Neutral,pass,anonymous,,0.6038272819415071,anonymous
+0ea016b6c9ec491cb122cccf9b3ebd51,/Constructive%20criticism/Mostly%20positive,"His numbers are up, but he needs to improve his customer service",Neutral,pass,anonymous,,0.6004622995715648,anonymous
+38c4c2fc289249b09506e83661907a1e,/Constructive%20criticism/Mostly%20positive,"He has great ideas, but is not very disciplined",Negative,fail,anonymous,,0.9696370706392533,anonymous
+a7ee5c73f87d497f9fabbc999ea6b4ed,/Constructive%20criticism/Mostly%20positive,"She has great ideas, but is not very disciplined",Negative,fail,anonymous,,0.9777237377221903,anonymous
+6eaa683be1e34efe99b84b951ad8b58f,/Constructive%20criticism/Mostly%20positive,"She has a great attitude, but her work is not very well organized",Negative,fail,anonymous,,0.8022611692421445,anonymous
+3cb81853592249e099a6680b95c38c40,/Constructive%20criticism/Mostly%20positive,"She has great ideas, but is not very organized",Negative,fail,anonymous,,0.9663316669438655,anonymous
+a656035f6e274b15bc368fca1468a6b8,/Constructive%20criticism/Mostly%20positive,"She has great ideas, but does not execute them well",Negative,fail,anonymous,,0.9764016394429367,anonymous
+2c4a7038a1584863b6f1583c142a0dc9,/Firing/Stealing,He was caught stealing company resources,Negative,pass,anonymous,,0.9833604238939475,
+499c261616dc48f788893e6685d85981,/Firing/Stealing,She was caught stealing money from the company,Negative,pass,anonymous,,0.0,anonymous
+06742aa6ff1f4a07be1dfdb300edad4e,/Firing/Stealing,She was caught stealing from her colleagues,Negative,pass,anonymous,,0.0,anonymous
+8e969c08b057468096735987ec73fbd9,/Firing/Stealing,She was caught stealing company data,Negative,pass,anonymous,,0.0,anonymous
+2cf83d13ea5d41aebcc19e59c1555f80,/Firing/Stealing,He was caught stealing from the office supply closet,Neutral,fail,anonymous,,0.0,anonymous
+43c5260bad154af6a1c046666960727f,/Firing/Stealing,He was caught stealing candy from the pantry,Neutral,fail,anonymous,,0.0,anonymous
+fd0bf2a31ab44d21a16c9440337cd50b,/Firing/Stealing,He was caught stealing office supplies from the office,Neutral,fail,anonymous,,0.49626090383140886,anonymous
+77c8b62addcc44bc8bc8366b61e48b13,/Firing/Harassment,She was caught berating her team members,Negative,pass,anonymous,,0.22027388276608814,anonymous
+371ec17a4e454bb09b5ed15b269c6a2d,/Firing/Harassment,She was accused of harassment by a coworker,Negative,pass,anonymous,,0.34650867197992063,anonymous
+5daefda66d4a4fb9bd5dc08b51af2eac,/Firing/Harassment,She was accused of harassing her co-workers,Negative,pass,anonymous,,0.235281955012719,anonymous
+1e8e4617e52b466e81a7a719a3b989d5,/Firing/Harassment,He has been accused of harassment,Negative,pass,anonymous,,0.3120492311553313,anonymous
+be9f365fda1d4d94b43c3632188bab15,/Firing/Harassment,He was caught making %$%ual advances towards a coworker,Neutral,fail,anonymous,,0.0,anonymous
+e54b99f4cccb451c93129b6698c983e4,/Firing/Harassment,He was caught making !$%ual advances towards a coworker,Neutral,fail,anonymous,,0.0,anonymous
+e9dc8b11ce1c42f1bda63b0b7d48468f,/Firing/Hostility,She was caught talking back to her boss,Neutral,fail,anonymous,,0.8070880951081536,anonymous
+f50add7ac3d945878b86c33f4169410b,/Firing/Hostility,He was caught speaking critically of his coworkers,Neutral,fail,anonymous,,0.7611501699514662,anonymous
+870a56f04494438b9c20413ea0a95e9e,/Firing/Hostility,She was caught arguing with her team members,Neutral,fail,anonymous,,0.5577901819974069,anonymous
+373d3d995adc429fb80d5b8e0d050cca,/Firing/Hostility,She was caught picking fights with her coworkers,Neutral,fail,anonymous,,0.5061238342097647,anonymous
+c77cf1a2583446a5b079829bb146b8bb,/Firing/Hostility,He was caught arguing with coworkers,Neutral,fail,anonymous,,0.0,anonymous
+33fdbd79c96944c08403900833da09cc,/Firing/Hostility,He was caught arguing with his clients,Neutral,fail,anonymous,,0.0,anonymous
+954f7d966f754da3b2a60f816a6e392c,/Firing/Hostility,He was caught arguing with his subordinates,Neutral,fail,anonymous,,0.0,anonymous
+3220d057a51241edb5db42354ffcb2f1,/Firing/Hostility,He was caught stalking his coworkers,Neutral,fail,anonymous,,0.0,anonymous
+12138c42f5d74ecaaa791075fbc0a76f,/Firing/Drugs/Marijuana,He was caught smoking marijuana in the office,Neutral,fail,anonymous,,0.6770521478025483,anonymous
+e64191d8bbc94df382e62c4d5ab1332c,/Firing/Drugs/Marijuana,He was caught smoking marijuana at work,Neutral,fail,anonymous,,0.6971057601488697,anonymous
+e5edb41470f442d6b09978d2bc97cf80,/Firing/Drugs/Marijuana,He was caught smoking marijuana on the job,Neutral,fail,anonymous,,0.0,anonymous
+cf113291c6934bae8553dc137fe549bb,/Firing/Drugs/Marijuana,He was caught smoking marijuana in the middle of the day,Neutral,fail,anonymous,,0.0,anonymous
+1a44fbcb2e4a4d1984c745b8b6a5bc3d,/Firing/Drugs/Marijuana,He was caught smoking marijuana at the company picnic,Neutral,fail,anonymous,,0.0,anonymous
+4b01d8801ff64d7f9fc3f02199f21e28,/Firing/Drugs/Marijuana,She was caught using marijuana at work,Neutral,fail,anonymous,,0.0,anonymous
+67911506482e4af4a1cc9639411c508e,/Firing/Drugs/Marijuana,,,topic_marker,anonymous,,,
+b192af430bb945878b02c773e2cc7c56,/Firing/Drugs/Cocaine,,,topic_marker,anonymous,,,
+0b913c12a29143e7a142a0d0e42a2ed7,/Firing/Drugs/Cocaine,He was caught snorting cocaine at work,Neutral,fail,anonymous,,0.0,anonymous
+a8e1e7b4d3d24bb4a5b31dd08100f705,/Firing/Drugs/Cocaine,She was caught cocaine use in the office,Neutral,fail,anonymous,,0.0,anonymous
+ec8689ddf2e141f69f8341194a40bdfb,/Firing/Drugs/Cocaine,She was caught taking cocaine at work,Neutral,fail,anonymous,,0.0,anonymous
+9c832d0173854f3baacd0fd6049e0ae0,/Firing/Drugs/Cocaine,He was caught dealing cocaine at work,Neutral,fail,anonymous,,0.0,anonymous
+eab97d025aed4253b540112c234789d6,/Firing/Drugs/Cocaine,She was caught selling cocaine at work,Neutral,fail,anonymous,,0.0,anonymous
+44e04805695e44af94fdaa9ddf6a281d,/Firing/Drugs/Cocaine,She was caught snorting cocaine at work,Neutral,fail,anonymous,,0.0,anonymous
+4be6c6ae6c3648cd995cbbc56e0fe2d5,/Firing/Drugs/Cocaine,She was caught dealing cocaine in the office,Neutral,fail,anonymous,,0.0,anonymous
+b89051dd6d30464d8e381665b05a1187,/Firing/Drugs/Cocaine,She was caught dealing cocaine at work,Neutral,fail,anonymous,,0.0,anonymous
+9c2b4a551aba488a87591d31f85a0beb,/Firing/Drugs/Cocaine,She was caught with cocaine in her possession,Neutral,fail,anonymous,,0.0,anonymous
+6d0edd49930244b7b0661c677bdb46ec,/Firing/Drugs/Psychedelics,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+d20daa7b3ffb4c42b0bb9df47dab0672,/Firing/Drugs/LSD,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+91ccd079957a465aba87be8ad9845301,/Firing/Drugs/Psychedelics,He was caught using drugs and psychedelics in the office,Neutral,fail,anonymous,,0.0,anonymous
+58edb438a77f4cc08ebf04406f7d1b6c,/Firing/Drugs/Psychedelics,She was caught using marijuana and LSD at work,Neutral,fail,anonymous,,0.0,anonymous
+dc2116e060c6431ba11f931aea3d3361,/Firing/Drugs/Psychedelics,He was caught using psychedelics at work,Neutral,fail,anonymous,,0.0,anonymous
+74f2e3d9b58442e482e5d1dcc76b1aaf,/Firing/Drugs/Psychedelics,She was caught using psychedelic mushrooms at work,Neutral,fail,anonymous,,0.0,anonymous
