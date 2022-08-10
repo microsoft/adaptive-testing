@@ -355,13 +355,13 @@ export default class Row extends React.Component {
           <svg height="30" width="150">(total_pass / (total_pass + total_fail))
             {scaled_score < 0 &&
               <g opacity="0.05">
-                <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
+                <line x1="50" y1="15" x2={50 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
                 <rect x="0" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(26, 127, 55, 1)", strokeWidth: "1"}} />
               </g>
             }
             {scaled_score > 0 &&
               <g opacity="0.05">
-                <line x1="100" y1="15" x2={100 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 1.0)", strokeWidth: "25"}}></line>
+                <line x1="50" y1="15" x2={50 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 1.0)", strokeWidth: "25"}}></line>
                 <rect x="50" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
               </g>
             }

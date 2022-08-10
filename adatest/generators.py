@@ -288,7 +288,7 @@ class OpenAI(TextCompletionGenerator):
             for p in parsed_suggestion: 
                 x = p.split('\n')
                 
-                cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' '))]) for text in x]
+                cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' ') or (i=='.') or (i==',') or (i == ';'))]) for text in x]
                 parsed_text.extend([text for text in cleanx if text])
 
             return(list(set(parsed_text)) ) 
