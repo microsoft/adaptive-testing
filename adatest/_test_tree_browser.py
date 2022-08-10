@@ -512,7 +512,7 @@ class TestTreeBrowser():
                     elif msg[k]["topic"] == NOT_SURE_TOPIC: # this means move the test to the not sure topic
                         # See if not sure topic exists, create if not
                         found_not_sure = False
-                        for k, test in self.test_tree.iterrows():
+                        for _, test in self.test_tree.iterrows():
                             if test["topic"] == NOT_SURE_TOPIC and test["label"] == "topic_marker":
                                 found_not_sure = True
                                 break

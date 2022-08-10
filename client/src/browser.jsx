@@ -188,7 +188,7 @@ export default class Browser extends React.Component {
 
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
         <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
-          <div id="folderbrowser" style={{height: "50%"}} >
+          <div id="folderbrowser" style={{height: "50%", overflowY: "auto"}} >
             <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} currentTopic={decodeURIComponent(this.state.topic)}
                onDrop={this.onDrop} onClick={this.setLocation}>
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
