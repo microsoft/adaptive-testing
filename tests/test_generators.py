@@ -5,9 +5,11 @@ from transformers import pipeline
 
 from adatest import generators
 
+TRANSFORMER_PIPELINE_MODELS = ["EleutherAI/gpt-neo-125M"]
+
 
 class TestTransformers:
-    @pytest.mark.parametrize("model_name", ["EleutherAI/gpt-neo-125M"])
+    @pytest.mark.parametrize("model_name", TRANSFORMER_PIPELINE_MODELS)
     def test_smoke(self, model_name):
         hf_model = pipeline("text-generation", model=model_name)
         target = generators.Transformers(hf_model.model, hf_model.tokenizer)
@@ -31,7 +33,7 @@ class TestTransformers:
         for item in results:
             assert isinstance(item, str)
 
-    @pytest.mark.parametrize("model_name", ["EleutherAI/gpt-neo-125M"])
+    @pytest.mark.parametrize("model_name", TRANSFORMER_PIPELINE_MODELS)
     def test_with_topics(self, model_name):
         hf_model = pipeline("text-generation", model=model_name)
         target = generators.Transformers(hf_model.model, hf_model.tokenizer)
@@ -56,10 +58,19 @@ class TestTransformers:
             assert isinstance(item, str)
 
 
+GENERATOR_PIPELINE_MODELS = [
+    "facebook/opt-125m",
+    "facebook/opt-350m",
+    "EleutherAI/gpt-neo-125M",
+    "gpt2",
+    "bigscience/bloom-560m",
+]
+
+
 class TestPipelines:
     @pytest.mark.parametrize(
         "model_name",
-        ["facebook/opt-125m", "facebook/opt-350m", "EleutherAI/gpt-neo-125M"],
+        GENERATOR_PIPELINE_MODELS,
     )
     def test_smoke(self, model_name):
         hf_pipeline = pipeline("text-generation", model=model_name)
@@ -86,7 +97,7 @@ class TestPipelines:
 
     @pytest.mark.parametrize(
         "model_name",
-        ["facebook/opt-125m", "facebook/opt-350m", "EleutherAI/gpt-neo-125M"],
+        GENERATOR_PIPELINE_MODELS,
     )
     def test_with_topics(self, model_name):
         hf_pipeline = pipeline("text-generation", model=model_name)
