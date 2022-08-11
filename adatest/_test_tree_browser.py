@@ -330,7 +330,8 @@ class TestTreeBrowser():
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
                     # self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # crv
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_test_prompt",""), mode="tests")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), user_prompt = msg[k].get("user_test_prompt",""), mode="tests")
+                    # temperature=msg[k].get("temperature",1)
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
                     # else:
@@ -359,7 +360,8 @@ class TestTreeBrowser():
                 elif action == "generate_topic_suggestions":
                     log.study(f"Request topic suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\tN/A")
                     self._clear_suggestions()
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), temperature=msg[k].get("temperature",1), user_prompt = msg[k].get("user_topic_prompt",""), mode="topics")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""),user_prompt = msg[k].get("user_topic_prompt",""), mode="topics")
+                    #  temperature=msg[k].get("temperature",1), 
                     self._refresh_interface()
                 
                 # change the current topic
@@ -744,7 +746,7 @@ class TestTreeBrowser():
         self.test_tree.retrain_topic_membership_model(self.current_topic)
         self._generate_suggestions(filter=filter)
     #crv
-    def _generate_suggestions(self, filter,temperature, user_prompt, mode):
+    def _generate_suggestions(self, filter, user_prompt, mode): # temperature
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -796,8 +798,9 @@ class TestTreeBrowser():
         #crv
         generators = [self._active_generator_obj] + list(self.generators.values())
         for generator in generators:
+            print(generators)
             try:
-                proposals = generator(prompts, self.current_topic, desc, mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, temperature=temperature , user_prompt = user_prompt)
+                proposals = generator(prompts, self.current_topic, desc, mode,  self.test_tree,self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, user_prompt = user_prompt) #   temperature=temperature ,
                 break
             except ValueError:
                 pass # try the next generator

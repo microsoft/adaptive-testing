@@ -19,7 +19,7 @@ generator = adatest.generators.OpenAI('text-curie-001',
 #generator = adatest.generators.Transformers(neo.model, neo.tokenizer)
 
 # create a new test tree
-tests = adatest.TestTree("bias_besa_thinkaloud_midway.csv")
+tests = adatest.TestTree("charvi_scratch.csv")
 
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)

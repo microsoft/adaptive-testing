@@ -21,7 +21,7 @@ classifier = transformers.pipeline("sentiment-analysis", model=model, tokenizer=
 generator = adatest.generators.OpenAI('text-curie-001')
 
 # create a new test tree
-tests = adatest.TestTree("aya_review_sentiment_analysis_scratch.csv")
+tests = adatest.TestTree("forough_review_sentiment_analysis_scratch1.csv")
 
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
