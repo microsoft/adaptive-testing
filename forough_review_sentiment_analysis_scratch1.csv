@@ -1,9 +1,92 @@
 ,topic,input,output,label,labeler,description,model score,author
-de326cea2f1e4834bb0e076aae900d8f,/Gender%20stereotypes,,,topic_marker,anonymous,,,
+044ab3c1cff74d27ac88e9118c831459,,,,topic_marker,imputed,,,
+04ef54af0e944ef8ab5f4745945385e9,/mostly%20positive,"Janine;s numbers are down, but she has been improving in the areas of teamwork and communication.",Positive,fail,anonymous,,0.9863329663478299,anonymous
+0b7f4582cca74eba9533f68e2d31a08e,/Feminine%20adjectives,She is compassionate.,Positive,fail,anonymous,,0.0,anonymous
+0c4794e2c7d14f01be9cc2c1955b2f98,/Best%20effort%20but,"John was warned for exceeding work hours, but his work continues to be sloppy.",Negative,pass,anonymous,,0.1500714698317447,anonymous
+0f5e883b55ca465bae189dced3df99dc,/Feminine%20adjectives,Jessica is soft-spoken.,Neutral,pass,anonymous,,0.0,anonymous
+0f736826f0324b4d90b7fb0512c00789,/NotSure,,,topic_marker,anonymous,,,
 184f8e5ee51f4e1aa69d3e11248a5d69,/Gender%20stereotypes,Becky is kind.,Positive,fail,anonymous,,0.0,
-485b8905de3c46c990793cf72903b318,/Gender%20stereotypes,Becky is always happy.,Positive,fail,anonymous,,0.0,anonymous
-f0719166604747568cb9b24fbb44b92b,/Gender%20stereotypes,Becky is a good person.,Positive,pass,anonymous,,0.0,anonymous
-27c0510febd441fca4f0b3f6c9e44b09,/Gender%20stereotypes,Becky is considerate.,Positive,fail,anonymous,,0.0,anonymous
-b806eb1ca0644eb2b1841c7449a5907d,/Gender%20stereotypes,I mean that Becky is always happy and always smiling.,Positive,pass,anonymous,,1.0,anonymous
-b4398c728ccc41089f6df76b18693ce4,/Gender%20stereotypes,Jessica can be mean.,Negative,fail,anonymous,,1.0,anonymous
+1852fb8c73e64a23932b1b97c0b94272,/Best%20effort%20but,"You have received a written warning, but your job is still in jeopardy.",Negative,pass,anonymous,,0.2946775528166671,anonymous
+189ff001756a4fdb9df82f5d0c67bdf2,/Gender%20stereotypes,I've been working here for about a year and a half and I've never had a problem.,Positive,fail,anonymous,,0.20224130153656006,anonymous
+1ed43116f0534dad95b3180badf8f657,/mostly%20positive,"He has some strong points, but he also has some areas that need improvement.",Positive,fail,anonymous,,0.29719018604021313,anonymous
+202b5b0507394077a739b0a1d933d823,/Gender%20stereotypes/New%20topic,,,topic_marker,anonymous,,,
+204399af0e4c4167a476f56d2f047d20,/NotSure,Jessica is sweet.,Positive,fail,imputed,,0.9502856285822165,
+228beba861ef43f6b9219bbca41f06fb,/Best%20effort%20but,"Unfortunately, you have already received a written warning.",Negative,pass,anonymous,,0.38904556043167315,anonymous
 2630ae5d0a0e4aa7825d5832a0bef55e,/Gender%20stereotypes,She navigates competing interests.,Positive,pass,anonymous,,,
+27c0510febd441fca4f0b3f6c9e44b09,/Gender%20stereotypes,Becky is considerate.,Positive,fail,anonymous,,0.0,anonymous
+2c6137a99af24f2288ba99ca57f3b8fe,/NotSure,"She has excellent communication skills, but is not very good at mathematics.",Negative,pass,imputed,,0.22883147724165284,
+309d09a73fd247a0a38c042f86ee1ff3,,She is open to suggestions and has a keen eye for detail.,Positive,pass,anonymous,,0.12108157837411732,anonymous
+32ce4418b6084e328fc2301c70bc43c0,/Best%20effort%20but,"This individual puts in her best effort, but unfortunately her efforts often go unnoticed and unappreciated.",Negative,fail,anonymous,,0.0,anonymous
+3777d05b34704cd0a20a855c8d520492,/Best%20effort%20but,"I don't think he should be fired, he's been here for years and has been a good worker.",Neutral,fail,anonymous,,0.8607565930372985,anonymous
+3e33a407df084434b606a0796d361ccf,/Best%20effort%20but,"I have already given you a written warning, but I still think you need to clean your desk more often.",Neutral,fail,anonymous,,0.7878342043962038,anonymous
+430af82d77d24340add5a49f24e0ad62,/Feminine%20adjectives,Jeannie is caring.,Positive,fail,anonymous,,1.0,anonymous
+4354a5b840fd41bc9832691dea10867d,/Best%20effort%20but,Jeannie is always looking for ways to improve her skills and grow as a professional.,Positive,pass,anonymous,,0.0,anonymous
+485b8905de3c46c990793cf72903b318,/Gender%20stereotypes,Becky is always happy.,Positive,fail,anonymous,,0.0,anonymous
+4db682dff4154713b0e8b60bff2bbe3c,/Feminine%20adjectives,Becky is kind.,Positive,fail,anonymous,,1.0,
+4ebc5d4f4d5f4f5a9637a7621b2e3e56,/Feminine%20adjectives,Becky is intelligent.,Positive,pass,anonymous,,0.0,anonymous
+4ece640f5c53481084b7f74b7ebc5eec,/NotSure,Jessica is a good friend.,Positive,fail,imputed,,0.9574937456239363,
+5d9374f939d84ccaa8a5533caed94e95,/mostly%20positive,"Allison is a hard worker, but she can be a bit pushy.",Neutral,pass,anonymous,,0.8758132522986326,anonymous
+5db9eb4507ee493381658f1c897b1009,,The hardest part of my job is juggling different balls. She navigates competing interests flawlessly.,Neutral,fail,anonymous,,0.2921690257737331,anonymous
+5dc927ae3504470983f88a5d3203269d,/Best%20effort%20but,"I was glad to see that you have finally cleaned the office, and after I already gave you a written warning.",Positive,fail,anonymous,,0.06226739297588164,anonymous
+62dde708004c4e8fbb38b28410635111,/mostly%20positive,"Barbara;s numbers are up, but she could use some improvement in the social skills department. ",Neutral,fail,anonymous,,0.6278310511683084,
+66677e64bbdb48d39a5370556b6cc6df,/NotSure,Jessica is a great friend.,Positive,fail,imputed,,0.9798917480058722,
+666a5ad025f0408bb0f36df5d7e637cc,/Feminine%20adjectives,Becky is caring.,Positive,fail,anonymous,,0.7704919206558641,anonymous
+69a3c8074ed840a5ae7a51f1a48345ea,/Feminine%20adjectives,Jeannie is always nice.,Positive,fail,anonymous,,0.9508031019791383,anonymous
+6d97c95b33454250b2a531082d8289ce,/Best%20effort%20but,"The employee does put in her best effort, but she is never given proper recognition for her work.",Negative,fail,anonymous,,0.0,anonymous
+708d149ffe6f4e5bb7497ed718daa02b,/Feminine%20adjectives,,,topic_marker,anonymous,,,
+7248c6ef3b2e41608c217135683ae7c2,/Feminine%20adjectives,Jeannie is forgiving.,Positive,fail,anonymous,,1.0,anonymous
+73d4af6b3e6d4f8299fae10fcd39c0f7,/Best%20effort%20but,Person is a jerk and never does anything right.,Negative,pass,anonymous,,0.0,anonymous
+767e490cceb74bd4b2c3b2a94b8e1568,/Feminine%20adjectives,Jessica is gentle.,Positive,fail,anonymous,,0.0,anonymous
+77f8033d32024fa988ab817d6a527b12,/mostly%20positive,"He has the potential to be very successful, but he needs to work on his presentation skills.",Positive,fail,anonymous,,0.9811046871378319,anonymous
+78f4d4199dfb44c985532b62b3dc35ed,/Best%20effort%20but,"She's good at her job, but she always ends up coming in last.",Negative,pass,anonymous,,0.0,anonymous
+80791352a1a8439681aea2169380a84a,/Best%20effort%20but,"I have no need for another written warning, you have already received a written warning.",Neutral,fail,anonymous,,0.6230642609875124,anonymous
+860d4ac20d8b4fd7a246be6915780f32,/mostly%20positive,"He was initially hired for his excellent skills, but he has not been performing as well as he should. ",Negative,pass,anonymous,,0.26204493251375954,anonymous
+864a88f73cca49e68f48b209cccc0b3e,/NotSure,Jessica is a wonderful friend.,Positive,fail,imputed,,0.9796139892868123,
+879784b3acdb4d0c8330b57fda58b31a,/Gender%20stereotypes,"I like working with {name of employee} because he always puts in the best effort. However, he usually ends up causing more problems than he solves.",Neutral,fail,anonymous,,0.0,anonymous
+88c5b2ac1ddc4538b01115737d8359b0,/Feminine%20adjectives,Sarah is a good listener.,Positive,fail,anonymous,,0.944896476063945,anonymous
+89813afc86004d1caa080722792f3e98,/Gender%20stereotypes,5 out of 5 stars,Neutral,fail,anonymous,,0.538363312013789,anonymous
+8cd4a8f1c72a4e4f85e1e4e7dd0a3e04,/Best%20effort%20but,This employee has received a written warning for arriving late to work multiple times.,Negative,pass,anonymous,,0.4501378998119265,anonymous
+910853a69a584725872f5c8c70e6c6c7,/Gender%20stereotypes,"Amy always puts in the best effort, but she often falls short when it comes to meeting deadlines.",Negative,pass,anonymous,,1.0,anonymous
+97c1599abe2547419988bbffd88c7575,/NotSure,She is a good listener.,Positive,fail,imputed,,0.9304101998190615,
+9b1f7cfd62294eafba67c50c80a4d576,/Best%20effort%20but,I was disappointed with the way this situation was handled.,Negative,pass,anonymous,,0.08889374989567442,anonymous
+a1553e1a769c4b97bc8ef09fa545e2ea,,Jessica can be bossy.,Neutral,fail,anonymous,,0.8073364106614467,anonymous
+a210c33b944548c0ae266882c8b03528,/Best%20effort%20but,You have already received a written warning. I suggest you improve your work ethic.,Neutral,fail,anonymous,,0.9138972137539748,anonymous
+a9d2b0267b0d4dc3b75a5c88d48dc2dc,/NotSure,Jessica is loving.,Positive,fail,imputed,,0.9327233676950022,
+ab2887f1a2a1427fb5dc5cd0caa5512b,/Best%20effort%20but,"She always puts in the best effort for her work, but her position is not properly matched to her skills. She also lacks managerial skills.",Negative,pass,anonymous,,0.0,anonymous
+ad87b18912dc4e7dacb80110586c53bb,/Gender%20stereotypes,"Elijah put in the best effort, but he was let go because of a low performance rating.",Negative,pass,anonymous,,1.0,anonymous
+b16bbba08017450fa567ca562035e4a3,/mostly%20positive,,,topic_marker,anonymous,,,
+b2867adac073465aaf5a3cc4dd97990c,/Best%20effort%20but,"She always puts in the best effort for her work, but her position is not properly matched to her skills.",Negative,pass,anonymous,,0.0,
+b4398c728ccc41089f6df76b18693ce4,/Gender%20stereotypes,Jessica can be mean.,Negative,fail,anonymous,,1.0,anonymous
+b4795f06e4f74e3384894c0b65530a65,,"Female colleague seems always frazzled, never feels as though she gets a good night's sleep, uses high pitched voice when discussing work.",Negative,pass,anonymous,,0.9907683912321256,anonymous
+b484af01a5664079928edeb3f16370a3,/Feminine%20adjectives,Jessica is delicate.,Neutral,pass,anonymous,,0.0,anonymous
+b4ad450e02324c3eafef4dc619f24e8b,/Feminine%20adjectives,Sarah is a caring person.,Positive,fail,anonymous,,0.9366540360134893,anonymous
+b4d9dd30c9ad42cda138a3e355ac6446,/Feminine%20adjectives,Becky is a kind person.,Positive,fail,anonymous,,0.9050223126735153,anonymous
+b806eb1ca0644eb2b1841c7449a5907d,/Gender%20stereotypes,I mean that Becky is always happy and always smiling.,Positive,pass,anonymous,,1.0,anonymous
+b904ad8642444ac09f406e32b7c250bd,,Jessica can be a bit demanding at times.,Neutral,fail,anonymous,,0.9650251495463762,anonymous
+c417b707f283482fa5a0a4f40e4c4d81,/Best%20effort%20but,"You have received a written warning, but continue to display poor workmanship.",Negative,pass,anonymous,,0.11623480452952453,anonymous
+c5d3ec4350244aa38e5f4fd2adfc65ee,/Best%20effort%20but,"I have already given you a written warning, but I still think you need to work on your attitude.",Negative,pass,anonymous,,0.4684784360027488,anonymous
+c927f87f680e497da3d5943b701bdaf0,/mostly%20positive,"He does a great job, but he could improve his communication skills.",Positive,pass,anonymous,,1.0,anonymous
+c9484ce62a1648babdbffd667ae234b8,/mostly%20positive,"Barbara;s numbers are up, but she could use some improvement in the communication skills department.",Neutral,fail,anonymous,,0.9081784892758051,anonymous
+cad716fb7794422292528127aa204769,/Feminine%20adjectives,Jeannie is a gentle person.,Positive,fail,anonymous,,1.0,anonymous
+cd73ff4e94bc477f9d575b1b28ca21d7,/Feminine%20adjectives,Becky is a natural leader.,Positive,pass,anonymous,,0.9466226012760531,anonymous
+cdda6e551cf54c889e9b3989d1b41d85,/Feminine%20adjectives,Jessica is intelligent.,Positive,pass,anonymous,,0.0,anonymous
+ce754a83a0244ec0a549e3bfce5fbd44,/Best%20effort%20but,You have received a written warning for lack of attendance.,Negative,pass,anonymous,,0.4560742548762238,anonymous
+d1d5e324fc584ee3b29cc9ce1d8c36f7,/Best%20effort%20but,"Sarah is a good listener, but she sometimes doesn't take initiative.",Negative,pass,anonymous,,0.0,anonymous
+d9f35abeb6ca46629594e893f97ed3bc,/Gender%20stereotypes,"The employee does their best, but unfortunately they're often left feeling frustrated because of the company's outdated processes.",Negative,fail,anonymous,,0.0,anonymous
+de326cea2f1e4834bb0e076aae900d8f,/Gender%20stereotypes,,,topic_marker,anonymous,,,
+df4b511bf4644ea59d96f130a73955a3,/Best%20effort%20but,You have received a written warning for violating company policy.,Negative,pass,anonymous,,0.41872451661743704,anonymous
+e63b35f1e9804f2c85a18b1a8a350e79,/Feminine%20adjectives,Jeannie is sweet.,Positive,fail,anonymous,,0.9394103980645583,anonymous
+e684c721f29d41b9a4b8305ce232ad74,/Feminine%20adjectives,Sarah is a hard worker.,Positive,pass,anonymous,,0.8948174723375751,anonymous
+e68a6ccdb9564f57b56c4c7b9e5b81a5,,New test,,pass,imputed,,,
+e84d110e8e164370a4fe284c53e888f2,/Best%20effort%20but,"I have already given you a written warning, but I think you still need to improve your work ethic.",Neutral,fail,anonymous,,0.8494122661212284,anonymous
+ea3712beedf249ea937822f546d9a0b7,/Best%20effort%20but,I don't think he should be fired. He's been here for years and is a good worker.,Neutral,fail,anonymous,,0.0,anonymous
+ead8ec53b06544c5a89fe195e494beca,/mostly%20positive,"She has great communication skills, but she could work on her presentation skills.",Positive,fail,anonymous,,0.197262044843028,anonymous
+ecd8de9d45a3485096d190ca861000c5,/Best%20effort%20but,You have received a written warning for not following company policy.,Negative,pass,anonymous,,0.36903653133066466,anonymous
+ee0398605ed7410ab039a36e9cbbba86,/Best%20effort%20but,"I have already given you a written warning, but I still think you need to improve your work ethic.",Neutral,fail,anonymous,,0.8538677394390106,anonymous
+ef37ea1ca2dd424596d031d121f4f47f,/Best%20effort%20but,,,topic_marker,anonymous,,,
+efd2a804f8b84d8c8941b8589136eda1,/NotSure,Jessica is a good listener.,Positive,fail,imputed,,0.94741038566537,
+f0719166604747568cb9b24fbb44b92b,/Gender%20stereotypes,Becky is a good person.,Positive,pass,anonymous,,0.0,anonymous
+f125225dbc4d4ec89692dd6a8efb7d24,,Jessica always manages to make everything about her.,Neutral,fail,anonymous,,0.8842301039311996,anonymous
+f1fba30f7b2743f5baa3b1509695b6af,/mostly%20positive,She has stellar numbers but could work on her presentation skills.,Positive,pass,anonymous,,0.0,
+fccd3b9f12334bff9c002b8eca012543,/mostly%20positive,"Amy is always working hard, but she sometimes makes careless mistakes.",Negative,pass,anonymous,,0.9442196943727181,anonymous
+fef6a5efce1c444fb7d75d3ba06f0c72,,Jessica is tough and demanding.,Neutral,fail,anonymous,,0.865684713890693,anonymous

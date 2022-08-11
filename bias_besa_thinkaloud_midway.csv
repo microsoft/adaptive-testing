@@ -1,14 +1,19 @@
 ,topic,input,output,label,labeler,description,model score,author
 00d6c6f88aaf406e8fe72e139b4ad3bb,,Thank you for noticing! I feel really confident in this outfit.,POSITIVE,fail,anonymous,,0.9998809514459606,anonymous
 01f5f1a5a1034726885f1b36b4708e2d,/Not Sure,You're really unfortunate with your choice of clothing.,NEGATIVE,pass,anonymous,,1.0,anonymous
+01fe3981479e47f391f3c5dae3961f69,/ Using position of power,The paragraph reads,POSITIVE,pass,anonymous,,1.0,anonymous
+02948d194a094762a162f0bdaff83d1d,/NotSure,She is writing about her favorite topic about which she has plenty of knowledge.,POSITIVE,pass,anonymous,,1.0,
 035f20af9f7d419aa2716c76f23c5106,/NotSure,,,topic_marker,anonymous,,,
 04ba5b0dd4714238a776411ae7bb4ceb,/Not%20Sure,That outfit is really unflattering on you.,NEGATIVE,fail,anonymous,,0.00495337235219203,anonymous
 0b73fad3c8df4bc4887152b15a327b0c,/Not Sure,You're wearing WAY too much makeup,NEGATIVE,fail,anonymous,,1.0,anonymous
+0dd3bc1b184a4ee18c72d3e552e497ee,,Please provide an example of imput.,NEGATIVE,pass,anonymous,,0.0,anonymous
+0ed7a0a828b042e4886bb755b8eabc00,/ Using position of power,. Joe is a Mac guy,POSITIVE,pass,anonymous,,1.0,anonymous
 1433dfb86f294e3f9b71d1ef188ecd9a,/Gossip,Who do you think you are?,NEGATIVE,fail,anonymous,,0.04997996054664401,anonymous
 1550391eca144c4aa0439162ae917032,/derogatory%20comments,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 1550c7d54a3d48f992daa8b356ad6988,/Polite%20Anger,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
-15d0e5b4557042798e364c919fced1f3,/Polite%20Insult,That outfit looks like it came out of a dumpster.,NEGATIVE,fail,anonymous,,1.0,anonymous
-18433eb27c874da6b340d3d65c8b284c,/Not%20Sure,I am sorry I can't talk about it now,NEGATIVE,pass,anonymous,,0.0,anonymous
+15d0e5b4557042798e364c919fced1f3,/Gossip,That outfit looks like it came out of a dumpster.,NEGATIVE,fail,anonymous,,1.0,anonymous
+18433eb27c874da6b340d3d65c8b284c,/NotSure,I am sorry I can't talk about it now,NEGATIVE,pass,anonymous,,0.0,anonymous
+18827897dfe94abc9b2741c6c7e5c2ea,/Polite Anger,B. The customer is not viewing the product.,NEGATIVE,fail,anonymous,,1.0,anonymous
 1d37efcc45c242dfa4a7e5de29a16c85,/Impertinence/hello,,,topic_marker,anonymous,,,
 1f91357d5f764c8a81578584bc1f9d77,/Polite%20Denial,,,topic_marker,anonymous,,,
 1f9be19473064d2a9e1ecf6840336878,/Not%20Sure,Let's talk about this tomorrow,POSITIVE,fail,anonymous,,0.0,anonymous
@@ -17,62 +22,73 @@
 24bc96bbd06143b7aa5c666773249820,,Thank you for your kind words. I really like this outfit.,POSITIVE,pass,anonymous,,0.9998716457732152,anonymous
 26371d7a536848c6beb3790a536dc905,/Not Sure,Is that really what you're wearing to work?,NEGATIVE,pass,anonymous,,0.4806019067764282,anonymous
 2f063dd5651241219664ed809c6181c7,/Not Sure,"Nice shoes, but they don't really go with that outfit.",NEGATIVE,pass,anonymous,,1.0,anonymous
-31db4a7827dc4d7eb94d41675b8c441b,/Not%20Sure,"Sorry I have to go now, let's definitely talk about this tomorrow.",POSITIVE,pass,anonymous,,0.0,anonymous
+31db4a7827dc4d7eb94d41675b8c441b,/NotSure,"Sorry I have to go now, let's definitely talk about this tomorrow.",POSITIVE,pass,anonymous,,0.0,anonymous
 32bae6942fb14dcdab4f661113f64f44,/Polite%20Insult,That's an interesting cloud over your head. ,POSITIVE,pass,anonymous,,0.9970578324357503,
-335588ea97a04f7f9907a75d801b2397,/Not%20Sure,I don't want to talk about this now,NEGATIVE,pass,anonymous,,0.0,anonymous
+335588ea97a04f7f9907a75d801b2397,/NotSure,I don't want to talk about this now,NEGATIVE,pass,anonymous,,0.0,anonymous
 357b981fb9de40bdaab1281637915584,/Not Sure,You really need to get out more.,NEGATIVE,pass,anonymous,,0.0,anonymous
 397ba78685d64b1fa7f00a80d8de4c74,/Polite%20Insult/Dressing,"Wow, you really dressed up today",POSITIVE,fail,anonymous,,0.9997938747258787,anonymous
 3a6de0867230428a9edcc6137057c6cc,/Not Sure,You look like you're pregnant.,NEGATIVE,pass,anonymous,,0.0,anonymous
+3e2dd71476214ac4b4ee9f9cde63a19d,/NotSure,"The tiger roared, threatening the bear. The bear growled in response, baring its teeth.",NEGATIVE,fail,anonymous,,1.0,anonymous
 3f73bb3aa58945bcbd5c75e4b54899bd,/Not Sure,"What are you trying to do, look like a witch?",NEGATIVE,fail,imputed,,1.0,anonymous
+40f08aa77ecd4fd581fc97197bcb2e1a,/ Using position of power,D and are rough,NEGATIVE,pass,anonymous,,1.0,anonymous
 4192d7feafb44daea0bc3d7453aeecf7,/Overly%20Friendly,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 41f87cf5559945bb89305153fee0d68b,/Not_Sure,Can you please not step on my heels?,NEGATIVE,fail,anonymous,,0.05574179066958937,anonymous
 4449e8241e4c4a5c8815ca7063163a50,/Not_Sure,,,topic_marker,imputed,,,
+4844f89e8faa4835a7b1bbd308f1b802,/NotSure,I need a list of ingredients for a pizza with sausage.,NEGATIVE,fail,imputed,,1.0,
 4a92f5798ecb4773811bf0ab57d92ccb,/Polite%20Insult/Dressing,Those shoes go really well with those socks,POSITIVE,fail,anonymous,,0.0,anonymous
 4b89e6c1f4b1472b8b121ef23e8f280a,/Not Sure,You're such a poser!,POSITIVE,pass,anonymous,,0.9980956914364583,anonymous
 4b900d4fe3df4fd8bb3ca24b5c05194f,/Polite%20Insult,I don't think you know what you're doing.,NEGATIVE,fail,anonymous,,1.0,anonymous
 4d0eac415593438aa90782da952e5aae,/Not_Sure,I told you to clean up your room!,NEGATIVE,pass,anonymous,,0.0992432370894665,anonymous
 4db1d7db0ec144ac9845a66fb12ae19e,/Not Sure,You're wearing that shirt like it's made of plastic,NEGATIVE,fail,anonymous,,1.0,anonymous
 512406de07b74b1881590fb3f1598f53,/Impertinence/hello,How dare you say something like that to me?,NEGATIVE,fail,anonymous,,1.0,anonymous
+5450f3d3d4cd4c1d96644f34d41d50ab,,Your task is to provide a sentence that is a (example of imput).,NEGATIVE,pass,anonymous,,0.0,anonymous
 56a0afe267be4f39a7e2a8b14735fc9e,/Not%20Sure,,,topic_marker,imputed,,,
+5f245bfa0fe848aaacc1f85581312ef6,/ Using position of power,,,topic_marker,imputed,,,
 61ae0db192ca4ce4a1466b5763e88a45,,Thank you! I really like this outfit.,POSITIVE,pass,anonymous,,0.9998824015056944,anonymous
-67f416380e044be9982da92b49c108f7,/Polite%20Insult,It doesn't seem like you have a lot of hair.,NEGATIVE,pass,anonymous,,1.0,anonymous
-6d8eb7ce84784c3ab6c1fba3aa1b4fde,,,,topic_marker,imputed,,,
+67f416380e044be9982da92b49c108f7,/derogatory comments,It doesn't seem like you have a lot of hair.,NEGATIVE,pass,anonymous,,1.0,anonymous
+6d8eb7ce84784c3ab6c1fba3aa1b4fde,,,,topic_marker,imputed,hello.,,
 7109e254b4ea48dabd0358821155de9f,/Not_Sure,I've been waiting for this for hours!,NEGATIVE,pass,anonymous,,0.089198788496879,anonymous
 7199d9f6afbc44b88cea6330c56f5f27,,"Thank you for your input, but I like my own style.",POSITIVE,pass,anonymous,,0.9997923805819972,anonymous
 731f563d00754ce99a61e45e3e23046d,/Polite%20Anger,I can't believe you would wear that out in public,NEGATIVE,pass,anonymous,,0.054133793694793174,anonymous
+73aeedca5648483eac625ba9331f631c,/Polite Denial,,,topic_marker,imputed,,,
 77ddc0a6fb024f2cb62803512cd82722,/Polite%20Insult/Dressing,,,topic_marker,anonymous,,,
 7ddc2330990f4d6f8899d85f596cf148,/putting%20someone%20down,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+7f9fc948ffe541299a0828f08614db24,/ Using position of power,Enter the correct spelling of each word.,POSITIVE,fail,imputed,,1.0,anonymous
 818c23b051274f3fb37ab43bd4a3ac12,/Polite Insult,,,topic_marker,imputed,,,
 89b4001f5cb045819854f13f12a09cf5,/Impertinence,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+8de4913aaf0f491faa652a29fc1f250e,,Please input a sentence about your imput.,NEGATIVE,fail,anonymous,,0.0,anonymous
 95a9466ea7aa489eb9f9e16a12aaa5d4,/Not Sure,,,topic_marker,imputed,,,
 966b8c01309b428cbe4445a450dc72df,/Polite%20Insult/Dressing,Those jeans are so tight,POSITIVE,fail,anonymous,,0.9814180951137415,anonymous
+9a207de6f4cb4b3a85b1d3e3fddca352,/ Using position of power,"hello my name is anthony gonsalves
+
+",POSITIVE,pass,anonymous,,0.0,anonymous
 9b733a498f7849a1a478dfebd5f6ded3,/Polite%20Anger,Could you not sneeze in my face?,POSITIVE,pass,anonymous,,0.995924808639816,anonymous
 9cf12bfbca644bec97d854409b4437aa,/Polite%20Insult,,,topic_marker,anonymous,,,
 9d83cab3c0f0456cb93a3a6c9f173892,/Polite Insult/Dressing,You again? How do you even have a place here?,NEGATIVE,pass,anonymous,,1.0,anonymous
 a0858bf01fdb454db63192adb91a0e5a,/Polite%20Insult/Dressing,"Wow, you really couldn't pay me to wear those",POSITIVE,fail,anonymous,,0.9893539692476909,anonymous
+a14a7c4620c646e78622f0375b4ba98f,/derogatory%20comments/New%20topic,,,topic_marker,anonymous,,,
+a1721a49c6e94d1faa5631475912e8c9,/Polite Denial,The robot is cleaning the room. It is going to use the vacuum cleaner.,NEGATIVE,fail,imputed,,1.0,anonymous
 a859e286f05f4f7da68a6c156dd17b9e,/Not Sure,I can't believe you! This is the third time this week you've spilled coffee on me!,NEGATIVE,pass,anonymous,,1.0,anonymous
+acd38080171d4296b81bccdf7de4d74b,/Polite Anger,,,topic_marker,imputed,,,
 b034f53ce04e4862aa0c3199c1265945,/Polite%20Insult/Dressing,Your clothes don't fit right,NEGATIVE,pass,anonymous,,0.0,anonymous
+b4771a03e90a484ba7f167d9c64bc23d,,I need someone to fill out a survey for me.,NEGATIVE,pass,anonymous,,0.0,anonymous
+b96cbfd9737048d080368c45d1ac78e3,,Please provide a sentence that is a task input description.,NEGATIVE,pass,anonymous,,0.0,anonymous
 bab5b7cc51c34ba9a3273b3abcba1894,/Not Sure,I don't think you should dress like that. This is a family restaurant.,NEGATIVE,pass,anonymous,,0.15114111973134994,anonymous
+bacc7a1fcd59455297d32281572b5e5a,/ Using position of power,My task is to write a report on a particular topic. ,NEGATIVE,pass,anonymous,,1.0,anonymous
+c6750c83345d4eadbfa8b996280f5f15,,The balloon artist is going to create an amazing balloon animal for your child.,POSITIVE,fail,imputed,,1.0,anonymous
 cd6695f085c24a0d8eb01c402ca5d632,/Not Sure,"Who do you think you are, telling me what to wear?",NEGATIVE,fail,anonymous,,0.1317100395517057,anonymous
+cf7427b92470463ca84ff4b0e868d5b7,,The task reads ,POSITIVE,pass,anonymous,,0.0,anonymous
 d2e089176304458c82ee82c962b9abe6,/Gossip,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 d4a89116da664cf489fe40888fd86f7c,/Polite%20Insult,I don't think those earrings go with your outfit.,NEGATIVE,pass,anonymous,,1.0,anonymous
+d910df2ea41a48e694a131b7f1150f28,/ Using position of power,A. The customer is viewing the product.,POSITIVE,pass,anonymous,,1.0,anonymous
 e2727e3c5e9949f797754e7fbb6748a4,/Polite%20Insult/Dressing,You're wearing that color again,POSITIVE,fail,anonymous,,0.997646466931902,anonymous
 e2d4f29d236644baa1e49f5defb88bc0,/%20Using%20position%20of%20power,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+e3f331a9a74340658c69a17f71bb940b,/derogatory comments,,,topic_marker,imputed,,,
 e48c7febd66f4db1a017b26f10e0abef,/Polite Insult/Dressing,,,topic_marker,imputed,,,
 e4ca4f37640a4288a4003be2e2ffbc2a,/Polite%20Insult/Dressing,"Ugh, those shoes are so ugly",NEGATIVE,pass,anonymous,,0.0,anonymous
 e4df98b23a9b412b93fd6ee346e2a6c4,/Polite%20Anger,Are you kidding me? You can't even dress yourself,NEGATIVE,fail,anonymous,,1.0,anonymous
-f2a16462ecca4498a6aaa79a5cc54af0,/Not%20Sure,hello,POSITIVE,pass,anonymous,,0.999518546725538,anonymous
+ea7056de4a174a9fb3478a84a167991c,,Please give a sentence that is an imput.,NEGATIVE,fail,anonymous,,0.0,anonymous
+f2a16462ecca4498a6aaa79a5cc54af0,/NotSure,hello,POSITIVE,pass,anonymous,,0.999518546725538,anonymous
 f6ed3193271a4c1a98259ed3fcbed33d,/Not Sure,You're wearing that shirt like it's made of cotton.,NEGATIVE,fail,imputed,,1.0,anonymous
 f9eeb1b4acbb481abec4c4ce80b1d5c4,/Polite%20Insult/Dressing,Those jeans make you look big,POSITIVE,fail,anonymous,,0.9992334556519717,anonymous
 fe7a5043e43d435ab0ec6d91ee19eb4d,/Not Sure,"What the hell are you trying to do, make me look like a clown?",NEGATIVE,pass,anonymous,,1.0,anonymous
-a14a7c4620c646e78622f0375b4ba98f,/derogatory%20comments/New%20topic,,,topic_marker,anonymous,,,
-9a207de6f4cb4b3a85b1d3e3fddca352,/derogatory%20comments,"hello my name is anthony gonsalves
-
-",POSITIVE,pass,anonymous,,0.0,
-bacc7a1fcd59455297d32281572b5e5a,/derogatory%20comments,My task is to write a report on a particular topic. ,NEGATIVE,pass,anonymous,,1.0,anonymous
-0ed7a0a828b042e4886bb755b8eabc00,/derogatory%20comments,. Joe is a Mac guy,POSITIVE,pass,anonymous,,1.0,anonymous
-01fe3981479e47f391f3c5dae3961f69,/derogatory%20comments,The paragraph reads,POSITIVE,pass,anonymous,,1.0,anonymous
-d910df2ea41a48e694a131b7f1150f28,/derogatory%20comments,A. The customer is viewing the product.,POSITIVE,pass,anonymous,,1.0,anonymous
-18827897dfe94abc9b2741c6c7e5c2ea,/derogatory%20comments,B. The customer is not viewing the product.,NEGATIVE,pass,anonymous,,1.0,anonymous
-3e2dd71476214ac4b4ee9f9cde63a19d,/derogatory%20comments,"The tiger roared, threatening the bear. The bear growled in response, baring its teeth.",NEGATIVE,pass,anonymous,,1.0,anonymous
-40f08aa77ecd4fd581fc97197bcb2e1a,/derogatory%20comments,D and are rough,NEGATIVE,pass,anonymous,,1.0,anonymous

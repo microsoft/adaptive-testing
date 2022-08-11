@@ -195,29 +195,30 @@ export default class Browser extends React.Component {
             </FolderBrowser>
           </div>
           <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", flexDirection: "column"}}>
-            <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span>
+            <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics for {decodeURIComponent(this.state.topic)}</span>
             <AutoComplete 
               style={{width: "185px", textAlign: "right"}}
-              placeholder={"Suggest more topics related to this folder ▼"}
+              placeholder={"▼ Suggest more sub-topics for this folder ▼"}
               allowClear={true}
               onChange={this.changeTopicPrompt} 
               id={"topic_prompt_input_box"}
               options={[
-                  {
-                    value: "Suggest sub topics for this folder",
-                  },
                   {
                     value: "Suggest parent topics for this folder",
                   },
                   {
                     value: "Suggest sibling topics for this folder",
                   },
+                {
+                    value: "Suggest children topics for this folder"
+
+                },
                   {
                     value: "List topics of importance in (problem domain)"
                   }
 
               ]} />
-              <Button onClick={this.refreshTopicSuggestions} type="primary" style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Submit</Button>
+              <Button onClick={this.refreshTopicSuggestions} type="primary" style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Refresh</Button>
               { this.state.loading_topic_suggestions ? <Spin /> : null }
               {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
@@ -272,33 +273,32 @@ export default class Browser extends React.Component {
             paddingTop: "10px",
             paddingBottom: "10px"
           }}>
-          <div style={{display: "flex"}} >  
+          <div style={{display: "flex", textAlign: "left"}} >  
             <AutoComplete 
               style={{width:"auto", flexGrow: "1"}}
-              placeholder={"Give me more tests similar to the saved tests below ▼" }
+              placeholder={"▼ Give me more tests similar to the saved tests below." }
               allowClear={true}
               onChange={this.changeTestPrompt} 
               id={"test_prompt_input_box"}
               options={[
                   {
-                    value: "Write sentences that are (task input description)  " 
-                    // + {this.state.topic_description} ,
+                    value: "Write sentences that are  "  + this.state.topic_description ,
                   },
                    {
-                    value: "Write sentences that are (task input description) and are (choice of output)",
+                    value: "Write sentences that are " + this.state.topic_description + " and are (choice of output)",
                    },
                   {
                     value: "Write short sentences showing on (topic) that have (feature of task instance) "
                   } ,
                   {
-                      value: " Give a sentence that is a (task input decription), such as '(example of imput)' "
+                      value: " Give a sentence that is a " + this.state.topic_description + ", such as '(example of imput)' "
                   },
                   {
-                      value: ' Give me sentences of the form: "my {insert person} is {insert positive event}, and {insert bad event} '
+                      value: ' Give me '+ this.state.topic_description + ' with the sentence form: "my {insert person} is {insert positive event}, and {insert bad event} '
                   }
               ]}
               />
-            <Button type="primary" style={{marginLeft: "10px"}} onClick={this.refreshTestSuggestions}>Submit</Button>
+            <Button type="primary" style={{marginLeft: "10px"}} onClick={this.refreshTestSuggestions}>Refresh</Button>
               {/* <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
                   Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
               </div>
@@ -401,8 +401,11 @@ export default class Browser extends React.Component {
           {/* <div className="adatest-suggestions-box-after"></div> */}
         </div>}
 
-        <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
-          <div style={{width: "200px", textAlign: "right", display: "inline-block"}}>
+        <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#000000"}}>
+        <div style={{width: "300px", textAlign: "left", display: "inline-block", fontWeight: "bold"}}>
+            Saved Tests
+          </div>
+          <div style={{width: outputColumnWidth, textAlign: "right", display: "inline-block"}}>
             Input
           </div>
           <div style={{width: "25px", textAlign: "left", display: "inline-block"}}>
@@ -419,7 +422,7 @@ export default class Browser extends React.Component {
             Fail
           </div>
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
-            <nobr>Off-topic</nobr>
+            <nobr>Not Sure</nobr>
           </div>
         </div>
         
@@ -881,7 +884,7 @@ export default class Browser extends React.Component {
       suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
-      temperature: this.state.active_temperature,
+      // temperature: this.state.active_temperature,
       user_test_prompt: this.state.testPrompt
     });
   }
@@ -904,7 +907,7 @@ export default class Browser extends React.Component {
       suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
-      temperature: this.state.active_temperature,
+      // temperature: this.state.active_temperature,
       user_topic_prompt: this.state.topicPrompt
     });
   }

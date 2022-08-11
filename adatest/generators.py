@@ -1,6 +1,7 @@
 """ A set of generators for AdaTest.
 """
 import asyncio
+from cgi import test
 import aiohttp
 import transformers
 import openai
@@ -11,12 +12,27 @@ import os
 import adatest
 import spacy
 from ._embedding import cos_sim
+from ._tree_generator import *
+from urllib.parse import unquote
 
 try:
     import clip
     import clip_retrieval.clip_client
 except ImportError:
     pass
+
+def cleanprefix(text):
+    index = -1
+    for i,j in enumerate(text[:4]):
+        if (j=='.') or (j =='-') or (j==')'):
+            index = i
+            break
+    
+    return text[index+1:]
+
+
+
+
 
 
 class Generator():
@@ -192,7 +208,7 @@ class Transformers(TextCompletionGenerator):
 
         self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
     
-    def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, topic_description, mode, tree,scorer=None,  num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
         if len(prompts) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
@@ -240,6 +256,7 @@ class Transformers(TextCompletionGenerator):
 class OpenAI(TextCompletionGenerator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
+
     
     def __init__(self, model="curie", api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
@@ -257,7 +274,8 @@ class OpenAI(TextCompletionGenerator):
                 with open(key_path) as f:
                     openai.api_key = f.read().strip()
     #crv
-    def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100, temperature =None, user_prompt=''):
+    def __call__(self, prompts, topic, topic_description, mode,test_tree,scorer,  num_samples=1, max_length=100, user_prompt=''):
+        # prompts, self.current_topic, desc, mode, self.scorer, self.test_tree,
         if len(prompts[0]) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
@@ -271,8 +289,41 @@ class OpenAI(TextCompletionGenerator):
         prompt_strings = self._create_prompt_strings(prompts, topic, mode)
         
         # substitute user provided prompt/temperature if available
-        call_temp = temperature if temperature is not None else self.temperature
-        call_prompt = prompt_strings if user_prompt == '' else user_prompt
+        call_temp =  self.temperature #temperature if temperature is not None else
+        call_prompt = prompt_strings if user_prompt == '' else user_prompt + '\n'
+
+        if (user_prompt in ['Suggest children topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
+            
+            concept = unquote(topic)[1:]
+            children = [] 
+            parent = '' 
+            sibling = []
+            for k,test in test_tree.iterrows(): 
+                if topic in test["topic"]:
+                    x = test["topic"].split(topic)
+                    print(x)
+                    if x[0]!='':
+                        parent= unquote( x[0])
+                    if len(x[1].split('/'))>1:
+                        children.append(unquote(x[1].split('/')[1]))
+            print('\n\n', parent, children)    
+            prompts_topic = [make_prompt(concept, parent=parent, children=children, sibling=sibling, few_shot_instances=get_few_shot_instances()) for _ in range(3)]
+            # print(prompts_topic)
+            response = openai.Completion.create(
+                engine=self.source, prompt=prompts_topic, max_tokens=200,
+                temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
+            
+           
+            if user_prompt == 'Suggest parent topics for this folder' :
+                return(just_parent(response))
+            if user_prompt == 'Suggest children topics for this folder':
+                return(just_children(response))
+            if user_prompt == 'Suggest sibling topics for this folder':
+                return(just_siblings(response))
+            
+
+        user_prompt = user_prompt + '\n'
+        # print(call_prompt)
 
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
@@ -283,12 +334,17 @@ class OpenAI(TextCompletionGenerator):
         parsed_suggestion =  self._parse_suggestion_texts(suggestion_texts, prompts)
         if user_prompt== call_prompt: 
             print('hello user prompt is being used ')
+            print(user_prompt)
             parsed_text = []
 
             for p in parsed_suggestion: 
                 x = p.split('\n')
+                #cleanx removes initial numbers and bullets from the suggestion (charvi) (super hacky way) 
+                # cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' ') or (i=='.') or (i==',') or (i == ';'))]) for text in x]
+                # cleanx = [''.join([i for j,i in enumerate(text) if (((i.isalpha()) or (i==' ') or(i==',') )or(j > 4))]) for text in x]
                 
-                cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' ') or (i=='.') or (i==',') or (i == ';'))]) for text in x]
+                
+                cleanx = [''.join(cleanprefix(i)) for i in x]
                 parsed_text.extend([text for text in cleanx if text])
 
             return(list(set(parsed_text)) ) 
@@ -310,7 +366,7 @@ class AI21(TextCompletionGenerator):
         self.temperature = temperature
         self.event_loop = asyncio.get_event_loop()
     
-    def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
+    def __call__(self, prompts, topic, topic_description, mode, tree,scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
         prompt_strings = self._create_prompt_strings(prompts, topic, mode)
         
@@ -347,7 +403,8 @@ class TestTreeSource(Generator):
         self.gen_type = "test_tree"
         self.assistant_generator = assistant_generator
 
-    def __call__(self, prompts, topic, topic_description, test_type=None, scorer=None, num_samples=1, max_length=100): # TODO: Unify all __call__ signatures
+    def __call__(self, prompts, topic, topic_description, test_type=None, test_tree=None, scorer=None, num_samples=1, max_length=100, user_prompt = None): # TODO: Unify all __call__ signatures
+        # prompts, self.current_topic, desc, mode, self.scorer, self.test_tree,
         if len(prompts) == 0:
             # Randomly return instances without any prompts to go off of. TODO: Consider better alternatives like max-failure?
             return self.source.iloc[np.random.choice(self.source.shape[0], size=min(50, self.source.shape[0]), replace=False)]
