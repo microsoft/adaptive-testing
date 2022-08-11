@@ -101,7 +101,7 @@ class TestTreeBrowser():
         # ensure that each scorer's score column is in the test tree dataframe
         for c in self.score_columns:
             if c not in self.test_tree.columns:
-                self.test_tree[c] = [np.nan for _ in range(self.test_tree.shape[0])]
+                self.test_tree[c] = ["__TOEVAL__" for _ in range(self.test_tree.shape[0])]
 
         # a unique identifier for this test set instance (used for UI connections)
         self._id = uuid.uuid4().hex
