@@ -503,7 +503,7 @@ class TestTreeBrowser():
 
             # if we are just changing the topic
             elif "topic" in msg[k] and len(msg[k]) == 1:
-                NOT_SURE_TOPIC = "/NotSure"
+                NOT_SURE_TOPIC = "/Not%20Sure"
 
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
@@ -528,6 +528,7 @@ class TestTreeBrowser():
                             }
 
                         self.test_tree.loc[k, "topic"] = NOT_SURE_TOPIC
+                        self.test_tree.loc[k, "label"] = "not_sure"
                     else:
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
                         self.test_tree.loc[k, "author"] = self.user

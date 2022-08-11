@@ -383,7 +383,7 @@ export default class Row extends React.Component {
                 :
                   <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="0px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
+                {this.state.labeler === "imputed" && this.state.label === "not_sure" ?
                   <FontAwesomeIcon icon={faQuestion} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(37, 46, 207, 1.0)" textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faQuestion} height="17px" y="7px" x="50px" style={{color: this.state.label === "off_topic" ? "rgb(37, 46, 207, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
@@ -477,7 +477,7 @@ export default class Row extends React.Component {
     // }
     // this.setState({label: "off_topic"});
     // User study change: Move to "Not Sure" special folder
-    this.props.comm.send(this.props.id, {"topic": "/NotSure"});
+    this.props.comm.send(this.props.id, {"topic": "/Not%20Sure"});
   }
 
   labelAsPass(e) {
