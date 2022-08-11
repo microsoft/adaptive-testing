@@ -386,7 +386,7 @@ export default class Row extends React.Component {
                 {this.state.labeler === "imputed" && this.state.label === "not_sure" ?
                   <FontAwesomeIcon icon={faQuestion} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(37, 46, 207, 1.0)" textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faQuestion} height="17px" y="7px" x="50px" style={{color: this.state.label === "off_topic" ? "rgb(37, 46, 207, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faQuestion} height="17px" y="7px" x="50px" style={{color: this.state.label === "not_sure" ? "rgb(37, 46, 207, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
                 <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
