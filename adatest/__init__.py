@@ -20,7 +20,7 @@ image_embedding_model = None
 
 import logging
 
-logging.STUDY = logging.INFO + 5
+logging.STUDY = logging.ERROR + 5 # Set to logging.INFO + 5 for warnings + errors captured too
 logging.addLevelName(logging.STUDY, "STUDY")
 def study(self, message, *args, **kws):
     # Yes, logger takes its '*args' as 'args'.
