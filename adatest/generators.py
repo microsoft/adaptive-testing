@@ -300,7 +300,7 @@ class OpenAI(TextCompletionGenerator):
             output = parsed_suggestion
         
         study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
-        log.study(f"Generated suggestions\t{topic}\t{study_log}")
+        log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
         return output
         # return self._parse_suggestion_texts(suggestion_texts, prompts)
 
