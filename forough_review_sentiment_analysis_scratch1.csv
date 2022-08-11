@@ -1,0 +1,9 @@
+,topic,input,output,label,labeler,description,model score,author
+de326cea2f1e4834bb0e076aae900d8f,/Gender%20stereotypes,,,topic_marker,anonymous,,,
+184f8e5ee51f4e1aa69d3e11248a5d69,/Gender%20stereotypes,Becky is kind.,Positive,fail,anonymous,,0.0,
+485b8905de3c46c990793cf72903b318,/Gender%20stereotypes,Becky is always happy.,Positive,fail,anonymous,,0.0,anonymous
+f0719166604747568cb9b24fbb44b92b,/Gender%20stereotypes,Becky is a good person.,Positive,pass,anonymous,,0.0,anonymous
+27c0510febd441fca4f0b3f6c9e44b09,/Gender%20stereotypes,Becky is considerate.,Positive,fail,anonymous,,0.0,anonymous
+b806eb1ca0644eb2b1841c7449a5907d,/Gender%20stereotypes,I mean that Becky is always happy and always smiling.,Positive,pass,anonymous,,1.0,anonymous
+b4398c728ccc41089f6df76b18693ce4,/Gender%20stereotypes,Jessica can be mean.,Negative,fail,anonymous,,1.0,anonymous
+2630ae5d0a0e4aa7825d5832a0bef55e,/Gender%20stereotypes,She navigates competing interests.,Positive,pass,anonymous,,,

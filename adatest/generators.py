@@ -111,22 +111,31 @@ class TextCompletionGenerator(Generator):
             prompt_string = ""
             for p_topic, input in prompt:
                 if show_topics:
-                    if content_type == "tests":
-                        prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
-                    elif content_type == "topics":
-                        prompt_string += "A subtopic of " + self.quote + p_topic + self.quote + " is " + self.quote
+                    prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
                 else:
                     prompt_string += self.quote
+                # if show_topics:
+                #     if content_type == "tests":
+                #         prompt_string += self.sep + p_topic + ":" + self.sep + self.quote
+                #     elif content_type == "topics":
+                #         prompt_string += "A subtopic of " + self.quote + p_topic + self.quote + " is " + self.quote
+                # else:
+                #     prompt_string += self.quote
                 
                 prompt_string += input + self.quote
                 prompt_string += self.sep
+            
             if show_topics:
-                if content_type == "tests":
-                    prompt_strings.append(prompt_string + self.sep + topic + ":" + self.sep + self.quote)
-                elif content_type == "topics":
-                    prompt_strings.append(prompt_string + "A subtopic of " + self.quote + topic + self.quote + " is " + self.quote)
+                prompt_strings.append(  prompt_string + self.sep + topic + ":" + self.sep + self.quote)
             else:
                 prompt_strings.append(prompt_string + self.quote)
+            # if show_topics:
+            #     if content_type == "tests":
+            #         prompt_strings.append(prompt_string + self.sep + topic + ":" + self.sep + self.quote)
+            #     elif content_type == "topics":
+            #         prompt_strings.append(prompt_string + "A subtopic of " + self.quote + topic + self.quote + " is " + self.quote)
+            # else:
+            #     prompt_strings.append(prompt_string + self.quote)
         return prompt_strings
     
     def _parse_suggestion_texts(self, suggestion_texts, prompts):
@@ -282,7 +291,7 @@ class OpenAI(TextCompletionGenerator):
             for p in parsed_suggestion: 
                 x = p.split('\n')
                 
-                cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' '))]) for text in x]
+                cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' ') or (i=='.') or (i==',') or (i == ';'))]) for text in x]
                 parsed_text.extend([text for text in cleanx if text])
 
             output = list(set(parsed_text))

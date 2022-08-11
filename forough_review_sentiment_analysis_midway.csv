@@ -1,0 +1,45 @@
+,topic,input,output,label,labeler,description,model score,author
+013bf2216cf444458dbbb97578260e06,/Actions/Firing,,,topic_marker,anonymous,,,
+16b1bb4b36004d579df8c6d3cab3de98,/Evaluation%20metrics/Hours%20worked,Your hours worked need to be more,Neutral,fail,anonymous,,0.0,anonymous
+218605fdaf154a0eafed9ba9729e12a1,/Actions/Firing,Your performance has been inadequate.,Negative,pass,anonymous,,0.0,anonymous
+2247cbfc07ca47628ef360a9078796ba,/Actions/Promotion,Your promotion prospects are looking better and better.,Positive,pass,anonymous,,0.9958826011630122,anonymous
+271a972491404c3986d2b7bb598d34e3,/Evaluation%20metrics/KPI,You need to work on improving your KPI,Neutral,fail,anonymous,,0.9201338589191437,
+2a1cce6ec07b4095888ecedb45d362f4,/Actions/Promotion,We will give you a promotion.,Positive,pass,anonymous,,0.9958011862907271,anonymous
+30862a4296ac4d0283b05aa4fa96292a,/Actions,,,topic_marker,anonymous,,,
+3694889af18843048c5ce8093c0d9799,/Evaluation%20metrics/Hours%20worked/Too%20many,You work too many hours,Negative,fail,anonymous,,0.0,anonymous
+36a3ccb3677c4516a819e96bd9582c2d,/Actions/Firing,Your contract has been terminated,Negative,pass,anonymous,,0.0,anonymous
+3dbc47bb5bfa45bfa553e34b7824c07e,/Actions/Promotion,Your promotion has been rescinded.,Negative,pass,anonymous,,1.0,anonymous
+3f6606dff66541b8b955c35035d7bde4,/Actions/Demotion,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+4252246d35824a239f967d81c950c1f6,/Actions/Firing,Your performance has not been meeting our expectations.,Negative,pass,anonymous,,0.0,anonymous
+4dd0d008930046acb68d83d1089eba3e,/Evaluation%20metrics/Sales%20figures,,,topic_marker,anonymous,,,
+5144156c600b40a1adc31b221d69f2a7,/Actions/Promotion,You barely met expectations.,Negative,pass,anonymous,,0.0,
+515d3b27b9344aef9680ab21c6721014,/Actions/Promotion,We will reconsider your promotion.,Neutral,fail,anonymous,,1.0,
+5567610c1b9f44b7967ee352d96c9632,/Actions/Firing,We are going to let you go effective immediately,Neutral,pass,anonymous,,0.0,anonymous
+55c2fd8f88064417a1dd000351ab549f,/Evaluation%20metrics/KPI,,,topic_marker,anonymous,,,
+56919081f6b74a6cb1b6ccedc5eb2b29,/Evaluation%20metrics/Hours%20worked,,,topic_marker,anonymous,,,
+569514cbec0545c5bed19aafdc14d952,/Evaluation%20metrics/Hours%20worked,You need to work 8 hours per day,Neutral,fail,anonymous,,0.7589043548458297,
+581c0ef383b44b99baee506a09400af4,/Actions/Promotion,You need to improve your performance for promotion.,Neutral,fail,anonymous,,0.9678715159854745,anonymous
+60548865b7ed4691b0abda1117dba7e4,/Actions/Firing,Your employment with us has been terminated.,Negative,pass,anonymous,,0.0,anonymous
+63b8443f89a749dd906fc9992bd0b871,/Evaluation%20metrics/Hours%20worked,You worked too few hours,Neutral,fail,anonymous,,0.0,anonymous
+6ff531aaee024ed280cb15b97f5ab53c,,,,topic_marker,imputed,,,
+7134e165850244f2b4b6ea4d703affda,/Actions/Relocation,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+751dddca885d488f9b187b1f202e8c42,/Evaluation%20metrics/Sales%20figures,I wish your sales figures would have been 2X,Neutral,fail,anonymous,,0.0,anonymous
+770c592b6b454f1f9f66dabea30b5c3e,/Actions/Promotion,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+81f24df602f74496b4a2df3fcc9ca016,/Evaluation%20metrics/Hours%20worked/Too%20many,,,topic_marker,anonymous,,,
+94741d1b9e1749e88c27f86c29484d91,/Actions/Promotion,Your promotion is pending.,Neutral,fail,anonymous,,0.9167370141160299,anonymous
+966dc675e6db46eaa6f4a4afc8192a47,/Evaluation%20metrics/KPI,Why is your kpi so low?,Negative,pass,anonymous,,0.0,
+a1b058beeced449d8e1aa0e34c66188a,/Actions/Suspension,,,topic_marker,anonymous,,,
+a4e73df2604341dab12df8dcbf5e234a,/Actions/Promotion,You will need to work more hours to be considered for promotion.,Neutral,fail,anonymous,,0.9370888047514622,anonymous
+b706b3cff64548f993713335b1a7efdb,/Evaluation%20metrics/KPI,Your kpi needs to be higher,Neutral,fail,anonymous,,0.0,
+c6794224492144fca276a8bb3b5212fd,/Evaluation%20metrics/Hours%20worked,Your hours worked need to be increased,Neutral,fail,anonymous,,0.0,anonymous
+d12c1d5fe97e41cfb98ec258a81a01fb,/Actions/Firing,Your termination was handled smoothly,Neutral,pass,anonymous,,0.0,anonymous
+d26ba0aed0df477d907116699a051e2f,/Actions/Firing,Your work is not meeting our standards.,Negative,pass,anonymous,,0.0,anonymous
+d692e7fa484d4605971ec915e32f0a3d,/Actions/Promotion,You are not promotable.,Neutral,fail,anonymous,,0.6824255865316147,anonymous
+d99b9466d18e47239359c16df1b984b2,/Actions/Firing,We are letting you go,Neutral,fail,anonymous,,0.7421629385771557,
+daf07ade90384b05a912a4cc4fc03b0b,/Evaluation%20metrics/Hours%20worked/Too%20many,You are working too many hours,Neutral,fail,anonymous,,0.0,anonymous
+ece43ba99c474b7f85bd0a3a066b1f90,/Feedback,,,topic_marker,anonymous,,,
+f7c2451ff8b548f9b0cd4eee1d244f8f,/Actions/Promotion,We will consider you for promotion in three years.,Neutral,fail,anonymous,,1.0,
+fb37ef62429a4863a5d26def8d83bdf0,/Evaluation%20metrics,,,topic_marker,anonymous,,,
+21e140e3bbed4e289e59f3f275b43dd1,/Actions/Demotion,You have been given a demotion,Neutral,fail,anonymous,,0.6308022631756582,anonymous
+6b6cadd809f246cd97c185bf4c03f495,/Actions/Demotion,You will be assigned to a lower position in the company.,Neutral,fail,anonymous,,0.7711217575771009,anonymous
+b771d65435e1412591e5a851b4068042,/Actions/Demotion,Your promotion has been revoked. You will now be working in your previous role.,Neutral,fail,anonymous,,0.7317552917234688,anonymous

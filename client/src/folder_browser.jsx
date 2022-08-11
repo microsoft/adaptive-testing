@@ -2,6 +2,7 @@ import React from 'react'
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faFolder} from '@fortawesome/free-solid-svg-icons'
+import QuestionMarkFolder from "./QuestionMarkFolder"
 
 export default class FolderBrowser extends React.Component{
     constructor(props){
@@ -67,18 +68,19 @@ export default class FolderBrowser extends React.Component{
 
     Drop(e, key){
         const id = e.dataTransfer.getData("id");
+        this.props.onDrop(id, {topic: key});
         // console.log('drop', id, key, this.props.mother_this.state.hovered_part)
-        var key_split = key.split('/')
-        var cur_key = ''
-        var k = ''
-        var concept_origin = '/'+key_split[1]
-        for(var i in key_split){
-            if(i==0){continue}
-            cur_key = cur_key + '/'+key_split[i]
-            k = k + cur_key
-            if(i!=key_split.length-1){k=k+'|'}
-        }
-        this.props.onDrop(id, {topic:k, type:'data_in_out|'+concept_origin})
+        // var key_split = key.split('/')
+        // var cur_key = ''
+        // var k = ''
+        // var concept_origin = '/'+key_split[1]
+        // for(var i in key_split){
+        //     if(i==0){continue}
+        //     cur_key = cur_key + '/'+key_split[i]
+        //     k = k + cur_key
+        //     if(i!=key_split.length-1){k=k+'|'}
+        // }
+        // this.props.onDrop(id, {topic:k, type:'data_in_out|'+concept_origin})
     }
 
     // mouseEnter(e, key){
@@ -111,11 +113,17 @@ export default class FolderBrowser extends React.Component{
             const folderRowClass = isSelected ? null : 'adatest-folder-hover';
             const passColor = isSelected ? '#7bdd7b' : '#09b909';
             const failColor = isSelected ? '#ef6d6d' : '#eb0000';
-
             const numFolders = structure[key] != null ? Object.keys(structure[key]).length : 0
             const testCounts = structure[key]['count']
             const passCount = testCounts != null ? testCounts[0] : 0
             const failCount = testCounts != null ? testCounts[1] : 0
+            const isNotSureFolder = key === "/Not Sure";
+            const iconStyle = {
+                fontSize: "14px",
+                marginRight:'3px',
+                color: "rgb(84, 174, 255)",
+                display: "inline-block"
+            }
 
             return (
                 <div>
@@ -125,12 +133,19 @@ export default class FolderBrowser extends React.Component{
 
                         { numFolders > 1 && <span style={{cursor: "pointer"}} onClick={e => this.toggleItem(e, key)}>{this.state.observe_state[key]?"▾":"▸"}</span>}
                         <span style={{cursor: "pointer", marginLeft: numFolders > 1 ? "0px" : "11px", color: textColor}} onClick={e => this.changeTopic(e, key)} onDrop={e => console.log('drop', key)}>
-                            <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", marginRight:'3px', color: "rgb(84, 174, 255)", display: "inline-block"}} />
+                            { isNotSureFolder ? 
+                                <QuestionMarkFolder style={iconStyle} />
+                                :
+                                <FontAwesomeIcon icon={faFolder} style={iconStyle} /> }
                             {k_list[k_list.length-1]}
                         </span> 
-                        <span style={{color: passColor}}> {passCount} </span>
-                        <span> / </span>
-                        <span style={{color: failColor}}> {failCount} </span>
+                        { !isNotSureFolder && 
+                        <>
+                            <span style={{color: passColor}}> {passCount} </span>
+                            <span> / </span>
+                            <span style={{color: failColor}}> {failCount} </span>
+                        </>
+                        }
                     </div>
                     <div style={{marginLeft: '10px'}}>
                         {numFolders > 0 && this.state.observe_state[key] && this.renderFolder(structure[key])}
@@ -143,7 +158,12 @@ export default class FolderBrowser extends React.Component{
     render(){
         return (
             <div style={{textAlign:'left', padding: '5px'}} className={"unselectable"}>
-                <div style={{cursor: "pointer"}} onClick={e => this.changeTopic(e, '')}>Tests</div>
+                <div style={{cursor: "pointer"}} 
+                    onClick={e => this.changeTopic(e, '')} 
+                    onDrop={e => this.Drop(e, '')}
+                    onDragOver={e => this.DragOver(e)}>
+                    Tests
+                </div>
                 {this.props.structure!=undefined && this.renderFolder(this.props.structure)}
             </div>
         )

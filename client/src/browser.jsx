@@ -188,7 +188,7 @@ export default class Browser extends React.Component {
 
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
         <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
-          <div id="folderbrowser" style={{height: "50%"}} >
+          <div id="folderbrowser" style={{height: "50%", overflowY: "auto"}} >
             <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} currentTopic={decodeURIComponent(this.state.topic)}
                onDrop={this.onDrop} onClick={this.setLocation}>
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
@@ -197,15 +197,25 @@ export default class Browser extends React.Component {
           <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", flexDirection: "column"}}>
             <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span>
             <AutoComplete 
-              style={{width: "185px"}}
-              placeholder={"Give me topics about..."}
+              style={{width: "185px", textAlign: "right"}}
+              placeholder={"Suggest more topics related to this folder ▼"}
               allowClear={true}
-              onChange={this.changeTestPrompt} 
+              onChange={this.changeTopicPrompt} 
               id={"topic_prompt_input_box"}
               options={[
                   {
-                    value: "Give me topics about plants, such as trees, shrubs, and bushes",
+                    value: "Suggest sub topics for this folder",
+                  },
+                  {
+                    value: "Suggest parent topics for this folder",
+                  },
+                  {
+                    value: "Suggest sibling topics for this folder",
+                  },
+                  {
+                    value: "List topics of importance in (problem domain)"
                   }
+
               ]} />
               <Button onClick={this.refreshTopicSuggestions} type="primary" style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Submit</Button>
               { this.state.loading_topic_suggestions ? <Spin /> : null }
@@ -246,7 +256,7 @@ export default class Browser extends React.Component {
           <div></div>
         </div>
         <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
-          <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
+          <ContentEditable defaultText="Input description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
                 {/* charvi edit for adding slider */}
         <div
@@ -265,13 +275,26 @@ export default class Browser extends React.Component {
           <div style={{display: "flex"}} >  
             <AutoComplete 
               style={{width:"auto", flexGrow: "1"}}
-              placeholder={"Give me a list of ... such as ..." }
+              placeholder={"Give me more tests similar to the saved tests below ▼" }
               allowClear={true}
-              onChange={this.changeTopicPrompt} 
+              onChange={this.changeTestPrompt} 
               id={"test_prompt_input_box"}
               options={[
                   {
-                    value: "Give me a list of plants, such as trees, shrubs, and bushes",
+                    value: "Write sentences that are (task input description)  " 
+                    // + {this.state.topic_description} ,
+                  },
+                   {
+                    value: "Write sentences that are (task input description) and are (choice of output)",
+                   },
+                  {
+                    value: "Write short sentences showing on (topic) that have (feature of task instance) "
+                  } ,
+                  {
+                      value: " Give a sentence that is a (task input decription), such as '(example of imput)' "
+                  },
+                  {
+                      value: ' Give me sentences of the form: "my {insert person} is {insert positive event}, and {insert bad event} '
                   }
               ]}
               />
@@ -388,14 +411,15 @@ export default class Browser extends React.Component {
           <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
             Output
           </div>
-          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
-            <nobr>Off-topic</nobr>
-          </div>
+         
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Pass
           </div>
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Fail
+          </div>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+            <nobr>Off-topic</nobr>
           </div>
         </div>
         
@@ -891,14 +915,14 @@ export default class Browser extends React.Component {
     this.setState({ active_temperature: e });
   }
 
-  changeTestPrompt(e) {
-    console.log("changeTestPrompt", e);
-    this.setState({testPrompt: e.target.value});
+  changeTestPrompt(value) {
+    console.log("changeTestPrompt", value);
+    this.setState({testPrompt: value});
   }
 
-  changeTopicPrompt(e) {
-    console.log("changeTopicPrompt", e);
-    this.setState({topicPrompt: e.target.value});
+  changeTopicPrompt(value) {
+    console.log("changeTopicPrompt", value);
+    this.setState({topicPrompt: value});
   }
 
   clearSuggestions(e) {
@@ -1035,6 +1059,10 @@ export default class Browser extends React.Component {
       ids = Object.keys(this.state.selections);
       this.setState({selections: {}});
     } else ids = id;
+
+    if (data["topic"]) {
+      data["topic"] = data["topic"].replaceAll(" ", "%20");
+    }
     this.comm.send(ids, data);
   }
 
