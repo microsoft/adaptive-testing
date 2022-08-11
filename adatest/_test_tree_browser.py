@@ -541,6 +541,9 @@ class TestTreeBrowser():
                 
                 # move a whole topic around
                 else:
+                    # Adding new suggestion to existing test tree
+                    if k.startswith('/__suggestions__/'):
+                        log.study(f"Accepted topic suggestion\t{self.current_topic}\t{self.current_topic + '/' + k[17:]}")
                     for id, test in self.test_tree.iterrows():
                         if is_subtopic(k, test.topic):
                             if msg[k]["topic"] == "_DELETE_":

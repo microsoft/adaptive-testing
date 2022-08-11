@@ -274,7 +274,7 @@ class OpenAI(TextCompletionGenerator):
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
         parsed_suggestion =  self._parse_suggestion_texts(suggestion_texts, prompts)
-        
+
         if user_prompt == call_prompt: 
             print('hello user prompt is being used ')
             parsed_text = []
@@ -285,10 +285,14 @@ class OpenAI(TextCompletionGenerator):
                 cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' '))]) for text in x]
                 parsed_text.extend([text for text in cleanx if text])
 
-            return(list(set(parsed_text)) ) 
+            output = list(set(parsed_text))
 
         else: 
-            return parsed_suggestion
+            output = parsed_suggestion
+        
+        study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
+        log.study(f"Generated suggestions\t{topic}\t{study_log}")
+        return output
         # return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
