@@ -4,7 +4,7 @@ import re
 import urllib.parse
 import adatest
 from .embedders import cos_sim
-from .utils import is_subtopic
+# from .utils import is_subtopic
 log = logging.getLogger(__name__)
 
 
@@ -13,7 +13,7 @@ class PromptBuilder():
     """
     
     def __init__(self, prompt_size=7, slot_randomization=0.25, score_randomization=0.05, skip_randomization=0.25, prompt_diversity=True,
-                 subtopic_diversity=True):
+                 subtag_diversity=True):
         """ Initialize the prompt builder.
         
         Parameters
@@ -34,9 +34,9 @@ class PromptBuilder():
             Whether to include a diversity term when selecting tests for the prompt. This diversity term is based
             on the embeddings of each test.
 
-        subtopic_diversity : bool
-            If true, we will try and pick tests from a diverse set of subtopics of the current topic (if we are
-            using subtopic tests and not direct child tests).
+        subtag_diversity : bool
+            If true, we will try and pick tests from a diverse set of subtags of the current tag (if we are
+            using subtag tests and not direct child tests).
         """
 
         assert skip_randomization < 0.99, "skip_randomization must be less than 1, otherwise everything will always be skipped!"
@@ -46,9 +46,9 @@ class PromptBuilder():
         self.score_randomization = score_randomization # TODO: make this scale according to the stddev of the top 7 entries?
         self.skip_randomization = skip_randomization
         self.prompt_diversity = prompt_diversity
-        self.subtopic_diversity = subtopic_diversity
+        self.subtag_diversity = subtag_diversity
     
-    def __call__(self, test_tree, topic, score_column, repetitions=1, filter="", suggest_topics=False, working_set_size=100, embeddings=None):
+    def __call__(self, test_tree, tags, score_column, repetitions=1, filter="", suggest_topics=False, working_set_size=100, embeddings=None):
         """ This builds a prompt for GPT3 that elicits useful input examples.
 
         Parameters
@@ -56,8 +56,8 @@ class PromptBuilder():
         test_tree : adatest.TestTree
             The test tree to generate prompts from.
         
-        topic : str
-            The topic to build a prompt for.
+        tags : str
+            The tag set to build a prompt for.
 
         score_column : str
             The column to use for scoring the tests.
@@ -212,7 +212,7 @@ class PromptBuilder():
                     sim_avoidance[new_ind] = avoidance_level
 
                 # lower the weight of the subtopic we just picked from
-                if self.subtopic_diversity:
+                if self.subtag_diversity:
                     new_topic = test_tree.loc[ids[new_ind], "topic"]
                     if topic != new_topic and is_subtopic(topic, new_topic):
                         subtopic = topic + "/" + new_topic[(len(topic)+1):].split("/")[0]

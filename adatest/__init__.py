@@ -4,7 +4,7 @@ from ._scorer import Scorer, DummyScorer, ClassifierScorer, GeneratorScorer, Raw
 from ._server import serve
 from .embedders import _embed as embed
 from ._model import Model
-from ._topic_model import ChainTopicModel, StandardTopicModel
+from ._tag_model import ChainTopicModel, StandardTopicModel
 from . import generators
 
 __version__ = '0.3.4'
