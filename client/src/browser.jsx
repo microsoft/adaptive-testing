@@ -9,8 +9,7 @@ import Row from './row';
 import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
-import {  Slider, AutoComplete, Button, Spin } from "antd";
-import "antd/dist/antd.css";
+import { Button, Autocomplete, Loader } from '@mantine/core';
 import FolderBrowser from './folder_browser';
 import TopicSuggestion from './topic-suggestion';
 
@@ -195,30 +194,35 @@ export default class Browser extends React.Component {
             </FolderBrowser>
           </div>
           <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", flexDirection: "column"}}>
-            <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span>
-            <AutoComplete 
-              style={{width: "185px", textAlign: "right"}}
+            {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
+            <Autocomplete 
+              style={{width: "185px"}}
+              label="Suggested topics"
               placeholder={"Suggest more topics related to this folder ▼"}
-              allowClear={true}
+              value={this.state.topicPrompt}
               onChange={this.changeTopicPrompt} 
               id={"topic_prompt_input_box"}
-              options={[
+              data={[
                   {
                     value: "Suggest sub topics for this folder",
+                    group: "A"
                   },
                   {
                     value: "Suggest parent topics for this folder",
+                    group: "A"
                   },
                   {
                     value: "Suggest sibling topics for this folder",
+                    group: "B"
                   },
                   {
-                    value: "List topics of importance in (problem domain)"
+                    value: "List topics of importance in (problem domain)",
+                    group: "B"
                   }
 
               ]} />
-              <Button onClick={this.refreshTopicSuggestions} type="primary" style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Submit</Button>
-              { this.state.loading_topic_suggestions ? <Spin /> : null }
+              <Button onClick={this.refreshTopicSuggestions} style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Submit</Button>
+              { this.state.loading_topic_suggestions ? <Loader /> : null }
               {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
                 <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
@@ -263,42 +267,47 @@ export default class Browser extends React.Component {
           style={{
             // position: "absolute",
             color: "rgb(170, 170, 170)",
+            textAlign: "left",
             margin: "10px 0px 5px 0px",
             border: "1px solid rgb(170, 170, 170)",
             borderRadius: "5px",
-            textAlign: "right",
             paddingRight: "15px",
             paddingLeft: "15px",
             paddingTop: "10px",
             paddingBottom: "10px"
           }}>
           <div style={{display: "flex"}} >  
-            <AutoComplete 
+            <Autocomplete 
               style={{width:"auto", flexGrow: "1"}}
+              label="Suggest tests"
               placeholder={"Give me more tests similar to the saved tests below ▼" }
-              allowClear={true}
+              value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
               id={"test_prompt_input_box"}
-              options={[
+              data={[
                   {
-                    value: "Write sentences that are (task input description)  " 
-                    // + {this.state.topic_description} ,
+                    value: "Write sentences that are (task input description)  ",
+                    group: "A"
                   },
-                   {
+                  {
                     value: "Write sentences that are (task input description) and are (choice of output)",
-                   },
-                  {
-                    value: "Write short sentences showing on (topic) that have (feature of task instance) "
-                  } ,
-                  {
-                      value: " Give a sentence that is a (task input decription), such as '(example of imput)' "
+                    group: "A"
                   },
                   {
-                      value: ' Give me sentences of the form: "my {insert person} is {insert positive event}, and {insert bad event} '
+                    value: "Write short sentences showing on (topic) that have (feature of task instance) ",
+                    group: "B"
+                  },
+                  {
+                    value: "Give a sentence that is a (task input decription), such as '(example of imput)' ",
+                    group: "B"
+                  },
+                  {
+                    value: 'Give me sentences of the form: "my {insert person} is {insert positive event}, and {insert bad event} ',
+                    group: "C"
                   }
               ]}
               />
-            <Button type="primary" style={{marginLeft: "10px"}} onClick={this.refreshTestSuggestions}>Submit</Button>
+            <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>Submit</Button>
               {/* <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
                   Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
               </div>
@@ -351,7 +360,7 @@ export default class Browser extends React.Component {
               </div>
             } */}
           </div>
-          { this.state.loading_test_suggestions ? <Spin /> : null }
+          { this.state.loading_test_suggestions ? <Loader /> : null }
           <div className="adatest-scroll-wrap adatest-suggestions-box-content" ref={(el) => this.suggestionsScrollWrapRef = el}>
             {   //this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)

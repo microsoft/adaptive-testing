@@ -2,6 +2,7 @@ const path = require('path');
  
 module.exports = {
   entry: path.resolve(__dirname, './src/adatest.jsx'),
+  devtool: 'eval-source-map',
   module: {
     rules: [
       {
@@ -20,6 +21,12 @@ module.exports = {
           search: '</script>',
           replace: '_/script>',
         }
+      },
+      // https://github.com/webpack-contrib/source-map-loader
+      {
+        enforce: "pre",
+        test: /\.js$/,
+        loader: "source-map-loader"
       }
     ],
   },
