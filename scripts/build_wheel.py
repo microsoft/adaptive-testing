@@ -22,13 +22,20 @@ def build_client():
     )
     _logger.info("Ending build_client")
 
+def build_wheel():
+    _logger.info("Starting build_wheel")
+    subprocess.check_call(["python", "setup.py", "sdist", "bdist_wheel"])
+    _logger.info("Ending build_wheel")
+
 def main():
     assert 'setup.py' in os.listdir(), "Must be run from repo root"
     # Build the client
     build_client()
 
     # Build the wheel
-
+    build_wheel()
+    
+    _logger.info("Completed")
 
 if __name__ == "__main__":
     main()
