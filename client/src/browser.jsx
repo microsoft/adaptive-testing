@@ -193,51 +193,53 @@ export default class Browser extends React.Component {
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
             </FolderBrowser>
           </div>
-          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", marginRight: "1rem", flexDirection: "column"}}>
-            {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
-            <Autocomplete 
-              label="Suggested topics"
-              placeholder={"▼ Suggest more sub-topics for this folder ▼"}
-              value={this.state.topicPrompt}
-              onChange={this.changeTopicPrompt} 
-              id={"topic_prompt_input_box"}
-              data={[
-                  {
-                    value: "Suggest sub topics for this folder",
-                    group: "A"
-                  },
-                  {
-                    value: "Suggest parent topics for this folder",
-                    group: "A"
-                  },
-                  {
-                    value: "Suggest sibling topics for this folder",
-                    group: "B"
-                  },
-                  {
-                    value: "Suggest children topics for this folder",
-                    group: "B"
-                  },
-                  {
-                    value: "List topics of importance in (problem domain)",
-                    group: "C"
-                  }
+          <div className="adatest-scroll-wrap" style={{padding: "10px", height: "50%", marginRight: "1rem", borderRadius: "5px", border: "solid rgb(216, 222, 228) 1px", backgroundColor: "rgb(246, 248, 250)"}}>
+            <div id="topicsuggestions" style={{display: "flex", flexDirection: "column"}}>
+              {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
+              <Autocomplete 
+                label="Suggested topics"
+                placeholder={"▼ Suggest more sub-topics for this folder ▼"}
+                value={this.state.topicPrompt}
+                onChange={this.changeTopicPrompt} 
+                id={"topic_prompt_input_box"}
+                data={[
+                    {
+                      value: "Suggest sub topics for this folder",
+                      group: "A"
+                    },
+                    {
+                      value: "Suggest parent topics for this folder",
+                      group: "A"
+                    },
+                    {
+                      value: "Suggest sibling topics for this folder",
+                      group: "B"
+                    },
+                    {
+                      value: "Suggest children topics for this folder",
+                      group: "B"
+                    },
+                    {
+                      value: "List topics of importance in (problem domain)",
+                      group: "C"
+                    }
 
-              ]} />
-              <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
-                <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "start"}}>Refresh</Button>
-                <Button onClick={this.addNewTopic} color="gray" style={{alignSelf: "end"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /></Button>
-              </div>
-              { this.state.loading_topic_suggestions ? <Loader /> : null }
-              {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
-              </div> */}
-              { topicSuggestions.map((id, index) => {
-                  return <TopicSuggestion topicId={id} 
-                            topic={this.state.topic}
-                            comm={this.comm} />
-              })}
+                ]} />
+                <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
+                  <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "start"}}>Refresh</Button>
+                  <Button onClick={this.addNewTopic} color="gray" style={{alignSelf: "end"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /></Button>
+                </div>
+                { this.state.loading_topic_suggestions ? <Loader /> : null }
+                {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                  <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
+                  <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
+                </div> */}
+                { topicSuggestions.map((id, index) => {
+                    return <TopicSuggestion topicId={id} 
+                              topic={this.state.topic}
+                              comm={this.comm} />
+                })}
+            </div>
           </div>
         </div>
 
