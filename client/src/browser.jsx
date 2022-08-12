@@ -293,23 +293,23 @@ export default class Browser extends React.Component {
               data={[
                   {
                     value: "Write sentences that are  "  + this.state.topic_description,
-                    group: "A"
+                    group: "Error discovery"
                   },
                   {
                     value: "Write sentences that are " + this.state.topic_description + " and are (choice of output)",
-                    group: "A"
+                    group: "Error discovery"
                   },
                   {
                     value: "Write short sentences showing on (topic) that have (feature of task instance) ",
-                    group: "B"
+                    group: "Error confirmation"
                   },
                   {
                     value: "Give a sentence that is a " + this.state.topic_description + ", such as '(example of imput)' ",
-                    group: "B"
+                    group: "Error confirmation"
                   },
                   {
                     value: 'Give me '+ this.state.topic_description + ' with the sentence form: "my {insert person} is {insert positive event}, and {insert bad event} ',
-                    group: "B"
+                    group: "Error confirmation"
                   }
               ]}
               />

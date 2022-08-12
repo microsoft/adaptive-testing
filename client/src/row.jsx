@@ -394,10 +394,10 @@ export default class Row extends React.Component {
               </React.Fragment>
             }
             {this.state.topic_name !== null && total_pass > 0 &&
-              <text x="75" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "bold", fontSize: "14px"}}>{total_pass}</text>
+              <text x="25" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "bold", fontSize: "14px"}}>{total_pass}</text>
             }
             {this.state.topic_name !== null && total_fail > 0 &&
-              <text x="125" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "bold", fontSize: "14px"}}>{total_fail}</text>
+              <text x="75" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "bold", fontSize: "14px"}}>{total_fail}</text>
             }
           </svg>
         </div>
