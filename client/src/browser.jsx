@@ -167,36 +167,35 @@ export default class Browser extends React.Component {
     return (
     <div onKeyDown={this.keyDownHandler} tabIndex="0" className="adatest-browser-container" ref={(el) => this.divRef = el}>
       <div style={{gridArea: "header"}}>
-        <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        {/* <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
+          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span>
         </div>
         <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
+          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span>
         </div>
         <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
           <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
             <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
           </span>
-        </div>
+        </div> */}
       </div>
       
     {/* john edit */}
 
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
         <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
-          <div id="folderbrowser" style={{height: "50%", overflowY: "auto"}} >
+          <div id="folderbrowser" style={{height: "50%", overflowY: "auto", marginRight: "1rem"}} >
             <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} currentTopic={decodeURIComponent(this.state.topic)}
                onDrop={this.onDrop} onClick={this.setLocation}>
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
             </FolderBrowser>
           </div>
-          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", flexDirection: "column"}}>
+          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", marginRight: "1rem", flexDirection: "column"}}>
             {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
             <Autocomplete 
-              style={{width: "185px"}}
               label="Suggested topics"
               placeholder={"▼ Suggest more sub-topics for this folder ▼"}
               value={this.state.topicPrompt}
@@ -225,7 +224,10 @@ export default class Browser extends React.Component {
                   }
 
               ]} />
-              <Button onClick={this.refreshTopicSuggestions} style={{marginTop: "0.25rem", marginBottom: "0.25rem", alignSelf: "start"}}>Refresh</Button>
+              <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
+                <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "start"}}>Refresh</Button>
+                <Button onClick={this.addNewTopic} color="gray" style={{alignSelf: "end"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /></Button>
+              </div>
               { this.state.loading_topic_suggestions ? <Loader /> : null }
               {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
@@ -339,7 +341,7 @@ export default class Browser extends React.Component {
                   { testSuggestions.length > 1 && <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} /> }
                 </div>
                 <span style={{fontWeight: "bold"}}>Suggested tests</span>
-                <div></div>
+                <Button onClick={this.addNewTest} color="gray" compact styles={(theme) => ({ root: { marginRight: 15 }})}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /></Button>
                 {/* <div onClick={this.refreshTestSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                   <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
                   <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested tests</span>
