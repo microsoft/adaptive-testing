@@ -3,6 +3,7 @@
 import asyncio
 from cgi import test
 import aiohttp
+from sklearn import tree
 import transformers
 import openai
 from profanity import profanity
@@ -16,12 +17,81 @@ import logging
 log = logging.getLogger(__name__)
 from ._tree_generator import *
 from urllib.parse import unquote
+import pickle
+
+
+def my_cos_sim(a, b):
+    """
+    Based on the sentence_transformers implementation.
+    """
+    a = torch.Tensor([a])
+    b = torch.Tensor([b])
+    a_norm = torch.nn.functional.normalize(a, p=2, dim=1)
+    b_norm = torch.nn.functional.normalize(b, p=2, dim=1)
+    return torch.mm(a_norm, b_norm.transpose(0, 1)).numpy()[0][0]
+
 
 try:
     import clip
     import clip_retrieval.clip_client
 except ImportError:
     pass
+
+
+def make_tree_unit(concept, parent ='', sibling=[], child=[]):
+    unit = 'Concept: "%s"\n' %concept 
+    unitpar=''; unitsib=''; unitchi=''
+    if parent: 
+        unitpar = "Main topic: '%s' \n" %parent
+    if sibling: 
+        unitsib = "Sibling topic: "
+        for i in sibling: 
+            unitsib += "'%s'," %i
+        unitsib+='\n'
+    if child: 
+        unitchi = "Subtopic: "
+        for i in child: 
+            unitchi += "'%s'," %i
+        unitchi +='\n'
+    rando = np.random.randint(2)
+    if rando ==0 :
+        return unit + unitpar + unitchi + unitsib
+    elif rando == 1:
+        return unit + unitchi + unitsib + unitpar
+    else: 
+        return unit + unitsib + unitpar + unitchi
+        
+
+def get_closest_instances( concept_embed, compare_with=[], embeddings=[], num=7):
+
+    similarity = [my_cos_sim(concept_embed, i) for i in embeddings]
+    indices = np.argsort(similarity)[-num:]
+    return ([compare_with[i] for i in indices])
+
+def get_terms_embedding(concept, parent='', sibling=[] , child=[]):
+    out = concept + ' '+parent 
+    for i in sibling:
+        out = out + ' '+ i 
+    for i in child: 
+        out = out + ' ' + i 
+
+    return out
+
+def read_list(filename):
+   
+    root = os.path.abspath(os.path.dirname(__file__))
+    filepath =  os.path.join(root, filename)
+
+    # for reading also binary mode is important
+    with open(filepath, 'rb') as fp:
+        n_list = pickle.load(fp)
+        return n_list
+
+def get_trees(file1='tree_list.pkl' , file2='tree_embeddings.pkl'):
+    tree_list = read_list(file1)
+    tree_embeddings = read_list(file2)
+    return tree_list, tree_embeddings
+
 
 def cleanprefix(text):
     index = -1
@@ -31,9 +101,6 @@ def cleanprefix(text):
             break
     
     return text[index+1:]
-
-
-
 
 
 
@@ -294,33 +361,72 @@ class OpenAI(TextCompletionGenerator):
         call_temp =  self.temperature #temperature if temperature is not None else
         call_prompt = prompt_strings if user_prompt == '' else user_prompt + '\n'
 
-        if (user_prompt in ['Suggest children topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
-            
-            concept = unquote(topic)[1:]
-            children = [] 
-            parent = '' 
+        if (user_prompt in ['Suggest child topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
+            parent, concept = topic.split('/')[-2:]
+            concept = unquote(concept)
+
+            print('concept', concept, 'topic', topic, 'parent = ', parent)
+            child = [] 
             sibling = []
             for k,test in test_tree.iterrows(): 
-                if topic in test["topic"]:
-                    x = test["topic"].split(topic)
-                    print(x)
-                    if x[0]!='':
-                        parent= unquote( x[0])
-                    if len(x[1].split('/'))>1:
-                        children.append(unquote(x[1].split('/')[1]))
-            print('\n\n', parent, children)    
-            prompts_topic = [make_prompt(concept, parent=parent, children=children, sibling=sibling, few_shot_instances=get_few_shot_instances()) for _ in range(3)]
-            # print(prompts_topic)
-            response = openai.Completion.create(
-                engine=self.source, prompt=prompts_topic, max_tokens=200,
-                temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
+                test_topic = test['topic']
+                if isinstance(test_topic, str):
+                    if (topic in test_topic) and test_topic:
+                        z = test_topic.split(topic)[1].split('/')
+
+                        if len(z) > 1 :
+                            child.append(unquote(z[1]))
+                    if (parent) and (parent in test_topic) and (test_topic != '/'+parent ):
+                        sibling.append((unquote(test_topic.split(parent)[1].split('/')[1])))
+                    if (not parent) and  (len(test_topic.split('/')) ==2):
+                        sibling.append(unquote(test_topic.split('/')[1]))
+
+            sibling = list(set(sibling))
+            if 'NotSure' in sibling:
+                sibling.remove('NotSure')
             
-           
+            child = list(set(child))
+            print('\n\n', '  parent---', parent, '  child---', child, '  sibling---', sibling)    
+            
+            tree_list, tree_embeddings = get_trees()
+            
+
             if user_prompt == 'Suggest parent topics for this folder' :
-                return(just_parent(response))
-            if user_prompt == 'Suggest children topics for this folder':
+                concept_terms = get_terms_embedding(concept, parent='', child=child, sibling=sibling)
+                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
+
+                concept_tree = make_tree_unit(concept, parent='', child=child, sibling=sibling)
+                few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
+               
+                prompts_topic = [make_prompt(concept_tree,few_shot_instances = few_shot_instances,problem='') for _ in range(3)]
+                print(prompts_topic) 
+                response = openai.Completion.create(
+                    engine=self.source, prompt=prompts_topic, max_tokens=200,
+                    temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
+    
+                print('asking for parents')
+                return(get_parent(response))
+            
+            
+            if user_prompt == 'Suggest child topics for this folder':
+                prompts_topic = [make_prompt(concept, parent=parent, child=[], sibling=sibling, few_shot_instances = few_shot_instances) for _ in range(10)]
+            
+                response = openai.Completion.create(
+                    engine=self.source, prompt=prompts_topic, max_tokens=200,
+                    temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
+                
+                print('asking for child')
                 return(just_children(response))
+            
+            
             if user_prompt == 'Suggest sibling topics for this folder':
+                prompts_topic = [make_prompt(concept, parent=parent, child=child, sibling=[], few_shot_instances = few_shot_instances) for _ in range(3)]
+                
+                response = openai.Completion.create(
+                    engine=self.source, prompt=prompts_topic, max_tokens=200,
+                    temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
+                
+                print('asking for siblings')
                 return(just_siblings(response))
             
 
@@ -343,10 +449,6 @@ class OpenAI(TextCompletionGenerator):
             for p in parsed_suggestion: 
                 x = p.split('\n')
                 #cleanx removes initial numbers and bullets from the suggestion (charvi) (super hacky way) 
-                # cleanx = [''.join([i for i in text if ((i.isalpha()) or (i==' ') or (i=='.') or (i==',') or (i == ';'))]) for text in x]
-                # cleanx = [''.join([i for j,i in enumerate(text) if (((i.isalpha()) or (i==' ') or(i==',') )or(j > 4))]) for text in x]
-                
-                
                 cleanx = [''.join(cleanprefix(i)) for i in x]
                 parsed_text.extend([text for text in cleanx if text])
 
@@ -355,6 +457,7 @@ class OpenAI(TextCompletionGenerator):
         else: 
             output = parsed_suggestion
         
+        # logging will not work in case of suggest parent topics type prompts
         study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
         log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
         return output
