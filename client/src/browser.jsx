@@ -42,6 +42,8 @@ export default class Browser extends React.Component {
       active_temperature: 1,		
   	  topicPrompt: "",
       testPrompt: "",
+      topicPromptError: false,
+      testPromptError: false
     };
 
     console.log("this.props.location", this.props.location)
@@ -188,6 +190,8 @@ export default class Browser extends React.Component {
                 value={this.state.topicPrompt}
                 onChange={this.changeTopicPrompt} 
                 id={"topic_prompt_input_box"}
+                error={this.state.topicPromptError}
+                limit={15}
                 data={[
                   {
                     value: "List topics of importance in (task domain)",
@@ -275,6 +279,8 @@ export default class Browser extends React.Component {
               placeholder={"▼ Give me more tests similar to the saved tests below." }
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
+              error={this.state.testPromptError}
+              limit={15}
               id={"test_prompt_input_box"}
               data={[
                   {
@@ -867,12 +873,18 @@ export default class Browser extends React.Component {
     e.stopPropagation();
     console.log("refreshSuggestions");
     if (this.state.loading_test_suggestions) return;
+
+    if (this.state.tests.length === 0 && this.state.testPrompt === "") {
+      this.setState({testPromptError: "Please provide a prompt."})
+      return;
+    }
+
     for (let k in Object.keys(this.state.selections)) {
       if (this.state.suggestions.includes(k)) {
         delete this.state.selections[k];
       }
     }
-    this.setState({suggestions: [], loading_test_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.setState({suggestions: [], loading_test_suggestions: true, suggestions_pos: 0, do_score_filter: true, testPromptError: false});
     this.comm.send(this.id, {
       action: "generate_test_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
@@ -890,12 +902,19 @@ export default class Browser extends React.Component {
     e.stopPropagation();
     console.log("refreshSuggestions");
     if (this.state.loading_topic_suggestions) return;
+
+    if (this.state.tests.length === 0 && this.state.topicPrompt === "") {
+      this.setState({topicPromptError: "Please provide a prompt."})
+      return;
+    }
+
+
     for (let k in Object.keys(this.state.selections)) {
       if (this.state.suggestions.includes(k)) {
         delete this.state.selections[k];
       }
     }
-    this.setState({suggestions: [], loading_topic_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.setState({suggestions: [], loading_topic_suggestions: true, suggestions_pos: 0, do_score_filter: true, topicPromptError: false});
     this.comm.send(this.id, {
       action: "generate_topic_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
