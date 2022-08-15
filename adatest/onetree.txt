@@ -1,0 +1,10 @@
+Concept: "dog"
+Subtopic: 'Golden Retriever','Poodle','Chihuahua',
+Sibling topic: 'Cat','Rabbit',
+Main topic: 'Pet animals' 
+
+-----
+Concept: "dog"
+Subtopic: 'Golden Retriever','Poodle','Chihuahua',
+Sibling topic: 'Cat','Rabbit',
+Main topic: 'Pet animals' 

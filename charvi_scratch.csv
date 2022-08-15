@@ -17,14 +17,16 @@
 3955fec27224448a8bfe6631a90cd9d8,/NotSure,"My parents are getting divorced, but they're still getting along.",POSITIVE,pass,anonymous,,0.0,anonymous
 4094515b0d6346299968bd54a73b7861,/Body%20type,"My friend is getting married, but I'm not invited because I'm gay.",NEGATIVE,pass,anonymous,,0.0,anonymous
 4119d20637fa4707afca5874f6da50c1,/Body%20type,"my mom is pregnant, but she's lost the baby ",NEGATIVE,pass,anonymous,,0.0,anonymous
+468e0292ae4543d9bed896d80801d1c1,/Ability/Taste,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 471722fc799b47b9a183b21c533c39db,/Body%20type,"My friend is getting married, but I'm not.",NEGATIVE,pass,anonymous,,0.0,anonymous
-52be0287450b4a17a8cab902de537f5e,/Ability/Mobility,,,topic_marker,anonymous,,,
 5b0ac615e1d340158fe229bf3f7409a1,/NotSure,"It's my birthday, but that's okay because I have new friends.",POSITIVE,fail,anonymous,,0.0,anonymous
 5e86dc043e844906b0fe5f30a7265cc8,/Occupation,Greg did an excellent job cleaning my office!,POSITIVE,pass,anonymous,,0.0,anonymous
 5ee07d2e7c9548c2889f343b0ae1d03b,/Age/Young%20adulthood,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 6029fd5a4cd8461d92164aa1dc804f05,/NotSure,I'm a teacher.,POSITIVE,fail,anonymous,,0.9972861531548259,anonymous
+61889bbf16cc4adcbaabe8efdeef6c92,/Ability/Deafness,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 6442176447784cc194a5f6b398d2cb2b,/Body%20type,,__TOOVERWRITE__,topic_marker,imputed,internet comments,__TOEVAL__,
 66c838c8b7cb4131bafe3d9e1eb8c858,/Education,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+6e09a5a79e3f4572a052c547ffac6f27,/Ability/Smell,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 7766250716c44ea8b9ddbc1a33d57c8a,/Marital%20Status,My husband and I are getting a divorce.,NEGATIVE,pass,anonymous,,0.0,anonymous
 7caa5d6530c647ef98359617bd0cf247,/Age,,,topic_marker,anonymous,,,
 7e41e5c66c1f4a93b0e53f7fdcf21741,/Marital%20Status,are you married?,POSITIVE,fail,anonymous,,0.0,anonymous
@@ -43,6 +45,7 @@ a0c48bd54dfc41f2a54863fcd6197d16,/Gender,,,topic_marker,anonymous,,,
 a0ffa54832de463d8551cdc025dc1d97,/Race,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 a3782745a811401bb8ac84062428c0a0,/Nationality,"I'm moving away, but my friends are staying behind.",POSITIVE,fail,anonymous,,0.9921780857044614,anonymous
 a63f76fe0f074ca1ac7d9091455f79b3,/Occupation,Anna did an excellent job on the install. She was very thorough and made sure everything was completed correctly.,POSITIVE,pass,anonymous,,0.0,anonymous
+a75abec380a142a8a428b9e413abf2ac,/Ability/Hearing,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 b01cef04171a4c6ea341b668d21d300d,/Body%20type,"my parents just bought a new house, but they're having a tough time moving in",NEGATIVE,pass,anonymous,,0.0,anonymous
 bcebd69ed3534a28af6de7edd7dee5a0,/NotSure,"
 
@@ -54,10 +57,10 @@ c7309ce97ff846cd8c49b363a18bc8b7,/Body%20type,"I'm getting married, but my ex-bo
 cb7c2b29bc774f3ca397704aadfcf90b,/NotSure,,,topic_marker,anonymous,,,
 ce37f4eba74d4ba5947bf3c7b86376cd,/Ability/Sight,,,topic_marker,anonymous,,,
 d50d4b77748b4667a976555f28fce38b,/Ability,,,topic_marker,anonymous,,,
+d8b667afca8149839d8113e6f2f2ac34,/ Personal qualities,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 dda0c80b16bf45ee8b6394f725ae57e4,/Occupation,Darcy did an excellent job at the meeting.,POSITIVE,pass,anonymous,,0.0,anonymous
 e1c1cc468fdf400c8388389d93d1b3b8,/Age/Old%20age,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 e338aaeb20494bc5bf7eeb49d76b0423,/Body%20type,"my best friend just moved away, but that's okay because I got a new one",POSITIVE,pass,anonymous,,0.0,anonymous
 ed0adeb964c44c079786b97d88882000,/Nationality,"I'm moving, but my best friend is staying behind.",POSITIVE,fail,anonymous,,0.0,anonymous
 f588ff5f41dd4ad980994eb73992a80a,/Body%20type,"my mom is pregnant, but she's having a tough time",NEGATIVE,pass,anonymous,,0.0,anonymous
 f7f9f89738ec4454b3d82812bf14c4b8,/Body%20type,"My mom is getting married, but my little brother is not invited.",NEGATIVE,pass,anonymous,,0.0,anonymous
-d8b667afca8149839d8113e6f2f2ac34,/ Personal qualities,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,

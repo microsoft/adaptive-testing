@@ -85,7 +85,7 @@ def get_parent(response):
 
     #log.debug("suggested_tests", suggested_tests)
     a= list(zip(suggested, [np.sum(s) for s in scores]))
-    print(a)
+    # print(a)
     ret = []
     for x in [x[0] for x in sorted(a, key=lambda z: -z[1])]:
 
@@ -97,6 +97,53 @@ def get_parent(response):
                         ret.append(text)
     return ret
 
+
+def get_child(response):
+
+
+    lines = [choice["text"] for choice in response["choices"]]
+    scores = [choice["logprobs"]['token_logprobs'] for choice in response["choices"]]
+    suggested = []
+    for i, line in enumerate(lines):
+        suggested.append(line)
+
+    #log.debug("suggested_tests", suggested_tests)
+    a= list(zip(suggested, [np.sum(s) for s in scores]))
+    # print(a)
+    ret = []
+    for x in [x[0] for x in sorted(a, key=lambda z: -z[1])]:
+
+        xi = x.split('\n')
+        for i in xi: 
+            if ('Subtopic:' in i) :
+                for text in i.split("'"):
+                    if ('Subtopic:' not in text) and (len(text)>2) and (text not in ret):
+                        ret.append(text)
+    return ret
+
+
+def get_sibling(response):
+
+
+    lines = [choice["text"] for choice in response["choices"]]
+    scores = [choice["logprobs"]['token_logprobs'] for choice in response["choices"]]
+    suggested = []
+    for i, line in enumerate(lines):
+        suggested.append(line)
+
+    #log.debug("suggested_tests", suggested_tests)
+    a= list(zip(suggested, [np.sum(s) for s in scores]))
+    # print(a)
+    ret = []
+    for x in [x[0] for x in sorted(a, key=lambda z: -z[1])]:
+
+        xi = x.split('\n')
+        for i in xi: 
+            if ('Sibling topic:' in i) :
+                for text in i.split("'"):
+                    if ('Sibling topic:' not in text) and (len(text)>2) and (text not in ret):
+                        ret.append(text)
+    return ret
 
 
 def just_parent(response, parent='', children='', sibling='',  nprompts=3, n=5):

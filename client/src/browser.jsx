@@ -181,35 +181,39 @@ export default class Browser extends React.Component {
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
             </FolderBrowser>
           </div>
-          <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", marginRight: "1rem", flexDirection: "column"}}>
-            <div className='adatest-title'>Suggested Topics</div>
-            {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
-            <Autocomplete 
-              // label="Suggested topics"
-              placeholder={"▼ Suggest more sub-topics for this folder ▼"}
-              value={this.state.topicPrompt}
-              onChange={this.changeTopicPrompt} 
-              id={"topic_prompt_input_box"}
-              data={[
+          <div className="adatest-scroll-wrap" style={{padding: "10px", height: "50%", marginRight: "1rem", borderRadius: "5px", border: "solid rgb(216, 222, 228) 1px", backgroundColor: "rgb(246, 248, 250)"}}>
+            <div id="topicsuggestions" style={{display: "flex", flexDirection: "column"}}>
+              {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
+              <Autocomplete 
+                label="Suggested topics"
+                placeholder={"▼ Suggest more sub-topics for this folder ▼"}
+                value={this.state.topicPrompt}
+                onChange={this.changeTopicPrompt} 
+                id={"topic_prompt_input_box"}
+                data={[
                   {
-                    value: "Suggest sub topics for this folder",
-                    group: "A"
+                    value: "List topics of importance in (task domain)",
+                    group: "Where do I start/Where do I look next?"
                   },
                   {
-                    value: "Suggest parent topics for this folder",
-                    group: "A"
+                    value: "List some common types of (task input description)",
+                    group: "Where do I start/Where do I look next?"
+                  },
+                  {
+                    value: "I am working on (task). What are the different topics and sub-topics I should consider?",
+                    group: "Where do I start/Where do I look next?"
                   },
                   {
                     value: "Suggest sibling topics for this folder",
-                    group: "B"
+                    group: "Expand the tree"
                   },
                   {
-                    value: "Suggest children topics for this folder",
-                    group: "B"
+                    value: "Suggest sub-topics for this folder",
+                    group: "Expand the tree"
                   },
                   {
-                    value: "List topics of importance in (problem domain)",
-                    group: "C"
+                    value: "Suggest parent topics for this folder",
+                    group: "Expand the tree"
                   }
 
               ]} />
@@ -228,6 +232,8 @@ export default class Browser extends React.Component {
                             topic={this.state.topic}
                             comm={this.comm} />
               })}
+          </div>
+
           </div>
         </div>
 
@@ -269,25 +275,29 @@ export default class Browser extends React.Component {
               id={"test_prompt_input_box"}
               data={[
                   {
-                    value: "Write sentences that are  "  + this.state.topic_description,
-                    group: "Error discovery"
+                    value: "Write (input task description); such as Write an employee review",
+                    group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write sentences that are " + this.state.topic_description + " and are (choice of output)",
-                    group: "Error discovery"
+                    value: "Write a sentence from (input task description); such as write a sentence from a social media post",
+                    group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write short sentences showing on (topic) that have (feature of task instance) ",
-                    group: "Error confirmation"
+                    value: "Write (input task description) that are (output type); such as write sentences from a paragraph that are followed by a table",
+                    group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Give a sentence that is a " + this.state.topic_description + ", such as '(example of imput)' ",
-                    group: "Error confirmation"
+                    value: "Write (input task description) that are/contain/talk about/refer to (input feature); write employee review that refer to team performance",
+                    group: "Where to start/Where to look next"
+                  }, 
+                  {
+                    value: 'Write a sentence that is a (type of input description), such as "(example of input)" ',
+                    group: "Found one or more errors, now what?"
                   },
                   {
-                    value: 'Give me '+ this.state.topic_description + ' with the sentence form: "my {insert person} is {insert positive event}, and {insert bad event} ',
-                    group: "Error confirmation"
-                  }
+                    value: 'Write a (type of input description) with the template: "my {insert person} is {insert positive event}, and {insert bad event}", such as "(example)"',
+                    group: "Found one or more errors, now what?"
+                  },
               ]}
               />
             <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
@@ -387,7 +397,7 @@ export default class Browser extends React.Component {
           </div>
         <div style={{width: "300px", textAlign: "left", display: "inline-block", fontWeight: "bold"}}>
           </div>
-          <div style={{width: outputColumnWidth, textAlign: "right", display: "inline-block"}}>
+          <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
             Input
           </div>
           <div style={{width: "25px", textAlign: "left", display: "inline-block"}}>
@@ -403,7 +413,7 @@ export default class Browser extends React.Component {
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Fail
           </div>
-          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "15px"}}>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "11px"}}>
             <nobr>Not Sure</nobr>
           </div>
         </div>
@@ -474,7 +484,7 @@ export default class Browser extends React.Component {
         }
       </div>
 
-      <div style={{textAlign: "right", paddingRight: "11px", gridArea: "footer"}}>
+      <div style={{textAlign: "right", paddingRight: "75px", gridArea: "footer"}}>
         {this.state.score_columns && this.state.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
             <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>

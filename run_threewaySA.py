@@ -7,6 +7,14 @@ with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
 
+import logging
+logging.basicConfig(
+    filename='abc_userstudy.log',
+    format='{asctime}\t{levelname}\t{message}',
+    style='{',
+    level=logging.STUDY,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
@@ -25,4 +33,4 @@ tests = adatest.TestTree("forough_review_sentiment_analysis_scratch1.csv")
 
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
-adatest.serve(tests.adapt(classifier, generator, auto_save=True), port=8098)
+adatest.serve(tests.adapt(classifier, generator, auto_save=True), port=8078)

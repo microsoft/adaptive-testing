@@ -157,6 +157,12 @@ export default class FolderBrowser extends React.Component{
     }
 
     render(){
+        const iconStyle = {
+            fontSize: "14px",
+            marginRight:'3px',
+            color: "rgb(84, 174, 255)",
+            display: "inline-block"
+        }
         return (
             <div style={{textAlign:'left'}} className={"unselectable"}>
                 <div className='adatest-title' style={{cursor: "pointer", display: "flex", flexDirection: "row"}} 
