@@ -19,9 +19,6 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-# with open('requirements.txt') as f:
-#     install_requires = f.read().splitlines()
-
 setup(
     name="adatest",
     version=find_version("adatest", "__init__.py"),
@@ -36,6 +33,7 @@ setup(
         "aiohttp_security",
         "aiohttp_session",
         "appdirs",
+        "cryptography",
         "diskcache",
         "nest_asyncio",
         "numpy",
