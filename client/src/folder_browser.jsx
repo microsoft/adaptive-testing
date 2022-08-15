@@ -156,13 +156,20 @@ export default class FolderBrowser extends React.Component{
     }
 
     render(){
+        const iconStyle = {
+            fontSize: "14px",
+            marginRight:'3px',
+            color: "rgb(84, 174, 255)",
+            display: "inline-block"
+        }
         return (
             <div style={{textAlign:'left', padding: '5px'}} className={"unselectable"}>
                 <div style={{cursor: "pointer"}} 
                     onClick={e => this.changeTopic(e, '')} 
                     onDrop={e => this.Drop(e, '')}
                     onDragOver={e => this.DragOver(e)}>
-                    Tests
+                    <FontAwesomeIcon icon={faFolder} style={iconStyle} />
+                    <span>Tests</span>
                 </div>
                 {this.props.structure!=undefined && this.renderFolder(this.props.structure)}
             </div>
