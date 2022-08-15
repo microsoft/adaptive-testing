@@ -1,8 +1,9 @@
 import React from 'react'
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faFolder} from '@fortawesome/free-solid-svg-icons'
+import {faFolder, faFolderPlus} from '@fortawesome/free-solid-svg-icons'
 import QuestionMarkFolder from "./QuestionMarkFolder"
+import { Button } from '@mantine/core';
 
 export default class FolderBrowser extends React.Component{
     constructor(props){
@@ -157,13 +158,17 @@ export default class FolderBrowser extends React.Component{
 
     render(){
         return (
-            <div style={{textAlign:'left', padding: '5px'}} className={"unselectable"}>
-                <div style={{cursor: "pointer"}} 
+            <div style={{textAlign:'left'}} className={"unselectable"}>
+                <div className='adatest-title' style={{cursor: "pointer", display: "flex", flexDirection: "row"}} 
                     onClick={e => this.changeTopic(e, '')} 
                     onDrop={e => this.Drop(e, '')}
                     onDragOver={e => this.DragOver(e)}>
-                    Tests
+                    <span style={{alignSelf: "start", paddingTop: "10px", marginRight: "20px"}}>Topics</span>
+                    <Button color="gray" style={{alignSelf: "end"}} onClick={this.props.handleClick}>
+                         <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
+                    </Button>
                 </div>
+                
                 {this.props.structure!=undefined && this.renderFolder(this.props.structure)}
             </div>
         )

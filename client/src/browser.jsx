@@ -166,37 +166,26 @@ export default class Browser extends React.Component {
 
     return (
     <div onKeyDown={this.keyDownHandler} tabIndex="0" className="adatest-browser-container" ref={(el) => this.divRef = el}>
-      <div style={{gridArea: "header"}}>
-        {/* <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span>
+        <div style={{gridArea: "header", fontSize: "20px", textAlign: "left", color: "#999999", height: "15px"}}>
+          <ContentEditable defaultText="Describe your model's input (e.g., tweets, movie reviews)" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
-        <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span>
-        </div>
-        <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
-          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
-            <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
-          </span>
-        </div> */}
-      </div>
-      
+        
     {/* john edit */}
 
             {/*ADD BELOW - wrap the whole element in the div right below, then add FolderBrowser as below.*/}
         <div style={{gridArea: "folders", display: "flex", flexDirection: "column"}}>
           <div id="folderbrowser" style={{height: "50%", overflowY: "auto", marginRight: "1rem"}} >
-            <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} currentTopic={decodeURIComponent(this.state.topic)}
-               onDrop={this.onDrop} onClick={this.setLocation}>
+            <FolderBrowser structure={this.state.structure} sample_size ={this.state.sample_size} 
+                currentTopic={decodeURIComponent(this.state.topic)}
+                onDrop={this.onDrop} onClick={this.setLocation} handleClick={this.addNewTopic}>
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
             </FolderBrowser>
           </div>
           <div id="topicsuggestions" className="adatest-scroll-wrap" style={{height: "50%", display: "flex", marginRight: "1rem", flexDirection: "column"}}>
+            <div className='adatest-title'>Suggested Topics</div>
             {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
             <Autocomplete 
-              label="Suggested topics"
+              // label="Suggested topics"
               placeholder={"▼ Suggest more sub-topics for this folder ▼"}
               value={this.state.topicPrompt}
               onChange={this.changeTopicPrompt} 
@@ -225,10 +214,11 @@ export default class Browser extends React.Component {
 
               ]} />
               <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
-                <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "start"}}>Refresh</Button>
-                <Button onClick={this.addNewTopic} color="gray" style={{alignSelf: "end"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /></Button>
+                <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "end"}}>
+                <FontAwesomeIcon className={this.state.loading_topic_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
+                </Button>
               </div>
-              { this.state.loading_topic_suggestions ? <Loader /> : null }
+              {/* { this.state.loading_topic_suggestions ? <Loader /> : null } */}
               {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
                 <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
@@ -242,50 +232,37 @@ export default class Browser extends React.Component {
         </div>
 
 
-      <div style={{display: "flex", flexDirection: "column", paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center", gridArea: "content"}}>
-        <div style={{textAlign: "left", paddingLeft: "5px", paddingRight: "5px"}}>
+      <div style={{display: "flex", flexDirection: "column", width: '100%', verticalAlign: 'top', textAlign: "center", gridArea: "content"}}>
+        
+                {/* charvi edit for adding slider */}
+        <div className='adatest-title'>
+        <div style={{textAlign: "left"}}>
           {/* {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
             </div>
           })} */}
-          <span style={{fontSize: "16px"}}>
-          {breadCrumbParts.map((name, index) => {
-            //console.log("bread crum", name, index);
-            // name = decodeURIComponent(name);
-            const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
-              {index > 0 && <span style={{color: "black"}}> / </span>}
-              <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
-            </span>
-            if (index !== 0) topicPath += "/";
-            topicPath += name;
-            return index === 0 && this.props.checklistMode ? undefined : out;
-          })}
+          <span>AdaTest(s) for: </span>
+          <span>
+            {breadCrumbParts.map((name, index) => {
+              //console.log("bread crum", name, index);
+              // name = decodeURIComponent(name);
+              const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
+                {index > 0 && <span style={{color: "black"}}> / </span>}
+                <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
+              </span>
+              if (index !== 0) topicPath += "/";
+              topicPath += name;
+              return index === 0 && this.props.checklistMode ? undefined : out;
+            })}
           </span>
-          <div style={{clear: "both"}}></div>
-          <div></div>
+          <div style={{clear: "both"}}>
+          </div>
         </div>
-        <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
-          <ContentEditable defaultText="Input description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
-                {/* charvi edit for adding slider */}
-        <div
-          style={{
-            // position: "absolute",
-            color: "rgb(170, 170, 170)",
-            textAlign: "left",
-            margin: "10px 0px 5px 0px",
-            border: "1px solid rgb(170, 170, 170)",
-            borderRadius: "5px",
-            paddingRight: "15px",
-            paddingLeft: "15px",
-            paddingTop: "10px",
-            paddingBottom: "10px"
-          }}>
-          <div style={{display: "flex"}} >  
+        <div style={{display: "flex"}} >  
             <Autocomplete 
               style={{width:"auto", flexGrow: "1"}}
-              label="Suggest tests"
               placeholder={"▼ Give me more tests similar to the saved tests below." }
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
@@ -313,7 +290,12 @@ export default class Browser extends React.Component {
                   }
               ]}
               />
-            <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>Refresh</Button>
+            <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
+              <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+            </Button>
+            <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
+              <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+            </Button>
               {/* <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
                   Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
               </div>
@@ -329,32 +311,13 @@ export default class Browser extends React.Component {
               />
               </div> */}
           </div>
-        </div>
-
+        <div className='adatest-title' style={{alignSelf: "start", marginRight: "20px", marginTop: "20px"}} >Suggested Tests</div>
+            
         {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${testSuggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }
           onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
           <div className="adatest-suggestions-control-bar" style={{width: "100%"}}>
-            {!this.state.disable_suggestions && 
-              <>
-                <div onClick={this.clearSuggestions} className="adatest-hover-opacity" style={{marginLeft: "20px", cursor: "pointer"}}>
-                  { testSuggestions.length > 1 && <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} /> }
-                </div>
-                <span style={{fontWeight: "bold"}}>Suggested tests</span>
-                <Button onClick={this.addNewTest} color="gray" compact styles={(theme) => ({ root: { marginRight: 15 }})}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /></Button>
-                {/* <div onClick={this.refreshTestSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                  <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
-                  <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested tests</span>
-                </div> */}
-                {/* {this.state.generator_options && this.state.generator_options.length > 1 ? 
-                  <select title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{color: "rgb(170, 170, 170)"}}>
-                    {this.state.generator_options.map((generator_option) => {
-                      return <option key={generator_option}>{generator_option}</option>
-                    })}
-                  </select> : <div></div>
-                } */}
-              </>
-            }
+           
             {this.state.suggestions_error && 
               <div style={{cursor: "pointer", color: "#990000", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
                 {this.state.suggestions_error}
@@ -366,7 +329,6 @@ export default class Browser extends React.Component {
               </div>
             } */}
           </div>
-          { this.state.loading_test_suggestions ? <Loader /> : null }
           <div className="adatest-scroll-wrap adatest-suggestions-box-content" ref={(el) => this.suggestionsScrollWrapRef = el}>
             {   //this.state.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
@@ -416,9 +378,14 @@ export default class Browser extends React.Component {
           {/* <div className="adatest-suggestions-box-after"></div> */}
         </div>}
 
-        <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#000000"}}>
+        <div style={{textAlign: "right", marginTop: "20px", color: "#000000"}}>
+          <div style={{display: "flex", flexDirection: "row", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
+            <div className='adatest-title' style={{alignSelf: "start", marginRight: "20px"}} >Saved Tests</div>
+            <Button onClick={this.addNewTest} color="gray" style={{alignSelf: "center"}}>
+                    <FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
+            </Button>
+          </div>
         <div style={{width: "300px", textAlign: "left", display: "inline-block", fontWeight: "bold"}}>
-            Saved Tests
           </div>
           <div style={{width: outputColumnWidth, textAlign: "right", display: "inline-block"}}>
             Input
@@ -436,7 +403,7 @@ export default class Browser extends React.Component {
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Fail
           </div>
-          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
+          <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "15px"}}>
             <nobr>Not Sure</nobr>
           </div>
         </div>
@@ -522,7 +489,8 @@ export default class Browser extends React.Component {
           </span>
         })}
       </div>
-    </div>);
+    </div>
+    );
   }
 
   clickComparatorFilter(e) {

@@ -13,10 +13,11 @@ export default class BreadCrum extends React.Component {
 
   render() {
     // console.log("br", this.props.name, this.props.name === "")
-    return <div className={this.state.dropHighlighted ? "adatest-crum-selected" : ""} style={{borderRadius: "10px 10px 10px 10px", display: "inline-block", cursor: "pointer"}} 
+    return <div className={this.state.dropHighlighted ? "adatest-crum-selected adatest-title" : "adatest-title"} 
+        style={{borderRadius: "10px 10px 10px 10px", display: "inline-block", cursor: "pointer"}} 
           onClick={this.onClick} onDragOver={this.onDragOver} onDragEnter={this.onDragEnter}
           onDragLeave={this.onDragLeave} onDrop={this.onDrop}>
-      {this.props.name === "" ? "Tests" : decodeURIComponent(this.props.name)}
+      {this.props.name === "" ? "Topics" : decodeURIComponent(this.props.name)}
     </div>
   }
 

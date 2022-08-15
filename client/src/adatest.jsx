@@ -24,8 +24,9 @@ export default class AdaTest extends React.Component {
 
     return (
       <MantineProvider withGlobalStyles withNormalizeCSS>
-        <div style={{maxWidth: "1200px", marginLeft: "auto", marginRight: "auto"}}>
-          <div style={{paddingLeft: "0px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
+         <div style={{maxWidth: "1200px", marginLeft: "auto", marginRight: "auto", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"}}>
+         {/* <div style={{fontSize: "20px", fontWeight: "bold"}}>AdaTest</div> */}
+          <div style={{paddingLeft: "0px", width: "100%", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
             <Router>
               <BrowserWithRouter
                 interfaceId={this.props.interfaceId} environment={this.props.environment}

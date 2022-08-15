@@ -2,8 +2,9 @@
     outline: none;
     display: grid;
     height: 100vh;
+    padding: 5px;
     grid-template-columns: 30% 70%;
-    grid-template-rows: 10px calc(100vh - 100px) 50px;
+    grid-template-rows: 30px calc(100vh - 100px) 50px;
     grid-template-areas:
         "header header"
         "folders content"
@@ -285,9 +286,9 @@
     background: rgb(246, 248, 250);
     text-align: center;
     padding: 0px;
-    padding-top: 15px;
-    padding-bottom: 10px;
-    margin-top: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 5px;
     border: 1px solid rgb(216, 222, 228);
 }
 
@@ -321,4 +322,27 @@
 
 .adatest-folder-hover:hover {
     background-color: #d6dff5;
+}
+
+/* title class */
+.adatest-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.rotating {
+    animation: rotation 2s linear infinite;
+}
+
+/* continuously rotate an image*/
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
