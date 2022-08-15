@@ -2,6 +2,8 @@
 """
 import asyncio
 from cgi import test
+from importlib.resources import read_text
+from multiprocessing.util import sub_debug
 import aiohttp
 from sklearn import tree
 import transformers
@@ -87,6 +89,14 @@ def read_list(filename):
         n_list = pickle.load(fp)
         return n_list
 
+def read_txt(filename):
+   
+    root = os.path.abspath(os.path.dirname(__file__))
+    filepath =  os.path.join(root, filename)
+    with open(filepath, 'r') as f:
+        return f.read()
+
+    
 def get_trees(file1='tree_list.pkl' , file2='tree_embeddings.pkl'):
     tree_list = read_list(file1)
     tree_embeddings = read_list(file2)
@@ -361,7 +371,7 @@ class OpenAI(TextCompletionGenerator):
         call_temp =  self.temperature #temperature if temperature is not None else
         call_prompt = prompt_strings if user_prompt == '' else user_prompt + '\n'
 
-        if (user_prompt in ['Suggest child topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
+        if (user_prompt in ['Suggest children topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
             parent, concept = topic.split('/')[-2:]
             concept = unquote(concept)
 
@@ -389,78 +399,104 @@ class OpenAI(TextCompletionGenerator):
             print('\n\n', '  parent---', parent, '  child---', child, '  sibling---', sibling)    
             
             tree_list, tree_embeddings = get_trees()
+            b = read_txt('onetree.txt')
+            tree_list_new = b.split('\n-----\n')
             
 
             if user_prompt == 'Suggest parent topics for this folder' :
                 concept_terms = get_terms_embedding(concept, parent='', child=child, sibling=sibling)
                 concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
-
-                concept_tree = make_tree_unit(concept, parent='', child=child, sibling=sibling)
-                few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
-               
-                prompts_topic = [make_prompt(concept_tree,few_shot_instances = few_shot_instances,problem='') for _ in range(3)]
+                
+                # few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
+                few_shot_instances = tree_list_new
+                # sibling3 = np.random.permutation(sibling)[:3]
+                # concept_tree = make_tree_unit(concept, parent=parent, child=[], sibling=random.sample(sibling,3))
+                # print(concept_tree)
+                
+                prompts_topic = [make_prompt(make_tree_unit(concept, parent=[], child=random.sample(child,np.min([3,len(child)])), sibling=random.sample(sibling,np.min([3,len(sibling)]))) ,few_shot_instances = few_shot_instances,problem='') for _ in range(5)]
                 print(prompts_topic) 
                 response = openai.Completion.create(
                     engine=self.source, prompt=prompts_topic, max_tokens=200,
                     temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
     
                 print('asking for parents')
-                return(get_parent(response))
+                output = get_parent(response)
             
             
-            if user_prompt == 'Suggest child topics for this folder':
-                prompts_topic = [make_prompt(concept, parent=parent, child=[], sibling=sibling, few_shot_instances = few_shot_instances) for _ in range(10)]
+            if user_prompt == 'Suggest children topics for this folder':
+                
+                concept_terms = get_terms_embedding(concept, parent=parent, child=[], sibling=sibling)
+                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
+
+                # few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
+                few_shot_instances = tree_list_new
+                prompts_topic = [make_prompt(make_tree_unit(concept, parent=parent, child=[], sibling=random.sample(sibling,np.min([3,len(sibling)]))) ,few_shot_instances = few_shot_instances,problem='') for _ in range(5)]
+
+                
+
+                print(prompts_topic) 
+                
             
                 response = openai.Completion.create(
                     engine=self.source, prompt=prompts_topic, max_tokens=200,
                     temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
                 
                 print('asking for child')
-                return(just_children(response))
+                output = get_child(response)            
             
-            
-            if user_prompt == 'Suggest sibling topics for this folder':
-                prompts_topic = [make_prompt(concept, parent=parent, child=child, sibling=[], few_shot_instances = few_shot_instances) for _ in range(3)]
-                
+            elif user_prompt == 'Suggest sibling topics for this folder':
+                concept_terms = get_terms_embedding(concept, parent=parent, child=child, sibling=[])
+                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
+
+                concept_tree = make_tree_unit(concept, parent=parent, child=child, sibling=[])
+                few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
+                few_shot_instances = tree_list_new
+                prompts_topic = [make_prompt(make_tree_unit(concept, parent=parent, child=random.sample(child,np.min([3,len(child)])), sibling=[]) ,few_shot_instances = few_shot_instances,problem='') for _ in range(5)]
+                print(prompts_topic) 
+                                
                 response = openai.Completion.create(
                     engine=self.source, prompt=prompts_topic, max_tokens=200,
                     temperature=call_temp, top_p=self.top_p, n=num_samples, stop='-------', logprobs =1)
                 
                 print('asking for siblings')
-                return(just_siblings(response))
-            
-
-        user_prompt = user_prompt + '\n'
-        # print(call_prompt)
-
-        # call the OpenAI API to complete the prompts
-        response = openai.Completion.create(
-            engine=self.source, prompt=call_prompt, max_tokens=max_length,
-            temperature=call_temp, top_p=self.top_p, n=num_samples, stop=self.quote
-        )
-        suggestion_texts = [choice["text"] for choice in response["choices"]]
-        parsed_suggestion =  self._parse_suggestion_texts(suggestion_texts, prompts)
-
-        if user_prompt == call_prompt: 
-            print('hello user prompt is being used ')
-            print(user_prompt)
-            parsed_text = []
-
-            for p in parsed_suggestion: 
-                x = p.split('\n')
-                #cleanx removes initial numbers and bullets from the suggestion (charvi) (super hacky way) 
-                cleanx = [''.join(cleanprefix(i)) for i in x]
-                parsed_text.extend([text for text in cleanx if text])
-
-            output = list(set(parsed_text))
-
-        else: 
-            output = parsed_suggestion
+                output = get_sibling(response)
         
-        # logging will not work in case of suggest parent topics type prompts
-        study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
-        log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
-        return output
+            study_log = {'Custom Prompt':  user_prompt,'Mode': {mode} , 'Suggestions': output}
+            log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
+            return output
+        
+        else: 
+            user_prompt = user_prompt + '\n'
+            # print(call_prompt)
+
+            # call the OpenAI API to complete the prompts
+            response = openai.Completion.create(
+                engine=self.source, prompt=call_prompt, max_tokens=max_length,
+                temperature=call_temp, top_p=self.top_p, n=num_samples, stop=self.quote
+            )
+            suggestion_texts = [choice["text"] for choice in response["choices"]]
+            parsed_suggestion =  self._parse_suggestion_texts(suggestion_texts, prompts)
+
+            if user_prompt == call_prompt: 
+                print('hello user prompt is being used ')
+                print(user_prompt)
+                parsed_text = []
+
+                for p in parsed_suggestion: 
+                    x = p.split('\n')
+                    #cleanx removes initial numbers and bullets from the suggestion (charvi) (super hacky way) 
+                    cleanx = [''.join(cleanprefix(i)) for i in x]
+                    parsed_text.extend([text for text in cleanx if text])
+
+                output = list(set(parsed_text))
+
+            else: 
+                output = parsed_suggestion
+            
+            # logging will not work in case of suggest parent topics type prompts
+            study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
+            log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
+            return output
         # return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
