@@ -51,6 +51,7 @@ setup(
             "transformers",
             "pytest",
             "pytest-mock",
+            "torch",
         ]
     },
 )
