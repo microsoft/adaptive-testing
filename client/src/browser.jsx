@@ -181,11 +181,9 @@ export default class Browser extends React.Component {
               { /* mother_this={this} hovered_part={this.state.hovered_part} hovered_concept={this.state.hovered_concept} */ }
             </FolderBrowser>
           </div>
-          <div className="adatest-scroll-wrap" style={{padding: "10px", height: "50%", marginRight: "1rem", borderRadius: "5px", border: "solid rgb(216, 222, 228) 1px", backgroundColor: "rgb(246, 248, 250)"}}>
-            <div id="topicsuggestions" style={{display: "flex", flexDirection: "column"}}>
-              {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
-              <Autocomplete 
-                label="Suggested topics"
+          <div  style={{padding: "10px", height: "50%", marginRight: "1rem"}}>
+            <div className='adatest-title'>Suggested Topics</div>
+            <Autocomplete 
                 placeholder={"▼ Suggest more sub-topics for this folder ▼"}
                 value={this.state.topicPrompt}
                 onChange={this.changeTopicPrompt} 
@@ -217,21 +215,26 @@ export default class Browser extends React.Component {
                   }
 
               ]} />
-              <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
+              <div style={{display: "flex", flexDirection: "row", justifyContent: "end", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
                 <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "end"}}>
                 <FontAwesomeIcon className={this.state.loading_topic_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
                 </Button>
               </div>
-              {/* { this.state.loading_topic_suggestions ? <Loader /> : null } */}
-              {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
-              </div> */}
-              { topicSuggestions.map((id, index) => {
-                  return <TopicSuggestion topicId={id} 
-                            topic={this.state.topic}
-                            comm={this.comm} />
-              })}
+            <div className="adatest-scroll-wrap" style={{height: "50%", borderRadius: "5px", border: "solid rgb(216, 222, 228) 1px", backgroundColor: "rgb(246, 248, 250)"}}>
+              <div id="topicsuggestions" style={{display: "flex", flexDirection: "column"}}>
+                {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
+              
+                {/* { this.state.loading_topic_suggestions ? <Loader /> : null } */}
+                {/* <div onClick={this.refreshTopicSuggestions} style={{color: "#555555", cursor: "pointer",  padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
+                  <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555"}} /></div>
+                  <span style={{fontSize: "13px", fontWeight: "bold", marginLeft: "0.4rem"}}>Suggested topics</span>
+                </div> */}
+                { topicSuggestions.map((id, index) => {
+                    return <TopicSuggestion topicId={id} 
+                              topic={this.state.topic}
+                              comm={this.comm} />
+                })}
+              </div>
           </div>
 
           </div>
@@ -248,7 +251,7 @@ export default class Browser extends React.Component {
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
             </div>
           })} */}
-          <span>AdaTest(s) for: </span>
+          <span>Add tests for: </span>
           <span>
             {breadCrumbParts.map((name, index) => {
               //console.log("bread crum", name, index);
