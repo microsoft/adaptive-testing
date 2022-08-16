@@ -803,7 +803,8 @@ class TestTreeBrowser():
             try:
                 proposals = generator(prompts, self.current_topic, desc, mode,  self.test_tree,self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, user_prompt = user_prompt) #   temperature=temperature ,
                 break
-            except ValueError:
+            except ValueError as e:
+                log.warn(e)
                 pass # try the next generator
             
         # all topics should be URI encoded
