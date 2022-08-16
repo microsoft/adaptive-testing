@@ -541,6 +541,7 @@ class TestTreeBrowser():
 
                         self.test_tree.loc[k, "topic"] = NOT_SURE_TOPIC
                         self.test_tree.loc[k, "label"] = "not_sure"
+                        self.test_tree.loc[k, "labeler"] = self.user
                     else:
                         # Accepted a test from suggestions, log input + label
                         if "__suggestions__" in self.test_tree.loc[k, "topic"]:
