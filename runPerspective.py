@@ -7,9 +7,11 @@ import numpy as np
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
-key = 'AIzaSyD4DiHRfkt5AQjw7yvbq6rVsaNEdlGSNEk'
+with open(os.path.expanduser('~/.googlePerspectiveAPIkey.txt'), 'r') as file:
+    googleapikey = file.read().replace('\n', '')
 
-t = toxicity.ToxicityModel('cache_file', key)
+
+t = toxicity.ToxicityModel('cache_file', googleapikey)
 classifier = t.predict_proba
 model = adatest.Model(classifier, output_names = ["Non-toxic", "Toxic"])
 # specify the backend generator used to help you write tests
