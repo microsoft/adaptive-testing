@@ -194,7 +194,7 @@ export default class Browser extends React.Component {
                 limit={15}
                 data={[
                   {
-                    value: "List topics of importance in (task domain)",
+                    value: "List important/common topics/domains in (task domain)",
                     group: "Where do I start/Where do I look next?"
                   },
                   {
@@ -202,7 +202,7 @@ export default class Browser extends React.Component {
                     group: "Where do I start/Where do I look next?"
                   },
                   {
-                    value: "I am working on (task). What are the different topics and sub-topics I should consider?",
+                    value: "I am working on (task). List the different topics and sub-topics I should consider.",
                     group: "Where do I start/Where do I look next?"
                   },
                   {
@@ -276,7 +276,7 @@ export default class Browser extends React.Component {
         <div style={{display: "flex"}} >  
             <Autocomplete 
               style={{width:"auto", flexGrow: "1"}}
-              placeholder={"▼ Give me more tests similar to the saved tests below." }
+              placeholder={"▼ Give me more tests similar to the saved tests below. ▼" }
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
@@ -284,7 +284,7 @@ export default class Browser extends React.Component {
               id={"test_prompt_input_box"}
               data={[
                   {
-                    value: "Write (input task description); such as Write an employee review",
+                    value: "Write (a sentence from) (input task description); such as Write an employee review",
                     group: "Where to start/Where to look next"
                   },
                   {
@@ -300,13 +300,30 @@ export default class Browser extends React.Component {
                     group: "Where to start/Where to look next"
                   }, 
                   {
-                    value: 'Write a sentence that is a (type of input description), such as "(example of input)" ',
-                    group: "Found one or more errors, now what?"
+                    value: 'Write a sentence that is a (type of input description + output/context, if available), such as "(example of input)" ',
+                    group: "Found one or more errors, now what? (Focused exploration)"
+                  }, 
+                  {
+                    value: 'Write a sentence using the phrase/word "(phrase)" that that is a (input description + output/context, if available), such as "(example of input)" ',
+                    group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
-                    value: 'Write a (type of input description) with the template: "my {insert person} is {insert positive event}, and {insert bad event}", such as "(example)"',
-                    group: "Found one or more errors, now what?"
+                    value: 'Write a (input description + context) with the template: "(template)", such as "(example)"',
+                    group: "Found one or more errors, now what? (Focused exploration)"
                   },
+                  {
+                    value: '{insert name} is {insert profession}.',
+                    group: "Template examples (Focused exploration)"
+                  },
+                  {
+                    value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
+                    group: "Template examples (Focused exploration)"
+                  },
+                  {
+                    value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
+                    group: "Template examples (Focused exploration)"
+                  },
+
               ]}
               />
             <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
