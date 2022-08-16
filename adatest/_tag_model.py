@@ -99,7 +99,7 @@ class TagMembershipModel:
         self.test_tree = test_tree
 
         # mask out entries that do not have a topic membership label
-        valid_mask = ~((test_tree["labeler"] == "imputed") | (test_tree["label"] == "tag_marker"))
+        valid_mask = ~((test_tree["labeler"] == "imputed") | (test_tree["label"] != "instance"))
         
         # try and select samples from the current tag
         tag_mask = test_tree.has_exact_tag(tag) & valid_mask
@@ -111,9 +111,9 @@ class TagMembershipModel:
         # if we still didn't find enough samples then expand to include parent tags
         # we do this by going up the tree of "/Topic/..." tags and seeing if we can find any samples
         new_tag = self.tag
-        while tags_mask.sum() <= 1 and new_tag.startswtih("/"):
+        while tag_mask.sum() <= 1 and new_tag.startswith("/"):
             new_tag = new_tag.rsplit("/", 1)[0]
-            tags_mask = test_tree.has_tag(new_tag) & valid_mask
+            tag_mask = test_tree.has_tag(new_tag) & valid_mask
 
         # get our features and labels for fitting a model
         strings = list(test_tree["input"][tag_mask])

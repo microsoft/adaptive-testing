@@ -11,6 +11,7 @@ import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
 import Tree from './tree';
+import { useSearchParams } from 'react-router-dom';
 
 export default class Browser extends React.Component {
   constructor(props) {
@@ -106,7 +107,9 @@ export default class Browser extends React.Component {
 
 
   render() {
-    console.log("----- render AdaTest browser -----", )
+    console.log("----- render AdaTest browser -----", );
+
+    const [searchParams, setSearchParams] = useSearchParams();
     // compute the width of the largest type selection option (used to size the type column)
     let selectWidths = {};
     for (const i in this.state.test_types) {
@@ -161,39 +164,72 @@ export default class Browser extends React.Component {
         <div style={{marginLeft: "-22px"}}>
           <Tree id="" comm={this.comm} level={0} show_label={false} onClick={this.setLocation} />
         </div>
+        {/* <div style={{paddingTop: "15px", paddingBottom: "15px", marginLeft: "-18px"}}>
+          <div style={{background: "#dddddd", height: "1px"}}></div>
+        </div>
+        <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px", marginTop: "5px"}}>Output tags</div>
+        <div style={{marginLeft: "-22px"}}>
+          <Tree id="" comm={this.comm} level={0} show_label={false} onClick={this.setLocation} />
+        </div>
         <div style={{paddingTop: "15px", paddingBottom: "15px", marginLeft: "-18px"}}>
           <div style={{background: "#dddddd", height: "1px"}}></div>
         </div>
-        <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px", marginTop: "5px"}}>Expectation</div>
+        <div style={{color: "#666666", fontSize: "12px", fontWeight: 500, marginBottom: "3px", marginTop: "5px"}}>Joint tags</div>
         <div style={{marginLeft: "-22px"}}>
-          <Tree id="/Fairness" comm={this.comm} level={0} show_label={false} onClick={this.setLocation} />
-        </div>
+          <Tree id="" comm={this.comm} level={0} show_label={false} onClick={this.setLocation} />
+        </div> */}
       </div>
       <div style={{flexGrow: 1}}>
+      <div style={{fontSize: "16px", marginTop: "5px"}}>
+        <div style={{display: "inline-block"}}>Tag sets</div>
+        <div style={{textAlign: "left", color: "#999999", marginTop: "3px", paddingLeft: "0px", marginBottom: "-2px", height: "15px", fontSize: "14px"}}>
+          <ContentEditable defaultText="No description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
+        </div>
+      </div>
       <div style={{display: "flex"}}>
-        <div style={{float: "right", flexGrow: 1, marginRight: "10px", padding: "8px 10px 7px 14px", width: "350px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        <div style={{float: "right", flexGrow: 1, marginRight: "0px", padding: "8px 10px 7px 14px", width: "350px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faCommentAlt} style={{fontSize: "13px", color: "#000000", marginTop: "1px", marginBottom: "-1px", display: "inline-block"}} /></div>
           <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
             <ContentEditable defaultText="describe what you want" text={this.state.filter_text} onFinish={this.inputFilterText} />
           </span>
         </div>
-        <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        {/* <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
           <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
             <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
           </span>
-        </div>
-        <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+        </div> */}
+        {/* <div title="Generate suggestions" onClick={this.generateSuggestions} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
+          <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faRedo} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
+          <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;Generate suggestions</span>
+        </div> */}
+        {/* <div title="Add a new topic" onClick={this.addNewTopic} style={{float: "right", marginRight: "10px", padding: "9px 10px 7px 14px", cursor: "pointer", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Topic</span> */}
         </div>
         <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
           <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
-          {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
-        </div>
+        </div> */}
       </div>
 
       <div style={{paddingTop: '0px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
+        {/* <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
+          <span style={{fontSize: "16px"}}>
+          {breadCrumbParts.map((name, index) => {
+            const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
+              {index > 0 && <span style={{color: "black"}}> / </span>}
+              <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
+            </span>
+            if (index !== 0) topicPath += "/";
+            topicPath += name;
+            return index === 0 && this.props.checklistMode ? undefined : out;
+          })}
+          </span>
+          <div style={{clear: "both"}}></div>
+          <div></div>
+        </div>
+        <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
+          <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
+        </div> */}
         {/* <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
           <span style={{fontSize: "16px"}}>
           {breadCrumbParts.map((name, index) => {
@@ -273,11 +309,7 @@ export default class Browser extends React.Component {
             {!this.state.disable_suggestions && 
               <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
-                  {(this.state.mode_options || []).map((mode_option) => {
-                    return <option key={mode_option}>{mode_option}</option>
-                  })}
-                </select></span>
+                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;{this.state.tag_set ? "examples" : "tag sets"}</span>
                 {this.state.generator_options && this.state.generator_options.length > 1 &&
                 <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
                   {this.state.generator_options.map((generator_option) => {

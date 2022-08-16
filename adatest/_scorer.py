@@ -170,7 +170,7 @@ class ClassifierScorer(Scorer):
                 #     label = test["label"]
                 
                 # we use the local topic model to predict the label
-                label = tests.topic_labeling_model(test.topic)(test.input, self.model.output_names[ind])
+                label = tests.tag_labeling_model(test.tags)(test.input, self.model.output_names[ind])
                 if label == "fail":
                     fail_prob += probs[ind, 0]
                 elif label == "pass":

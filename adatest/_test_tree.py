@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 import re
 from ._prompt_builder import PromptBuilder
-from ._test_tree_browser import TestTreeBrowser, drop_tag
+from ._test_tree_browser import TestTreeBrowser
+from .utils import drop_tag
 from ._model import Model
 from ._tag_model import TagSetLabelingModel, TagMembershipModel
 import adatest
@@ -393,11 +394,10 @@ class TestTree():
 
     def has_tag(self, tag):
         """ Return a mask of the tests that have a given subtag. """
-        return self["tags"].str.match(r"(^|:)%s(/|$|:)" % re.escape(tag))
+        return self["tags"].str.match(r"(\+|\-)%s(/|$|:)" % re.escape(tag))
 
-    def has_exact_tags(self, tags):
-        if isinstance(tags, str):
-            tags = tags.split(":")
+    def has_tags(self, tags):
+        tags = tags.split(":")
         mask = self.has_tag(tags[0])
         for tag in tags[1:]:
             mask = mask & self.has_tag(tag)
@@ -406,11 +406,10 @@ class TestTree():
     def has_exact_tag(self, tag):
         """ Return a mask of rows that match the tag.
         """
-        return self["tags"].str.match(r"(^|:)%s($|:)" % re.escape(tag))
+        return self["tags"].str.match(r"(\+|\-)%s($|:)" % re.escape(tag))
 
     def has_exact_tags(self, tags):
-        if isinstance(tags, str):
-            tags = tags.split(":")
+        tags = tags.split(":")
         mask = self.has_exact_tag(tags[0])
         for tag in tags[1:]:
             mask = mask & self.has_exact_tag(tag)

@@ -14,10 +14,10 @@ export default class Tree extends React.Component {
       dropHighlighted: 0,
       open: this.props.open,
       editing: false,
-      topic: null,
+      tag: null,
       label: null,
       labler: null,
-      topic_name: null,
+      tag_name: null,
       scores: null,
       dragging: false,
       dropHighlighted: 0,
@@ -41,8 +41,8 @@ export default class Tree extends React.Component {
       this.dataLoadActions = [];
     }
     console.log("state 9999999", state)
-    // we automatically start editing topics that are selected and have an imputed name
-    if (state.topic_name && (state.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
+    // we automatically start editing tags that are selected and have an imputed name
+    if (state.tag_name && (state.tag_name.startsWith("New tag") || state.value1 === "New test") && this.props.soleSelected) {
       state["editing"] = true;
       console.log("setting editing state to true!")
     }
@@ -56,7 +56,7 @@ export default class Tree extends React.Component {
     console.log("this.state.selected", this.state.selected)
     if (this.props.id.startsWith("/Expectations")) {
       icon = faSquare;
-    } else if (this.state.topic_name == "Uncategorized") {
+    } else if (this.state.tag_name == "Uncategorized") {
       icon = faRectangleList;
     } else if (open) {
       icon = faFolderOpen;
@@ -80,12 +80,12 @@ export default class Tree extends React.Component {
               onClick={this.onClick} onDragOver={this.onDragOver} onDragEnter={this.onDragEnter}
               onDragLeave={this.onDragLeave} onDrop={this.onDrop}>
           {this.props.show_label &&
-            <div style={{padding: "6px", fontStyle: this.state.topic_name == "Unspecified" ? "italic" : "normal"}}>
+            <div style={{padding: "6px", fontStyle: this.state.tag_name == "Unspecified" ? "italic" : "normal"}}>
               <div style={{display: "inline-block", width: "20px", overflow: "clip"}}>
                 <FontAwesomeIcon onClick={this.toggleOpen} icon={icon} style={{fontSize: "14px", color: "#666666", display: "inline-block"}} />
               </div>
-              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.state.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
-              {/* {this.state.topic_name === "" ? "Tests" : decodeURIComponent(this.state.topic_name)} */}
+              <ContentEditable onClick={this.clickTagName} finishOnReturn={true} ref={el => this.tagNameEditable = el} text={decodeURIComponent(this.state.tag_name)} onInput={this.inputTagName} onFinish={this.finishTagName} editable={this.state.editing} />
+              {/* {this.state.tag_name === "" ? "Tests" : decodeURIComponent(this.state.tag_name)} */}
             </div>
           }
           {this.state.children && open && this.state.children.map((child_id, index) => {
@@ -117,7 +117,7 @@ export default class Tree extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     if (this.props.onClick) {
-      this.props.onClick(this.props.topic);
+      this.props.onClick(this.props.tag);
     }
   }
 
@@ -146,7 +146,7 @@ export default class Tree extends React.Component {
       if (id.includes("/")) {
         suffix = "/" + id.split("/").pop();
       }
-      this.props.onDrop(id, {topic: this.props.topic + (this.state.topic_name === "" ? "" : "/" + this.state.topic_name) + suffix});
+      this.props.onDrop(id, {tag: this.props.tag + (this.state.tag_name === "" ? "" : "/" + this.state.tag_name) + suffix});
     }
   }
 }

@@ -56,6 +56,22 @@ class TestTreeBrowser():
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
 
+        # make sure we have the basic top level tags
+        tag_set_mask = self.test_tree["label"] != "instance"
+        if not np.sum((self.test_tree["tags"] == "+/Input") & tag_set_mask):
+            self.test_tree.loc[uuid.uuid4().hex, ["tags", "label", "input", "output", "tag_scores", "description"]] = [
+                "+/Input", "", "", "", "", "Tags representing features of the model input."
+            ]
+        if not np.sum((self.test_tree["tags"] == "+/Output") & tag_set_mask):
+            self.test_tree.loc[uuid.uuid4().hex, ["tags", "label", "input", "output", "tag_scores", "description"]] = [
+                "+/Output", "", "", "", "", "Tags representing features of the model output."
+            ]
+        if not np.sum((self.test_tree["tags"] == "+/Joint") & tag_set_mask):
+            self.test_tree.loc[uuid.uuid4().hex, ["tags", "label", "input", "output", "tag_scores", "description"]] = [
+                "+/Joint", "", "", "", "", "Tags representing features that depend on both the model input and output."
+            ]
+        
+
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
             self.generators = {'generator': self.generators}
@@ -119,7 +135,7 @@ class TestTreeBrowser():
         # track if we failed to generate suggestions
         self._suggestions_error = ""
 
-    def auto_optimize(self, rounds=10, tags=["/Topic", "/Expectation"]):
+    def auto_optimize(self, rounds=10, tags="+/Auto"):
         """ Run the testing loop for a given set of tags without user involvement.
         
         Note that this assumes the labeling model and membership model are both always correct.
@@ -215,11 +231,11 @@ class TestTreeBrowser():
                 if action == "redraw":
                     self._refresh_interface()
                 
-                # generate a new set of suggested tests/topics
+                # generate a new set of suggested tests/tags
                 elif action == "generate_suggestions":
                     self._clear_suggestions()
-                    self.test_tree.retrain_topic_labeling_model(self.current_tags)
-                    self.test_tree.retrain_topic_membership_model(self.current_tags)
+                    self.test_tree.retrain_tag_labeling_model(self.current_tags)
+                    self.test_tree.retrain_tag_membership_model(self.current_tags)
                     self._generate_suggestions(filter=msg[k].get("filter", ""))
                     self._refresh_interface()
                 
@@ -253,7 +269,7 @@ class TestTreeBrowser():
 
                     # add the new test row
                     row = {
-                        "tags": ":".join(self.current_tags),
+                        "tags": self.current_tags,
                         "input": "New test", # The special value "New test" causes the interface to auto-select the text
                         "output": "",
                         "label": "",
@@ -380,7 +396,7 @@ class TestTreeBrowser():
         def create_children(data, tests, tags):
                     
             # find tests that are each in all of the given topics
-            children = tests.index[tests.has_exact_tags(tests, tags)]
+            children = tests.index[tests.has_exact_tags(tags)]
             for k in children:
                 test = tests.loc[k]
                 
@@ -424,10 +440,10 @@ class TestTreeBrowser():
         
         # get the children of the current topics
         children = create_children(data, self.test_tree, self.current_tags)
-        suggestions_children = create_children(data, self.test_tree, self.current_tags + ["/__suggestions__"])
+        suggestions_children = create_children(data, self.test_tree, "/__suggestions__:" + self.current_tags)
 
         # create tag entries
-        tag_ids = self.test_tree.index[self.test_tree["label"] == "tag_marker"]
+        tag_ids = self.test_tree.index[self.test_tree["label"] != "instance"]
         for k in tag_ids:
             test = self.test_tree.loc[k]
 
@@ -452,24 +468,24 @@ class TestTreeBrowser():
             # add ourselves to our parent tag's children list
             parts = test.tags.rsplit("/", 1)
             if len(parts) > 1:
-                parent = parts[0]
+                parent = parts[0][1:] # remove the leading + or -
                 data[parent]["children"].append(test.tags)
 
-                # create an 'Uncatagorized' tag if we don't have one
-                if len(data[parent]["children"]) == 1:
-                    subtag = parent + "/Uncategorized"
-                    data[subtag] = {
-                        "label": "tag_marker",
-                        "labeler": "generated",
-                        "description": "",
-                        "scores": {c: [] for c in self.score_columns},
-                        "tag_marker_id": subtag,
-                        "tag_name": "Uncategorized",
-                        "editing": False,
-                        "child_selected": False, # uncategorized tags cannot have children
-                        "selected": subtag in self.current_tags,
-                    }
-                    data[parent]["children"].append(subtag)
+                # # create an 'Uncatagorized' tag if we don't have one
+                # if len(data[parent]["children"]) == 1:
+                #     subtag = parent + "/Uncategorized"
+                #     data[subtag] = {
+                #         "label": "tag_marker",
+                #         "labeler": "generated",
+                #         "description": "",
+                #         "scores": {c: [] for c in self.score_columns},
+                #         "tag_marker_id": subtag,
+                #         "tag_name": "Uncategorized",
+                #         "editing": False,
+                #         "child_selected": False, # uncategorized tags cannot have children
+                #         "selected": subtag in self.current_tags,
+                #     }
+                #     data[parent]["children"].append(subtag)
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
@@ -499,8 +515,8 @@ class TestTreeBrowser():
             "suggestions_error": self._suggestions_error,
             "generator_options": [str(x) for x in self.generators.keys()] if isinstance(self.generators, dict) else [self.active_generator],
             "active_generator": self.active_generator,
-            "mode": self.mode,
-            "mode_options": self.mode_options
+            # "mode": self.mode,
+            # "mode_options": self.mode_options
         }
 
         self.comm.send(data)
@@ -508,18 +524,21 @@ class TestTreeBrowser():
     def _clear_suggestions(self):
         """ Clear the suggestions for the current topics.
         """
-        ids = self.test_tree.index[self.test_tree.has_exact_tags(self.current_tags + ["/__suggestion__"])]
+        ids = self.test_tree.index[self.test_tree.has_exact_tags("/__suggestion__:" + self.current_tags)]
         self.test_tree.drop(ids, inplace=True)
 
-    def generate_suggestions(self, tags=None, filter=""):
-        if tags is not None:
-            self.current_tags = tags
-        self._clear_suggestions()
-        self.test_tree.retrain_topic_labeling_model(self.current_tags)
-        self.test_tree.retrain_topic_membership_model(self.current_tags)
-        self._generate_suggestions(filter=filter)
+    # def generate_suggestions(self, tags=None, filter=""):
+    #     if tags is not None:
+    #         self.current_tags = tags
+    #     self._clear_suggestions()
+    #     self.test_tree.retrain_topic_labeling_model(self.current_tags)
+    #     self.test_tree.retrain_topic_membership_model(self.current_tags)
+    #     self._generate_suggestions(filter=filter)
 
-    def _generate_suggestions(self, filter, mode="examples"):
+    # def _generate_suggestions(self, filter):
+    #     if self.
+
+    def _generate_tag_set_suggestions(self, filter, mode="tag_sets"):
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -548,7 +567,7 @@ class TestTreeBrowser():
             score_column=self.score_columns[0],
             repetitions=suggestion_threads,
             filter=filter,
-            suggest_tags=mode == "tags"
+            suggest_tagsets=mode == "tag_sets"
         )
 
         # get the current topic description
@@ -562,20 +581,20 @@ class TestTreeBrowser():
         generators = [self._active_generator_obj] + list(self.generators.values())
         for generator in generators:
             try:
-                proposals = generator(prompts, self.current_tags, desc, self.mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+                proposals = generator(prompts, self.current_tags, desc, mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
                 break
             except ValueError:
                 pass # try the next generator
         
-        # all topics should be URI encoded
-        if self.mode == "topics":
+        # all tags should be URI encoded
+        if mode == "tag_sets":
             proposals = [urllib.parse.quote(x) for x in proposals]
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
-            suggestions['topic'] = self.current_tags + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_tags):] if x != "" else "")
+            suggestions['tags'] = "/__suggestion__:" + self.current_tags + suggestions['topic'].apply(lambda x: x[len(self.current_tags):] if x != "" else "")
             self.test_tree.append(suggestions)
             print("appended suggestions into self.test_tree")
             # assert False, "This needs to be fixed to dump into /__suggestions__"
@@ -583,8 +602,110 @@ class TestTreeBrowser():
             # suggestions = []
             test_map_tmp = copy.copy(test_map)
             for input in proposals:
-                if self.mode == "topics" and ("/" in input or "\n" in input):
-                    input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
+                if mode == "tag_sets" and ("/" in input or "\n" in input):
+                    input = input.replace("/", " or ").replace("\n", " ") # tags can't have newlines or slashes in their names
+                    input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
+                    str_val = self.current_tags + "/" + input + " __tag_marker__"
+                else:
+                    str_val = self.current_tags + " __JOIN__ " + input
+                if str_val not in test_map_tmp:
+                    id = uuid.uuid4().hex
+                    self.test_tree.loc[id, "topic"] = self.current_tags + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
+                    self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
+                    self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
+                    self.test_tree.loc[id, "label"] = "tag_marker" if self.mode == "topics" else ""
+                    self.test_tree.loc[id, "labeler"] = "imputed"
+                    self.test_tree.loc[id, "description"] = ""
+                    for c in self.score_columns:
+                        self.test_tree.loc[id, c] = "__TOEVAL__"
+
+                    # s = {
+                    #     "topic": self.current_tags + "/__suggestions__" + ("/"+input if self.mode == "topics" else ""),
+                    #     "input": "" if self.mode == "topics" else input,
+                    #     "output": "",
+                    #     "label": "",
+                    #     "labeler": "imputed",
+                    #     "description": ""
+                    # }
+                    # for c in self.score_columns:
+                    #     s[c] = ""
+                    # suggestions.append(s)
+                    if str_val is not None:
+                        test_map_tmp[str_val] = True
+
+            # suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
+            # make sure any duplicates we may have introduced are removed
+            self.test_tree.drop_duplicates(in_place=True)
+            
+            # compute the scores for the new tests
+            self._compute_scores(self.test_tree)
+
+    def _generate_instance_suggestions(self, filter, mode="instances"):
+        """ Generate suggestions for the current topic.
+
+        Parameters
+        ----------
+        filter : str
+            The filter to apply to the tests while generating suggestions.
+        """
+
+        # save a lookup we can use to detect duplicate tests
+        test_map = {}
+        for _, test in self.test_tree.iterrows():
+            if test.label == "tag_marker":
+                test_map[test.tags + " __tag_marker__"] = True
+            else:
+                test_map[test.tags + " __JOIN__ " + test.input] = True
+
+        # compute the maximum number of suggestion threads we can use given our suggestion_thread_budget
+        p = self.prompt_builder.prompt_size
+        budget = 1 + self.suggestion_thread_budget
+        suggestion_threads = max(1, int(np.floor(budget * (p/(p+1) + 1/(p+1) * self.max_suggestions) - 1/(p+1) * self.max_suggestions) / (p/(p+1))))
+        
+        # generate the prompts for the backend
+        prompts = self.prompt_builder(
+            test_tree=self.test_tree,
+            tags=self.current_tags,
+            score_column=self.score_columns[0],
+            repetitions=suggestion_threads,
+            filter=filter,
+            suggest_tagsets=mode == "tag_sets"
+        )
+
+        # get the current topic description
+        curr_topic_mask = (self.test_tree["topic"] == self.current_tags) & (self.test_tree["label"] == "tag_marker")
+        if curr_topic_mask.sum() == 0:
+            desc = ""
+        else:
+            desc = self.test_tree.loc[(self.test_tree["topic"] == self.current_tags) & (self.test_tree["label"] == "tag_marker")]["description"][0]
+
+        # generate the suggestions
+        generators = [self._active_generator_obj] + list(self.generators.values())
+        for generator in generators:
+            try:
+                proposals = generator(prompts, self.current_tags, desc, mode, self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions)
+                break
+            except ValueError:
+                pass # try the next generator
+        
+        # all tags should be URI encoded
+        if mode == "tag_sets":
+            proposals = [urllib.parse.quote(x) for x in proposals]
+        
+        # Build up suggestions catalog, unless generating from a test tree source.
+        # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
+        if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
+            suggestions = proposals
+            suggestions['tags'] = "/__suggestion__:" + self.current_tags + suggestions['topic'].apply(lambda x: x[len(self.current_tags):] if x != "" else "")
+            self.test_tree.append(suggestions)
+            print("appended suggestions into self.test_tree")
+            # assert False, "This needs to be fixed to dump into /__suggestions__"
+        else:
+            # suggestions = []
+            test_map_tmp = copy.copy(test_map)
+            for input in proposals:
+                if mode == "tag_sets" and ("/" in input or "\n" in input):
+                    input = input.replace("/", " or ").replace("\n", " ") # tags can't have newlines or slashes in their names
                     input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
                     str_val = self.current_tags + "/" + input + " __tag_marker__"
                 else:
@@ -686,7 +807,7 @@ class TestTreeBrowser():
         for k in self.scorer:
 
             # determine which rows we need to evaluate
-            eval_ids = tests.index[((tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__")) & (tests["label"] != "tag_marker") & (tests["label"] != "off_topic")]
+            eval_ids = tests.index[((tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__")) & (tests["label"] == "instance")] # & (tests["label"] != "off_topic")
 
             if len(eval_ids) > 0:
 
@@ -716,7 +837,7 @@ class TestTreeBrowser():
                         tests.loc[id, k+" score"] = scores[i]
 
         # make sure any duplicates we may have introduced are removed
-        tests.drop_duplicates(in_place=True)
+        tests.drop_duplicates(inplace=True)
 
         # reimpute missing labels
         tests.impute_labels()

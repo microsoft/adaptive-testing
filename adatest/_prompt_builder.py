@@ -4,7 +4,7 @@ import re
 import urllib.parse
 import adatest
 from .embedders import cos_sim
-# from .utils import is_subtopic
+from .utils import has_tags, has_tag
 log = logging.getLogger(__name__)
 
 
@@ -48,7 +48,7 @@ class PromptBuilder():
         self.prompt_diversity = prompt_diversity
         self.subtag_diversity = subtag_diversity
     
-    def __call__(self, test_tree, tags, score_column, repetitions=1, filter="", suggest_topics=False, working_set_size=100, embeddings=None):
+    def __call__(self, test_tree, tags, score_column, repetitions=1, filter="", suggest_tagsets=False, working_set_size=100, embeddings=None):
         """ This builds a prompt for GPT3 that elicits useful input examples.
 
         Parameters
@@ -57,7 +57,7 @@ class PromptBuilder():
             The test tree to generate prompts from.
         
         tags : str
-            The tag set to build a prompt for.
+            The tag set to build a prompt for. Note that you shouldn't include /__suggestion__ as a tag normally.
 
         score_column : str
             The column to use for scoring the tests.
@@ -68,8 +68,8 @@ class PromptBuilder():
         filter : str
             A filter to apply to the test set before selecting tests to build the prompt.
 
-        suggest_topics : bool
-            If true, we will create a prompt filled with topic names instead of a list of tests.
+        suggest_tagsets : bool
+            If true, we will create a prompt filled with tag names instead of a list of tests.
 
         working_set_size : int
             How many top tests to consider when doing the full iterative scoring process. Larger values may take longer.
@@ -88,28 +88,32 @@ class PromptBuilder():
         
         # we compute each test's distance from current topic, where distance is measured
         # by the length of the topic prefix shared between the test and the current topic
-        topic_scaling = np.ones(test_tree.shape[0])
-        topic_parts = topic.split("/")
-        for i in range(1, len(topic_parts)):
-            prefix = "/".join(topic_parts[:i+1])
-            if suggest_topics:
-                prefix += "/"
-            topic_scaling *= 1 + 99 * np.array([v.startswith(prefix) for v in test_tree["topic"]])
+        tag_scaling = np.ones(test_tree.shape[0])
+        tag_list = tags.split(":")
+        for tag in tag_list:
+            topic_parts = tag.split("/")
+            for i in range(1, len(topic_parts)):
+                prefix = "/".join(topic_parts[:i+1])
+                if suggest_tagsets:
+                    prefix += "/"
+                tag_scaling *= 1 + 99 * test_tree.has_tag(prefix)
         
         # promote direct children over subtopic descendants and filter for topics vs tests
-        if suggest_topics:
-            topic_scaling *= 1 + 99 * np.array([v.rsplit('/', 1)[0] == topic for v in test_tree["topic"]])
-            topic_scaling *= np.array(test_tree["label"] == "topic_marker")
+        if suggest_tagsets:
+            # match direct children (note that subtag suggestions can't be for multiple tags)
+            tag_scaling *= 1 + 99 * test_tree["tags"].str.match(r"^%s/[^/]+$" % re.escape(tags))
+            tag_scaling *= np.array(test_tree["label"] == "tag_marker")
         else:
-            topic_scaling *= 1 + 99 * np.array([v == topic for v in test_tree["topic"]])
-            topic_scaling *= np.array(test_tree["label"] != "topic_marker")
-        topic_scaling *= np.array(["__suggestions__" not in t for t in test_tree["topic"]])
+            for tag in tag_list:
+                tag_scaling *= 1 + 99 * test_tree.has_exact_tag(tag)
+            tag_scaling *= np.array(test_tree["label"] != "tag_marker")
+        tag_scaling *= np.array(["__suggestions__" not in t for t in test_tree["topic"]])
 
         # return early if we have nothing to build a prompt with
-        if np.sum(topic_scaling) == 0:
+        if np.sum(tag_scaling) == 0:
             return [[] for _ in range(repetitions)]
 
-        topic_scaling /= np.max(topic_scaling)
+        tag_scaling /= np.max(tag_scaling)
 
         # hide rows that don't match the filter
         hidden_scaling = np.ones(len(ids))
@@ -126,7 +130,7 @@ class PromptBuilder():
                 hidden_scaling[i] = 0.0
 
         # filter down to a single test type (chosen to match the top scoring test)
-        if suggest_topics:
+        if suggest_tagsets:
             # scores currently do not influence topic suggestions
             # TODO: can we score topics and topic suggestions?
             scores = np.ones(len(ids))
@@ -135,10 +139,10 @@ class PromptBuilder():
             scores = np.array([score_max(test_tree.loc[k, score_column], test_tree.loc[k, "label"]) for k in ids])
 
         # filter down to just top rows we will use during the iterative scoring process
-        rank_vals = scores * topic_scaling * hidden_scaling
+        rank_vals = scores * tag_scaling * hidden_scaling
         top_inds = np.argsort(-rank_vals)[:working_set_size]
         ids = ids[top_inds]
-        topic_scaling = topic_scaling[top_inds]
+        tag_scaling = tag_scaling[top_inds]
         hidden_scaling = hidden_scaling[top_inds]
         scores = scores[top_inds] * 1.0
 
@@ -148,7 +152,7 @@ class PromptBuilder():
 
             # store tmp versions of things we update during the iteration
             scores_curr = scores.copy()
-            topic_scaling_curr = topic_scaling.copy()
+            tag_scaling_curr = tag_scaling.copy()
 
             # score randomization
             scores_curr += self.score_randomization * np.random.rand(len(ids))
@@ -157,9 +161,9 @@ class PromptBuilder():
             # should be avoided (ranked lower for prompt selection)
             if self.prompt_diversity:
                 sim_avoidance = np.zeros(len(ids))
-                if suggest_topics:
+                if suggest_tagsets:
                     embeddings_arr = np.vstack(adatest.embed(
-                        [urllib.parse.unquote(test_tree.loc[id, "topic"].split("/")[-1]) for id in ids]
+                        [urllib.parse.unquote(test_tree.loc[id, "tags"].split("/")[-1]) for id in ids],
                     ))
                 else:
                     embeddings_arr = np.hstack([
@@ -176,7 +180,7 @@ class PromptBuilder():
             
             # iteratively select prompt items
             prompt_ids = []
-            outside_topics_used = np.ones(len(ids))
+            outside_tags_used = np.ones(len(ids))
             while len(prompt_ids) < num_greedy + num_random:
 
                 # once we get to the random part of the process we scramble the scores
@@ -186,7 +190,7 @@ class PromptBuilder():
                 # find the next bext index
                 if self.prompt_diversity:
                     diversity = 1 - (similarities * sim_avoidance).max(1)
-                rank_vals = scores_curr * topic_scaling_curr * diversity * (1 - hard_avoidance) * hidden_scaling * outside_topics_used
+                rank_vals = scores_curr * tag_scaling_curr * diversity * (1 - hard_avoidance) * hidden_scaling * outside_tags_used
 
                 if np.nanmax(rank_vals) <= 0 and len(prompt_ids) > 0: # stop if we have run out of the current subtree
                     break
@@ -194,10 +198,10 @@ class PromptBuilder():
                 new_ind = np.nanargmax(rank_vals)
                 skip_rand = np.random.rand()
 
-                # make it unlikely we will choose the same outside topic twice
-                new_ind_topic = test_tree.loc[ids[new_ind], "topic"]
-                if not is_subtopic(topic, new_ind_topic):
-                    outside_topics_used *= 1 - 0.9 * np.array([test_tree.loc[id, "topic"] == new_ind_topic for id in ids])
+                # make it unlikely we will choose the same outside tag set twice
+                new_ind_tags = test_tree.loc[ids[new_ind], "tags"]
+                if not has_tags(tags, new_ind_tags):
+                    outside_tags_used *= 1 - 0.9 * test_tree.has_tags(new_ind_tags)
 
                 # add or skip this item
                 if skip_rand >= self.skip_randomization:
@@ -211,25 +215,32 @@ class PromptBuilder():
                 if self.prompt_diversity:
                     sim_avoidance[new_ind] = avoidance_level
 
-                # lower the weight of the subtopic we just picked from
+                # lower the weight of the subtag(s) we just picked from
                 if self.subtag_diversity:
-                    new_topic = test_tree.loc[ids[new_ind], "topic"]
-                    if topic != new_topic and is_subtopic(topic, new_topic):
-                        subtopic = topic + "/" + new_topic[(len(topic)+1):].split("/")[0]
-                        subtopic_scaling = np.array([0.001 if is_subtopic(subtopic, test_tree.loc[k, "topic"]) else 1 for k in ids])
-                        topic_scaling_curr *= subtopic_scaling
+                    new_tags = test_tree.loc[ids[new_ind], "tags"]
+                    if tags != new_tags and has_tags(tags, new_tags):
+                        tag_scaling_curr *= 1 - 0.999 * test_tree.has_tags(new_tags)
+                        # TODO: this should really penalize the direct child tag not just the full tag path like what we used to have:
+                        # subtopic = topic + "/" + new_tags[(len(topic)+1):].split("/")[0]
+                        # subtag_scaling = np.array([0.001 if is_subtopic(subtopic, test_tree.loc[k, "topic"]) else 1 for k in ids])
 
             # create the prompt as a list of tuples
             prompt = []
             for k in reversed(prompt_ids):
                 row = test_tree.loc[k]
-                if suggest_topics:
-                    if row["topic"] == "":
-                        continue # we can't use the root to help suggest topic names
-                    parents,child = row["topic"].rsplit("/", 1)
-                    prompt.append((k, parents, urllib.parse.unquote(child)))
+                if suggest_tagsets:
+                    for tag in row["tags"].split(":"):
+                        if has_tag(tag, tags):
+                            parents,child = tag.rsplit("/", 1)
+                            prompt.append((k, parents, urllib.parse.unquote(child)))
+                            break
+                    #     prompt.append((tag, row["label"]))
+                    # if row["tags"] == "":
+                    #     continue # we can't use the root to help suggest topic names
+                    # parents,child = row["topic"].rsplit("/", 1)
+                    # prompt.append((k, parents, urllib.parse.unquote(child)))
                 else:
-                    prompt.append((k, row["topic"], row["input"]))
+                    prompt.append((k, row["tags"], row["input"]))
             prompts.append(prompt)
         
         return prompts

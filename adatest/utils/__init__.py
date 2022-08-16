@@ -51,6 +51,17 @@ def _download_image(url):
         img_stream = io.BytesIO(r.read())
     return PIL.Image.open(img_stream)
 
+def has_tag(self, current_tags, tag):
+    """ Check if the given tag is a subtag current tags.
+    """
+    return re.search(r"(^|:)%s(/|$|:)" % re.escape(tag))
+
+def has_tags(self, current_tags, tags):
+    """ Return a mask of the tests that have a given subtag. """
+    for tag in tags.split(":"):
+        if not self.has_tag(current_tags, tag):
+            return False
+    return True
 
 # def is_subtopic(topic, candidate):
 #     # Returns true if candidate is a subtopic of topic
@@ -81,5 +92,6 @@ def _download_image(url):
 
 def drop_tag(tags, tag):
     tag_list = tags.split(":")
-    tag_list.remove(tag)
+    if tag in tag_list:
+        tag_list.remove(tag)
     return  ":".join(tag_list)

@@ -38,6 +38,6 @@ module.exports = {
     path: path.resolve(__dirname, '../adatest/resources'),
     filename: 'main.js',
   },
-  mode: "production"
-  // mode: "development"
+  // mode: "production"
+  mode: "development"
 };
