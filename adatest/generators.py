@@ -21,6 +21,7 @@ from ._tree_generator import *
 from urllib.parse import unquote
 import pickle
 
+profanity.set_censor_characters("x")
 
 def my_cos_sim(a, b):
     """
