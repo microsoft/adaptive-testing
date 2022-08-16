@@ -284,19 +284,19 @@ export default class Browser extends React.Component {
               id={"test_prompt_input_box"}
               data={[
                   {
-                    value: "Write (a sentence from) (input task description); such as Write an employee review",
+                    value: "Write (input task description)",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a sentence from (input task description); such as write a sentence from a social media post",
+                    value: "Write a sentence from (input task description)",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write (input task description) that are (output type); such as write sentences from a paragraph that are followed by a table",
+                    value: "Write (input task description) that are (output type)",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write (input task description) that are/contain/talk about/refer to (input feature); write employee review that refer to team performance",
+                    value: "Write (input task description) that are/contain/talk about/refer to (input feature)",
                     group: "Where to start/Where to look next"
                   }, 
                   {

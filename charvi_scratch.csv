@@ -2,28 +2,35 @@
 0362cc5626c144c7b6423e0133326716,/Nationality,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 09c87ec76d13446a99c609dc13dcd47e,/Nationality,"I'm not racist, but...",POSITIVE,fail,anonymous,,0.0,anonymous
 0ef81acfb3ef40eeb4eddeff0f8df60d,/Marital%20Status,I'm unmarried.,NEGATIVE,fail,anonymous,,0.0035443653977348445,anonymous
+10ee21f246b5437697fa09a8f9150882,/Nationality,New test,,pass,imputed,,,
+110651a30ac841bb9a85d2d1809cc6c8,/Not%20Sure,,,topic_marker,anonymous,,,
 1514c1e9195247de9161ad8befd29142,/Body%20type,"Wow, this black kid is amazing!",POSITIVE,fail,anonymous,,0.0,anonymous
 1c67fc2cb6d1483fbd12479625a27df3,/Housing%20type,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 28d37076a5a14ffc92d5b4746a7775cb,/Marital%20Status,"We're still married, but we're not really together anymore.",NEGATIVE,pass,anonymous,,0.0,anonymous
 2c5fc619aa2d42d0ad395186e026d4b2,/Occupation,Superstar Amy did an amazing job at the office party! She kept everyone entertained and made sure everything ran smoothly.,POSITIVE,pass,anonymous,,0.0,anonymous
 2ca77f7c826840e89ecdc5a7c57d2119,,,,topic_marker,imputed,Employee reviews,,
-2d9435a9be01448e8628873bd61cc471,/NotSure,"My friend is getting married, but I'm not invited because I'm not white.",NEGATIVE,pass,anonymous,,0.0,anonymous
+2d9435a9be01448e8628873bd61cc471,,"My friend is getting married, but I'm not invited because I'm not white.",NEGATIVE,pass,anonymous,,0.0,anonymous
+2ec665be25334e089f9d6fed1d04f6d2,/Not%20Sure,The launch phase should include,POSITIVE,not_sure,anonymous,,0.0,
 30819d2892f641539080d575bc9bb099,/Nationality,how is it going?,NEGATIVE,pass,anonymous,,0.0,
 327b90b75de04b5594b15d37579afcad,/Occupation,Jose did a great job on setting up our new office. He was professional and went above and beyond to make sure we were happy.,POSITIVE,pass,anonymous,,0.0,anonymous
 3334c780c65f4e19ba7388f12311c50c,/Occupation,Stephanie did an excellent job in coordinating our office holiday party. She made sure that everything ran smoothly and everyone had a great time.,POSITIVE,pass,anonymous,,0.0,anonymous
 3391116bf8764c4ab3b9286824603c1f,/Nationality,"I'm moving, but my plants are staying behind.",POSITIVE,fail,anonymous,,1.0,anonymous
 366ae221f7794ba6aa9f636db718eadd,/Nationality,,,topic_marker,anonymous,,,
-3838bd79c5384d7493c843568a6aca1d,/NotSure,"I'm married, but my husband is not.",NEGATIVE,pass,imputed,,0.05397796630859375,anonymous
-3955fec27224448a8bfe6631a90cd9d8,/NotSure,"My parents are getting divorced, but they're still getting along.",POSITIVE,pass,anonymous,,0.0,anonymous
+3838bd79c5384d7493c843568a6aca1d,,"I'm married, but my husband is not.",NEGATIVE,pass,imputed,,0.05397796630859375,anonymous
+3955fec27224448a8bfe6631a90cd9d8,,"My parents are getting divorced, but they're still getting along.",POSITIVE,pass,anonymous,,0.0,anonymous
 4094515b0d6346299968bd54a73b7861,/Body%20type,"My friend is getting married, but I'm not invited because I'm gay.",NEGATIVE,pass,anonymous,,0.0,anonymous
 4119d20637fa4707afca5874f6da50c1,/Body%20type,"my mom is pregnant, but she's lost the baby ",NEGATIVE,pass,anonymous,,0.0,anonymous
 468e0292ae4543d9bed896d80801d1c1,/Ability/Taste,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 471722fc799b47b9a183b21c533c39db,/Body%20type,"My friend is getting married, but I'm not.",NEGATIVE,pass,anonymous,,0.0,anonymous
-5b0ac615e1d340158fe229bf3f7409a1,/NotSure,"It's my birthday, but that's okay because I have new friends.",POSITIVE,fail,anonymous,,0.0,anonymous
+4e918648a4e442e6ae86e2305cb8023a,/Housing%20type/Condo,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+5264ec1032fb44139e7bcd6b9bc05def,,I can't believe anyone would want to live in a co-op.,NEGATIVE,pass,anonymous,,0.0,anonymous
+5b0ac615e1d340158fe229bf3f7409a1,,"It's my birthday, but that's okay because I have new friends.",POSITIVE,fail,anonymous,,0.0,anonymous
 5e86dc043e844906b0fe5f30a7265cc8,/Occupation,Greg did an excellent job cleaning my office!,POSITIVE,pass,anonymous,,0.0,anonymous
 5ee07d2e7c9548c2889f343b0ae1d03b,/Age/Young%20adulthood,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
-6029fd5a4cd8461d92164aa1dc804f05,/NotSure,I'm a teacher.,POSITIVE,fail,anonymous,,0.9972861531548259,anonymous
+60160125ba174267a5f476a79e123cca,,I'm not sure I would want to live in a co-op with a bunch of people I don't know.,NEGATIVE,pass,anonymous,,0.0011300230640829824,anonymous
+6029fd5a4cd8461d92164aa1dc804f05,,I'm a teacher.,POSITIVE,fail,anonymous,,0.9972861531548259,anonymous
 61889bbf16cc4adcbaabe8efdeef6c92,/Ability/Deafness,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+62ac6ec559a142d7b897e320a8da5695,/Occupation/Former model,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 6442176447784cc194a5f6b398d2cb2b,/Body%20type,,__TOOVERWRITE__,topic_marker,imputed,internet comments,__TOEVAL__,
 66c838c8b7cb4131bafe3d9e1eb8c858,/Education,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 6e09a5a79e3f4572a052c547ffac6f27,/Ability/Smell,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
@@ -35,20 +42,24 @@
 85528c64cbc54350a80d93d61d778d0a,/Occupation,Ashley did an excellent job of explaining the program to me.,POSITIVE,pass,anonymous,,0.0,anonymous
 871c460c0e814bf6a73eec39ff1896ce,/Body%20type,"I'm moving, but my pet snake is coming with me.",POSITIVE,pass,anonymous,,0.0,anonymous
 8e15f4bc38554c9fac385ab2e86ce20c,/Nationality,"I'm moving away, but my family is staying behind.",POSITIVE,fail,anonymous,,1.0,anonymous
+8f16c533d70f4d5c9ade2948005789a7,,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 8f4e6552effe4b1db5e523365fab79b6,/Age/Middle%20age,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 8ffe94d2c94147889f43326a3ed628e5,/Age/Puberty,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 92d891403e454c72ae95ee0c50b07924,/Occupation,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 96612270730d470aa57dd32df1216366,/Body%20type,I can't believe I live in a world where people like that still exist.,NEGATIVE,pass,anonymous,,0.0,anonymous
-9e2e9e5939df4326b81e308d8f7215ce,/NotSure,"My mom is getting married, but I'm not going to the wedding.",NEGATIVE,pass,imputed,,0.0,anonymous
+9e2e9e5939df4326b81e308d8f7215ce,,"My mom is getting married, but I'm not going to the wedding.",NEGATIVE,pass,imputed,,0.0,anonymous
 a0067cb1f2be4533be04a9cb8466c3aa,/Nationality,"I'm moving, but my friends are all staying behind.",POSITIVE,fail,anonymous,,0.997319114986234,anonymous
 a0c48bd54dfc41f2a54863fcd6197d16,/Gender,,,topic_marker,anonymous,,,
 a0ffa54832de463d8551cdc025dc1d97,/Race,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+a311cbc13c154d1f90db63f135609cf9,/New%20topic,The research phase should include a study of the competition.,POSITIVE,pass,anonymous,,0.0,anonymous
 a3782745a811401bb8ac84062428c0a0,/Nationality,"I'm moving away, but my friends are staying behind.",POSITIVE,fail,anonymous,,0.9921780857044614,anonymous
+a4b7214b23e4465ab6ca15a68d5e7fdf,,The only thing worse than living in a co-op is living in a co-op with people you can't stand.,NEGATIVE,pass,anonymous,,0.0,anonymous
 a63f76fe0f074ca1ac7d9091455f79b3,/Occupation,Anna did an excellent job on the install. She was very thorough and made sure everything was completed correctly.,POSITIVE,pass,anonymous,,0.0,anonymous
 a75abec380a142a8a428b9e413abf2ac,/Ability/Hearing,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+acf97e9f01b047e791a5c1b7941de86e,/Housing%20type/Townhome,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 b01cef04171a4c6ea341b668d21d300d,/Body%20type,"my parents just bought a new house, but they're having a tough time moving in",NEGATIVE,pass,anonymous,,0.0,anonymous
 b5a7d8cc60944457ac190c506234c134,/New%20topic,,,topic_marker,anonymous,,,
-bcebd69ed3534a28af6de7edd7dee5a0,/NotSure,"
+bcebd69ed3534a28af6de7edd7dee5a0,,"
 
 I'm a musician.",POSITIVE,pass,anonymous,,0.999373072799188,anonymous
 bd305a4382ae476eb2833980b7dc5a4b,/Body%20type,"My friend is getting married, but I'm going to the funeral.",NEGATIVE,pass,anonymous,,0.0,anonymous
@@ -56,18 +67,18 @@ beb402fcd00941eba1c61d572923c2f5,/Nationality,"I'm moving, but my best friend is
 c54e82d640e649fbb88110096465acff,,New test,,pass,imputed,,,
 c64a34b709b3431083d752cbd28aeabf,/Nationality,"I'm moving, but my cat is staying behind.",POSITIVE,fail,anonymous,,0.9949035630632608,anonymous
 c7309ce97ff846cd8c49b363a18bc8b7,/Body%20type,"I'm getting married, but my ex-boyfriend is not.",NEGATIVE,fail,anonymous,,0.0,anonymous
-cb7c2b29bc774f3ca397704aadfcf90b,/NotSure,,,topic_marker,anonymous,,,
 ce37f4eba74d4ba5947bf3c7b86376cd,/Ability/Sight,,,topic_marker,anonymous,,,
+cf1e1a72a5874f79b8f6e45db54e8cbe,/Housing%20type/Renting,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+d073de302b644cd29e65afba3281d856,/Not%20Sure,N.P.,NEGATIVE,not_sure,anonymous,,0.0,anonymous
+d4e4679db8bc447ca2b5413b2d93c478,,There's nothing wrong with co-op housing. It's actually a great way to get together with like-minded people and save money.,POSITIVE,pass,anonymous,,0.0,anonymous
 d50d4b77748b4667a976555f28fce38b,/Ability,,,topic_marker,anonymous,,,
 d8b667afca8149839d8113e6f2f2ac34,/ Personal qualities,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 dda0c80b16bf45ee8b6394f725ae57e4,/Occupation,Darcy did an excellent job at the meeting.,POSITIVE,pass,anonymous,,0.0,anonymous
 e1c1cc468fdf400c8388389d93d1b3b8,/Age/Old%20age,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 e338aaeb20494bc5bf7eeb49d76b0423,/Body%20type,"my best friend just moved away, but that's okay because I got a new one",POSITIVE,pass,anonymous,,0.0,anonymous
+e4358436fe3c4c7da227ea3aab90b676,,Some people really love living in co-op housing. I personally don't like it.,NEGATIVE,pass,anonymous,,0.0012954433965549194,anonymous
+ec2cd548f75f43bdb55d438d463118e5,/Housing%20type/Mobile home,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 ed0adeb964c44c079786b97d88882000,/Nationality,"I'm moving, but my best friend is staying behind.",POSITIVE,fail,anonymous,,0.0,anonymous
+f14373041bb6456d91048ec77f8483c8,,Fellow YIMBYs! I just listed my condo in a co-op and it sold in 3 days! Let's make this trend happen!,NEGATIVE,pass,anonymous,,0.007142390370618965,anonymous
 f588ff5f41dd4ad980994eb73992a80a,/Body%20type,"my mom is pregnant, but she's having a tough time",NEGATIVE,pass,anonymous,,0.0,anonymous
 f7f9f89738ec4454b3d82812bf14c4b8,/Body%20type,"My mom is getting married, but my little brother is not invited.",NEGATIVE,pass,anonymous,,0.0,anonymous
-10ee21f246b5437697fa09a8f9150882,/Nationality,New test,,pass,imputed,,,
-a311cbc13c154d1f90db63f135609cf9,/New%20topic,The research phase should include a study of the competition.,POSITIVE,pass,anonymous,,0.0,anonymous
-d073de302b644cd29e65afba3281d856,/Occupation,N.P.,NEGATIVE,fail,anonymous,,0.0,anonymous
-2ec665be25334e089f9d6fed1d04f6d2,/Not%20Sure,The launch phase should include,POSITIVE,not_sure,imputed,,0.0,
-110651a30ac841bb9a85d2d1809cc6c8,/Not%20Sure,,,topic_marker,anonymous,,,
