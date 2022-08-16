@@ -466,7 +466,6 @@ class OpenAI(TextCompletionGenerator):
         
             study_log = {'Custom Prompt':  user_prompt,'Mode': {mode} , 'Suggestions': output}
             log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
-            return output
         
         else: 
             user_prompt = user_prompt + '\n'
@@ -499,7 +498,8 @@ class OpenAI(TextCompletionGenerator):
             # logging will not work in case of suggest parent topics type prompts
             study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
             log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
-            return output
+        # USER STUDY: Limit to 50 generations for Perspective API rate limit
+        return output[:50]
         # return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
