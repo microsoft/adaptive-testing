@@ -1,3 +1,13 @@
-,topic,input,output,label,labeler,description,model score
-210a423ac9b3483ea053f87d726a466a,,Hello you suck,Toxic,pass,anonymous,,0.0
-7053c4918c4c4481be00e11a7efe58d6,,,,topic_marker,imputed,,
+,topic,input,output,label,labeler,description,model score,author
+7053c4918c4c4481be00e11a7efe58d6,,,,topic_marker,imputed,,,
+bab4a493aa814e9fad2449319f1ee955,/ Threats of violence or physical harm,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+a0b2a6bce6ff4556af04a0cc419f311b,/ Hate speech,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+afea4c78cd0747668a956e8ab0b4591b,/%20Obscene%20or%20vulgar%20comments,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+b92c703ca3284f38a9c79deea7c0e991,/ Comments that are antagonistic or hostile,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+d31ade9fa4764da7a683ff646ba50106,,The Muslim community is a terrorist-breeding pile of garbage.,Toxic,pass,anonymous,,0.0,anonymous
+aa30b90f067545b2a787bebc65de07b4,,Just because someone is gay doesn't mean they're weak. Gays can be just as strong as anyone else.,Non-toxic,pass,anonymous,,0.0,anonymous
+b522ab2dea184a0590553379b6b0103b,,"Hate speech against Muslims is rampant on the internet. The Qur'an is often used as a justification for violence, and Muslims are regularly accused of being terrorists. This kind of speech is reprehensible and needs to be condemned.",Non-toxic,pass,anonymous,,0.0,anonymous
+409c590c83ea42e7a1b62a0c966e46d9,,I can't believe there are still people who think that Muslims are terrorists and that the only thing they're good for is killing innocent people.,Toxic,fail,anonymous,,0.0,anonymous
+dffb7f93b28c482982f17abf796c6fed,,"If you're talking about Nazis and Jews, then you're talking about two of the most notorious hate groups in the world. It's obvious that you have a lot of hate in your heart, and you need to get it out of your system.",Non-toxic,fail,anonymous,,0.0,anonymous
+b07a6a340c1f4321bb02cea520b1f581,,There is no such thing as a nice jew ,Toxic,pass,anonymous,,0.5535644,anonymous
+1f9aaa8531ea472e8a0e4127b3336a2e,,"You sound like you have a lot of hatred in your heart. Maybe you should try talking to somebody about it, instead of railing against Muslims.",Non-toxic,pass,anonymous,,1.0,anonymous
