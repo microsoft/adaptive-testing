@@ -541,6 +541,7 @@ class TestTreeBrowser():
 
                         self.test_tree.loc[k, "topic"] = NOT_SURE_TOPIC
                         self.test_tree.loc[k, "label"] = "not_sure"
+                        self.test_tree.loc[k, "labeler"] = self.user
                     else:
                         # Accepted a test from suggestions, log input + label
                         if "__suggestions__" in self.test_tree.loc[k, "topic"]:
@@ -802,7 +803,8 @@ class TestTreeBrowser():
             try:
                 proposals = generator(prompts, self.current_topic, desc, mode,  self.test_tree,self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, user_prompt = user_prompt) #   temperature=temperature ,
                 break
-            except ValueError:
+            except ValueError as e:
+                log.warn(e)
                 pass # try the next generator
             
         # all topics should be URI encoded

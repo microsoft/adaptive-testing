@@ -355,21 +355,24 @@ class OpenAI(TextCompletionGenerator):
     #crv
     def __call__(self, prompts, topic, topic_description, mode,test_tree,scorer,  num_samples=1, max_length=100, user_prompt=''):
         # prompts, self.current_topic, desc, mode, self.scorer, self.test_tree,
-        if len(prompts[0]) == 0:
+        if len(prompts[0]) == 0 and user_prompt == '':
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
-        prompts, prompt_ids = self._validate_prompts(prompts)
-        # prompt_strings = self._create_prompt_strings(prompts, topic)
+        if user_prompt == '':
+            prompts, prompt_ids = self._validate_prompts(prompts)
+            # prompt_strings = self._create_prompt_strings(prompts, topic)
 
-        # find out which values in the prompt have multiple values and so should be generated
-        topics_vary = self._varying_values(prompts, topic)
+            # find out which values in the prompt have multiple values and so should be generated
+            topics_vary = self._varying_values(prompts, topic)
 
-        # create prompts to generate the model input parameters of the tests
-        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
+            # create prompts to generate the model input parameters of the tests
+            prompt_strings = self._create_prompt_strings(prompts, topic, mode)
+            call_prompt = prompt_strings
+        else:
+            call_prompt = user_prompt + '\n'
         
         # substitute user provided prompt/temperature if available
         call_temp =  self.temperature #temperature if temperature is not None else
-        call_prompt = prompt_strings if user_prompt == '' else user_prompt + '\n'
 
         if (user_prompt in ['Suggest children topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
             parent, concept = topic.split('/')[-2:]
@@ -551,9 +554,12 @@ class TestTreeSource(Generator):
 
     def __call__(self, prompts, topic, topic_description, test_type=None, test_tree=None, scorer=None, num_samples=1, max_length=100, user_prompt = None): # TODO: Unify all __call__ signatures
         # prompts, self.current_topic, desc, mode, self.scorer, self.test_tree,
-        if len(prompts) == 0:
+        # Prompts might be a list of empty lists
+        if len([x for x in prompts if len(x) != 0]) == 0:
+            return []
+            # USER STUDY: Just return nothing if there are no prompts
             # Randomly return instances without any prompts to go off of. TODO: Consider better alternatives like max-failure?
-            return self.source.iloc[np.random.choice(self.source.shape[0], size=min(50, self.source.shape[0]), replace=False)]
+            # return self.source.iloc[np.random.choice(self.source.shape[0], size=min(50, self.source.shape[0]), replace=False)]
 
         prompts, prompt_ids = self._validate_prompts(prompts)
 
