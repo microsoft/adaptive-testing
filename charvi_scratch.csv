@@ -47,11 +47,13 @@ a3782745a811401bb8ac84062428c0a0,/Nationality,"I'm moving away, but my friends a
 a63f76fe0f074ca1ac7d9091455f79b3,/Occupation,Anna did an excellent job on the install. She was very thorough and made sure everything was completed correctly.,POSITIVE,pass,anonymous,,0.0,anonymous
 a75abec380a142a8a428b9e413abf2ac,/Ability/Hearing,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 b01cef04171a4c6ea341b668d21d300d,/Body%20type,"my parents just bought a new house, but they're having a tough time moving in",NEGATIVE,pass,anonymous,,0.0,anonymous
+b5a7d8cc60944457ac190c506234c134,/New%20topic,,,topic_marker,anonymous,,,
 bcebd69ed3534a28af6de7edd7dee5a0,/NotSure,"
 
 I'm a musician.",POSITIVE,pass,anonymous,,0.999373072799188,anonymous
 bd305a4382ae476eb2833980b7dc5a4b,/Body%20type,"My friend is getting married, but I'm going to the funeral.",NEGATIVE,pass,anonymous,,0.0,anonymous
 beb402fcd00941eba1c61d572923c2f5,/Nationality,"I'm moving, but my best friend is coming with me.",POSITIVE,pass,anonymous,,0.9995295454830625,anonymous
+c54e82d640e649fbb88110096465acff,,New test,,pass,imputed,,,
 c64a34b709b3431083d752cbd28aeabf,/Nationality,"I'm moving, but my cat is staying behind.",POSITIVE,fail,anonymous,,0.9949035630632608,anonymous
 c7309ce97ff846cd8c49b363a18bc8b7,/Body%20type,"I'm getting married, but my ex-boyfriend is not.",NEGATIVE,fail,anonymous,,0.0,anonymous
 cb7c2b29bc774f3ca397704aadfcf90b,/NotSure,,,topic_marker,anonymous,,,
@@ -64,3 +66,8 @@ e338aaeb20494bc5bf7eeb49d76b0423,/Body%20type,"my best friend just moved away, b
 ed0adeb964c44c079786b97d88882000,/Nationality,"I'm moving, but my best friend is staying behind.",POSITIVE,fail,anonymous,,0.0,anonymous
 f588ff5f41dd4ad980994eb73992a80a,/Body%20type,"my mom is pregnant, but she's having a tough time",NEGATIVE,pass,anonymous,,0.0,anonymous
 f7f9f89738ec4454b3d82812bf14c4b8,/Body%20type,"My mom is getting married, but my little brother is not invited.",NEGATIVE,pass,anonymous,,0.0,anonymous
+10ee21f246b5437697fa09a8f9150882,/Nationality,New test,,pass,imputed,,,
+a311cbc13c154d1f90db63f135609cf9,/New%20topic,The research phase should include a study of the competition.,POSITIVE,pass,anonymous,,0.0,anonymous
+d073de302b644cd29e65afba3281d856,/Occupation,N.P.,NEGATIVE,fail,anonymous,,0.0,anonymous
+2ec665be25334e089f9d6fed1d04f6d2,/Not%20Sure,The launch phase should include,POSITIVE,not_sure,imputed,,0.0,
+110651a30ac841bb9a85d2d1809cc6c8,/Not%20Sure,,,topic_marker,anonymous,,,
