@@ -27,4 +27,5 @@ tests = adatest.TestTree("perspective_scratch.csv")
 
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
-adatest.serve(tests.adapt(model, generator, auto_save=True), port=8089)
+
+adatest.serve(tests.adapt(model, generator, auto_save=True), port=8099)

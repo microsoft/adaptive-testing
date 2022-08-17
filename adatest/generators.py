@@ -467,7 +467,7 @@ class OpenAI(TextCompletionGenerator):
         
             study_log = {'Custom Prompt':  user_prompt,'Mode': {mode} , 'Suggestions': output}
             log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
-        
+            
         else: 
             user_prompt = user_prompt + '\n'
             # print(call_prompt)

@@ -813,6 +813,10 @@ class TestTreeBrowser():
         
         # Build up suggestions catalog, unless generating from a test tree source.
         # NOTE: Doing safe checks for TestTree type in order to prevent circular imports
+
+        
+
+
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
             suggestions['topic'] = self.current_topic + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_topic):] if x != "" else "")
@@ -855,7 +859,13 @@ class TestTreeBrowser():
                         test_map_tmp[str_val] = True
 
             # suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
+            start = time.time()
+
             self._compute_embeddings_and_scores(self.test_tree)
+            end = time.time()
+            
+            log.warn(f"time elapsed {end-start}")
+
 
         # Filter invalid suggestions
         # if self.mode != "topics":
