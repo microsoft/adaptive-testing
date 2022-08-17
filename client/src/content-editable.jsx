@@ -21,7 +21,7 @@ export default class ContentEditable extends React.Component {
 
   render() {
     //console.log("this.props.text", this.props.text)
-    const emptyContent = this.props.text == undefined || this.props.text.length === 0;
+    const emptyContent = this.props.text === undefined || this.props.text.length === 0;
     this.lastEditable = this.props.editable;
     if (this.lastText === null) this.lastText = this.props.text;
     return <div
@@ -116,7 +116,7 @@ export default class ContentEditable extends React.Component {
   componentDidUpdateOrMount(mount) {
     // console.log("ContentEditable componentDidUpdateOrMount", mount, this.props.text, this.props.editable);
     if (this.props.text !== this.divRef.textContent) {
-      if (this.props.text !== undefined && this.props.text !== null && this.props.text.length > 0) {
+      if (this.props.text !== undefined && this.props.text !== null && (this.props.text.length > 0 || this.divRef.textContent !== this.props.defaultText)) {
         this.divRef.textContent = this.props.text;
       } else {
         if (mount) this.divRef.textContent = this.props.defaultText;

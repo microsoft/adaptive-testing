@@ -1,0 +1,199 @@
+,topic,input,output,label,labeler,description,author,model score
+00f2dfd40977438f9942793768959e8a,,,,topic_marker,imputed,,,
+02076434c5fc4a389f127e542c479c64,/Rooms,Sheets didn't seem clean,neg,pass,anonymous,,anonymous,0.03536648847074937
+029c3b23ed7c491bb0f5b35687dd3f8c,/Location,Far from the best beaches,pos,fail,anonymous,,anonymous,0.8619214039468347
+04189a46ab1642789a5f59fb5a758e29,/Price,Expensive for what you get,pos,pass,anonymous,,,0.0
+04f087d371604398b32205eab29cd587,/Location,Close to nowhere,neg,pass,anonymous,,,0.007999936759466829
+061c756434f84e0b9d4dbad828496837,/Location,Just off the bus line,pos,pass,anonymous,,anonymous,0.0
+069449b9da3b4481827417686c244033,/Price,High prices for average services and less convinient location,neg,pass,anonymous,,anonymous,0.0
+06b259ccddbe4769b050fb855dd245dc,/Rooms,Only had a couple pillows,pos,fail,anonymous,,anonymous,0.9068814921475123
+06ffa0d789944320a18d1c91a9567315,/Facilities/Restaurant,Don't eat here,neg,pass,anonymous,,anonymous,0.002532984066390833
+0adc101c0dc549a089ed5733a2893dba,/Service,Service at the hotel is quite slow,neg,pass,anonymous,,anonymous,0.0
+0ba15c3386e34777bfb4906394f15b82,/Price,One star service for a four star price,pos,fail,anonymous,,,1.0
+0e74d4372f484ef089c75e8f82446226,/Location,Bus line runs close by,pos,pass,anonymous,,anonymous,0.0
+10555369f4254142a2d42df7558063d2,/Facilities/Restaurant,"My lasagne was excellent, I could eat it every day!",pos,pass,anonymous,,anonymous,0.0
+123de4a1154a4a47b3f897230b66c3f1,/Service,Any issues are taken care of quickly,pos,pass,anonymous,,anonymous,0.0
+15ded90cab9e453792a97a4e739a644e,/Location,No walkability for people with mobility issues,pos,fail,anonymous,,anonymous,1.0
+1604abdbfbda497e8de46f111bf4e506,/Facilities/Pool,Pool cleaning was horrible,neg,pass,anonymous,,anonymous,0.0015588112163477117
+18c454fa3d444526ad71a95fe5a45ef5,/Price,Low price but high standard of service,pos,pass,anonymous,,anonymous,0.0
+1a256503b0364a40808ef76b10248c30,/Service,Front desk staff were attentive,pos,pass,anonymous,,anonymous,0.0
+1b96d669ba1546dba79174644e9d741f,/Facilities/Restaurant,Restaurant was located in the basement,neg,pass,anonymous,,anonymous,0.0
+1c5020a50e5747cb90f4d08259c09772,/Price,,,topic_marker,anonymous,,,
+1cdedd7004ea4a34a9623c91aae382f0,/Facilities/Restaurant,Waiters were friendly and attentive,pos,pass,anonymous,,anonymous,0.0
+1da0369fd6bb4afb958caf57ac4ceaf5,/Price,Extraordinarily expensive for what you get,neg,pass,anonymous,,anonymous,0.0
+1dc58e624e364c2b82e7f4b20ca06676,/Facilities/Restaurant,Bread did not come at the end of meal,neg,pass,anonymous,,anonymous,0.02117403731632515
+1e27ca77e6bf46beb7282fc50ed9dba0,/Rooms,Only 2 bath towels,pos,fail,anonymous,,anonymous,0.5659768154018169
+1ed5d0e0e01248c4a197e65ee461db7b,/Location,Hotel dropped into an anonymous business park,neg,pass,anonymous,,,0.0038315118022913173
+22259ce0a5df47a5a956c49cbc8755a0,/Service,Always willing to do whatever it takes to make your stay pleasant,pos,pass,anonymous,,anonymous,0.0
+2245eaa2609f40009a5a98471fbec625,/Facilities,,,topic_marker,anonymous,,,
+2346ed4286764ff089c1917cf9da2ddd,/Price,Prices are a little on the steep side,pos,fail,anonymous,,anonymous,1.0
+244f7853fd1142bb9427c36a666b91f9,/Facilities/Restaurant,Food quantity was small,neg,pass,anonymous,,anonymous,0.010578740506381622
+257400db509e49c1b6dd9e287685140e,/Facilities/Restaurant,No toilets in restaurant,pos,fail,anonymous,,anonymous,0.8834572233315061
+27a04b3d63254577b1112ae04145f935,/Facilities/Restaurant,No free refills,pos,fail,anonymous,,anonymous,0.9858127695421115
+287e05c7919345bba29ce27de5b80299,/Facilities/Restaurant,Got food poisoning,neg,pass,anonymous,,anonymous,0.0
+2db7e0e996ac4b8da81fa7bbb286914c,/Location,An oasis of calm during tourist season,pos,pass,anonymous,,anonymous,0.0
+2e3005f8a8c24cbd96401adb7f321458,/Facilities/Restaurant,Breakfast needs a major overhaul,neg,pass,anonymous,,anonymous,0.0
+2f5b87f286b04736bf061c3a7e438911,/Rooms,"No views of the ocean at all, only of a parking lot.",neg,pass,anonymous,,anonymous,0.0055049279431199595
+34998856113841b78e12a3f454ff4420,/Price,Rigged to overcharge,neg,pass,anonymous,,anonymous,0.0
+357caede646a4c5ea1b59da52e807e12,/Location,Slightly isolated from the area's attractions,pos,fail,anonymous,,anonymous,0.9509071111679077
+387d9bf5e9ac47f49503fe8aaa10f2f9,/Rooms,Our air conditioner wasn't working,neg,pass,anonymous,,anonymous,0.0
+38af115065e9475a82ba455e010667e7,/Price,Crazy expensive for what you get,neg,pass,anonymous,,anonymous,0.0
+3ab16b419ab54eda9616b20631da00a2,/Facilities/Restaurant,Get here as early as possible or you'll be waiting for a long time,pos,fail,anonymous,,anonymous,0.9929495269304643
+3b0a1573d9154d938928d7ce3ddff043,/Price,The price seemed reasonable,neg,fail,anonymous,,anonymous,0.16721585891294058
+3b63631e191f473f852a9276e3e7bcde,/Location,Too far from some attractions,neg,pass,anonymous,,anonymous,0.2603970766067505
+3ca8925223ff49969a35dd682a2abdb6,/Facilities/Restaurant,Seafood is so much better elsewhere,pos,fail,anonymous,,anonymous,0.9628090240245476
+40bdeeb227c44fb99e19466df0617dd5,/Rooms,Room was noisy at night,pos,fail,anonymous,,anonymous,0.9222849882329996
+4231463634b84ccf918ae5e3269a32e5,/Location,Can walk to art district,pos,pass,anonymous,,anonymous,0.0
+44dc6a3678654196aa2212a943f64ec1,/Rooms,We could just lie in bed and watch the ships in the harbor,neg,fail,anonymous,,,1.0
+4819f234c2c74680a145f8a4617aaf04,/Facilities/Pool,Water terribly cold,neg,pass,anonymous,,,0.0018953193006728897
+4877e7bd4af94768bd881652c7876066,/Price,Good budget option,pos,pass,anonymous,,anonymous,0.0
+4c272643ac1f4a62a0ccca592273d51c,/Service,Staff very attentive,pos,pass,anonymous,,,0.0
+4cb11859b69a48908e0ca2e02c17ddc2,/Service,Checkout very quick,pos,pass,anonymous,,anonymous,0.0
+4d0c722297bc40dba00809efeff3ddf2,/Rooms,"Room was too hot, could not sleep",neg,pass,anonymous,,anonymous,0.020949860030593202
+4dd929eba2094491a64af7a2ce5d7316,/Rooms,TV didn't work in the room,neg,pass,anonymous,,,0.005870745712330646
+514cf379d06440ccadb04ecf97509779,/Location,Quiet and secluded,pos,pass,anonymous,,anonymous,0.0
+514de23d0393402c81c36a54e60f29ed,/Location,Neighborhood is intimidating,pos,fail,anonymous,,anonymous,0.9916251948979808
+5170081ead85441e8a6887d5b0f62599,/Price,Not bad for the price paid,neg,fail,anonymous,,anonymous,1.0
+54206f4acfc0498dac42279eba4fb303,/Rooms,Clean room,pos,pass,anonymous,,anonymous,0.0
+5584df6c0efe4298ba96be700dce9228,/Rooms,Bed in need of replacement,pos,fail,anonymous,,anonymous,0.9335646420665538
+57617f8ff6f449b69307c77a7bbbf2cb,/Rooms,No bath mats for the shower,neg,pass,anonymous,,anonymous,0.01952743961762565
+57a816da1e594e47a057898522897884,/Service,Happy with how quickly front desk answered the telephone,pos,pass,anonymous,,anonymous,0.0
+57e569d649fc4bd08dfdc2a1fbaa2f6e,/Location,No trains or buses nearby,pos,fail,anonymous,,anonymous,0.9322171141787088
+58f95cfa3e7e4c28b7dcf9a1e1df99ed,/Location,,,topic_marker,anonymous,,,
+5cfefaac1bf1406c968067fe3a912b1d,/Service,"I had a problem with a handle on the toilet...he just replaced it, no big deal",neg,fail,anonymous,,anonymous,1.0
+5d892e8dce8646978c9e3ff5501390b6,/Service,Next day laundry service was very good,pos,pass,anonymous,,anonymous,0.0
+5fd2f4ce35254c049dc40398b2248d18,/Facilities/Restaurant,Breakfast service very efficient,pos,pass,anonymous,,,0.0
+627696d7081c4f56955dc8041858724d,/Service,Laundry service shrank my clothes,neg,pass,anonymous,,,0.0
+62f8f606ac574e66977b800db82cea34,/Price,Great value for money,pos,pass,anonymous,,,0.0
+64027ae207a14db0aaab9be6a9ecea1e,/Location,Tucked away on a quiet street,neg,fail,anonymous,,,0.022233733700274178
+68bd829209644bc9a84dd7bd6f5d5b01,/Facilities/Pool,,,topic_marker,anonymous,,,
+69de51585b4b45a48b6669292ffb3fd6,/Rooms,Room was small but cozy,pos,pass,anonymous,,,0.0
+6ae7e0a652374f8d895d581b66d7085e,/Rooms,Bathroom light didn't work,neg,pass,anonymous,,,0.00546946100179207
+6c3453f4c1e747d2b58e22bbcf1f16e7,/Rooms,No hot water in the shower,neg,pass,anonymous,,,0.01566485443944781
+6d586a3fff17484ea71ee23ecc04582c,/Price,Overpriced given the poor facilities,neg,pass,anonymous,,,0.0
+708fb5c25b7b4b03963710a8e3f34929,/Location,Close to parks and water,pos,pass,anonymous,,anonymous,0.0
+72ba2281ba504b65a2ef931291a611e7,/Facilities/Pool,Pool was almost totally blocked by rubbish,neg,pass,anonymous,,anonymous,0.005074477409384375
+754cdb6c7f294e1483f807e2646466d6,/Service,Service at front desk needs improvement,neg,pass,anonymous,,anonymous,0.0
+75f3a65f995f43f599417ca8c20dfc64,/Facilities/Restaurant,There is a better place to eat a short distance away,pos,fail,anonymous,,anonymous,0.8710957429139538
+769f96e52819496f83c8496c39b92f6a,/Price,Pricey for what you get,neg,pass,anonymous,,anonymous,0.0
+76eb16ffe9c7438bb1da78e680833931,/Location,Surrounding neighborhood is unsafe,neg,pass,anonymous,,anonymous,0.06573726834944035
+77895cede75c46c29f209dfaefcc08aa,/Facilities/Pool,Pool is not working,neg,pass,anonymous,,anonymous,0.008743519935493917
+77a53430419e48c198f7c200a3bdc41b,/Service,The staff would try and make you smile,neg,fail,anonymous,,anonymous,1.0
+78049dd0d393426cbae76ddbb187007f,/Facilities/Restaurant,Don't eat the ciabatta bread,pos,fail,anonymous,,anonymous,0.6495006680488586
+783dd0a357cc4066ac0a662e435c58f5,/Service,Not always enough being done for guests in the lobby,neg,pass,anonymous,,anonymous,0.0
+786bcd6d9b594e0b84ed70c6da5f676c,/Rooms,Desk chair conspicuous by its absence,neg,pass,anonymous,,,0.01946825884876856
+7a9551af176e4af1865515b32f5397bc,/Price,Not cheap enough for this location,neg,pass,anonymous,,anonymous,0.0
+7bc8465e009e4983a1d8fbf50842ffe6,/Facilities/Pool,No towels,pos,fail,anonymous,,,0.956467116010669
+7e24228f5504453b8646f9dd7cc73c79,/Location,Awful neighbourhood for walking,pos,fail,anonymous,,anonymous,0.9462354253697054
+81419edffe684a6391deb9af1d87b2c0,/Price,The most expensive hotel on the strip,pos,fail,anonymous,,anonymous,1.0
+825ea717350c40ff90a8d303b2c3259f,/Location,Too far from beach,neg,pass,anonymous,,anonymous,0.03152497975248768
+8275a1368f3f41e8b02b55ce39e8187e,/Facilities/Restaurant,Food is poor,neg,pass,anonymous,,anonymous,0.05149824440842651
+8279b202475b40bd90d323f0ffdfcac2,/Rooms,Plenty of hot water,neg,fail,anonymous,,anonymous,0.09558087017650185
+853c9fd8147c46f3b579effe6f4520c2,/Facilities/Restaurant,All the meals were a bit over seasoned,pos,fail,anonymous,,anonymous,0.9088237095843423
+86e6fc6fe5d14c8691a9e8158712bb5f,/Service,Overall everyone is willing to help out,pos,pass,anonymous,,anonymous,0.0
+877463f68a7f460c978b0ee39959e8e9,/Price,Your money is not well spent,neg,pass,anonymous,,anonymous,0.0
+891b56253c1a439ab7bbafce933f64b7,/Rooms,View from the balcony was of a parking lot,pos,fail,anonymous,,anonymous,0.9438569021719737
+895f996aeff14dcdbda01e0770b08691,/Rooms,Couldn't see any ocean,pos,fail,anonymous,,anonymous,0.9530809174163879
+8b57269f3e8441a7bbbe4c99cd81cd37,/Facilities/Restaurant,Best nachos in town,pos,pass,anonymous,,anonymous,0.0
+8d40b4fae3cd4779bf40266c0f94f240,/Location,Buses and trains do not stop nearby,pos,fail,anonymous,,anonymous,0.9761177196263865
+908ad023d80f410eac1075ca63cf11a6,/Location,Walkability not great,pos,fail,anonymous,,anonymous,0.5081075581344234
+922d0ee4e1c74a25920ecb627f3dd63c,/Service,"Took a long time to get our keys, until nearly midnight",pos,fail,anonymous,,anonymous,1.0
+939ac59a858b45aa913058de2ecd16d2,/Rooms,Was not satisfied with the condition of the room or the room itself,pos,fail,anonymous,,anonymous,0.9646280156359222
+9621a20b718747b790a7526dfd38cfbd,/Service,"Accommodating staff, courteous",pos,pass,anonymous,,anonymous,0.0
+9632ec45e7b04be6bcff15e52f52e599,/Rooms,Bathroom had been cleaned just prior to our arrival,pos,pass,anonymous,,anonymous,0.0
+978373b2df0f42538c13492cf0d6471a,/Facilities/Restaurant,Sauces a bit too hot,pos,fail,anonymous,,anonymous,0.9444596030643642
+97af1b8a4a2948898130c48753328b54,/Rooms,View was different from promotional photos,pos,fail,anonymous,,anonymous,0.9764968971125088
+9840372f7900424baff1e9258e58e3d7,/Rooms,AC wasn't working well,neg,pass,anonymous,,anonymous,0.020115314715187866
+9a2ff1b8978846ae9f295d4846ec12b8,/Rooms,Didn't have hot water,neg,pass,anonymous,,anonymous,0.01998141284973178
+9b1fef0c3b2d4a839cc5fb0b3d854861,/Price,Rather overpriced for what you get,pos,fail,anonymous,,anonymous,0.0
+9ba4cb824eef42ab878e8fc4ce572973,/Facilities/Pool,Pool service didn't include towels,neg,pass,anonymous,,,0.20532752267528293
+9d5879a6b52f4d41add360507657519a,/Location,Horrendous traffic noise,neg,pass,anonymous,,,0.007439990382418224
+9dfd09a7496f436dafb651947727d51e,/Facilities/Restaurant,Waited 10 minutes after seating for our waitress,pos,fail,anonymous,,anonymous,0.9440716364373023
+a1a82990388a4e61b3fd72db79ab5870,/Location,Can walk to downtown/transit,pos,pass,anonymous,,anonymous,0.0
+a25a7218116347f1b075c57e7043a373,/Facilities/Pool,Pool closed for repair,pos,fail,anonymous,,,0.9739708322546833
+a2c4512803b843a5adc5d4c572dc4912,/Facilities/Pool,"When we were there, the pool was closed",pos,fail,anonymous,,anonymous,0.9828934881076902
+a2d1674f57e040dead2d64eb2fbf9916,/Facilities/Restaurant,Like variety on buffet,pos,pass,anonymous,,anonymous,0.0
+a52c80339cd64af882265082ae3a42ae,/Service,I was not happy with the service,neg,pass,anonymous,,anonymous,0.0
+a6b3ce110f474bada036aa13ccf41548,/Service,,,topic_marker,anonymous,,,
+a76d528c740b40019f3f69d1ed1a6b15,/Rooms,Ocean view from our room,pos,pass,anonymous,,anonymous,0.0
+a77390fe811d45a187e1d04004df4350,/Facilities/Restaurant,Restaurant wasn't large but served excellent food,pos,pass,anonymous,,,0.0
+a9027c10b08d4bc6a865ddd21e4c480d,/Price,Cheap and very quiet,pos,pass,anonymous,,anonymous,0.0
+a92ccc2284254033af6974e63383edea,/Price,Very expensive for what you get,neg,pass,anonymous,,anonymous,0.0
+a933bcbd4c2542baafaa8475961d38e8,/Rooms,Rooms were dated and small,pos,fail,anonymous,,anonymous,0.9489458026560805
+ab3b7acf65b24cd1afa1729a773c4110,/Rooms,The room had no clock,neg,pass,anonymous,,anonymous,0.01801225306431987
+abfb9c8a7a364bfdbc142a6f2ac7cdac,/Facilities/Restaurant,Food was unremarkable,neg,pass,anonymous,,,0.0
+ac5ebdc88ed245919a6f3364340ef448,/Rooms,Cramped bathrooms,neg,pass,anonymous,,anonymous,0.003501463001233201
+adeffd2e8b79435f8aaf02494294c0c0,/Facilities/Restaurant,Late dining was an added bonus,pos,pass,anonymous,,anonymous,0.0
+af8f94e9389e49568bbac469c6d540a9,/Price,Fair price for a swanky strip hotel,neg,fail,anonymous,,anonymous,1.0
+afd78d1c77d243d2ba54c3686ac2ff3e,/Price,Fairly priced,pos,pass,anonymous,,,0.0
+aff3e0264a8d448c836daa4a109419a7,/Location,Hard to get to from tourist attractions,pos,fail,anonymous,,anonymous,0.9668508984189681
+b09f27d62f0f45cd851464b44aeefe2f,/Rooms,The smell of mold or mildew was heavy,neg,pass,anonymous,,anonymous,0.03170379541096625
+b0ad37a7942e4d0989833f90903f9d6d,/Location,Close to the beach,pos,pass,anonymous,,anonymous,0.0
+b0b16ba1a58c4c288a667aef6ccc76b7,/Location,Very few restaurants and shops,neg,pass,anonymous,,anonymous,0.03229419574689485
+b1aab53a4f2143b2894c09f1dc9fb82e,/Rooms,Bed was very comfy,pos,pass,anonymous,,anonymous,0.0
+b21f1062d7564a76b4a251189da8a1dd,/Facilities/Pool,Two hot tubs!,pos,pass,anonymous,,,0.0
+b63f3ac15004474eb013c3d4134e1e01,/Service,They were so willing to help us with everything,pos,pass,anonymous,,anonymous,0.0
+b8b872e399ae44c4baa73de896162065,/Service,Concierge got us a reservation at a restaurant,pos,pass,anonymous,,,0.0
+b8e1a50475604ee390feab4bfe14424a,/Service,Had been promised early checkin but were turned away,pos,fail,anonymous,,,1.0
+b9f5539ec780496aa72e3777d03fbaa7,/Rooms,Our room had an ocean view,pos,pass,anonymous,,,0.0
+ba328c365f3943488ecf109c455a5a60,/Location,Close to all the sights,pos,pass,anonymous,,anonymous,0.0
+bab0178fc46a427899447113248122c9,/Facilities/Pool,No lane swimming,pos,fail,anonymous,,,0.9611776900817911
+bac7bb1c7ffa41b485ca71e09aae6998,/Location,Away from the madness of downtown,pos,pass,anonymous,,anonymous,0.0
+bc8637a35f6a43ecab2e9f1e2a6b9517,/Facilities/Restaurant,"Food was terrible, should close down",neg,pass,anonymous,,anonymous,0.013274874064298664
+bc931528b0bf4c3dbb258a8a38d0cdc6,/Rooms,Bathroom fan broke,neg,pass,anonymous,,anonymous,0.043131239390885534
+be290ab5098c4ce5bee1abace7f6bc7b,/Facilities/Pool,Pool was closed for the season,pos,fail,anonymous,,anonymous,0.9801850118077637
+bf49f08e930448d9ad00343919b31886,/Price,This place is more expensive than it appears,pos,fail,anonymous,,anonymous,1.0
+bfb2e0d1194c4625898339bd1b2f24e9,/Rooms,The air conditioner was not working,neg,pass,anonymous,,anonymous,0.11590849003673025
+c22f5c0b880d40889e599f54ca38928a,/Rooms,Room was very small and dark,neg,pass,anonymous,,anonymous,0.023819851068293596
+c30ad576150f4343a129c9bd4872460e,/Facilities/Restaurant,Food portion was mini,pos,fail,anonymous,,anonymous,0.9234152849055209
+c58b3df66491447a994fb6eaca312640,/Rooms,Wardrobe lacked coathangers,neg,pass,anonymous,,,0.004106684871886362
+c5ced663935e4d14a0ea3c57e1ae343e,/Service,I asked for a late check-out but was told no problem,pos,pass,anonymous,,anonymous,0.0
+c6cbf8a3e9754d09b391ef1e6c9978f1,/Facilities/Restaurant,Drinks reasonably priced,pos,pass,anonymous,,anonymous,0.0
+c896f64736b54f539606a011b40cffdd,/Rooms,Problem with key card in the elevator,neg,pass,anonymous,,anonymous,0.4970642328262329
+c99d0927d84645178879e949ff37787c,/Service,Friendly concierge,pos,pass,anonymous,,anonymous,0.0
+ca06223f280541ac9a4e9c27cb7ff986,/Location,Road noise is intense,pos,fail,anonymous,,anonymous,0.9398255207305095
+ca8622d782ac41f195a4bb3efd4d4e2c,/Facilities/Restaurant,Dining room did not seem well maintained,neg,pass,anonymous,,anonymous,0.0
+caf8976f3f34409cae22dcf6361e2634,/Location,Isolated from the downtown,pos,fail,anonymous,,anonymous,0.5898931866947897
+ccf1a41f509148afb4b78b014b2a1848,/Rooms,Rooms have not been kept in good condition,pos,fail,anonymous,,anonymous,0.8474004485875167
+cd40428fd68d4db8b4a8a0bf547b943e,/Facilities/Restaurant,,,topic_marker,anonymous,,,
+cd92ed58725d4658be9c2d0b0cfb1671,/Price,Expensive but was worth it,pos,pass,anonymous,,anonymous,0.0
+ce1cc7a936574950bf822b54ae68b7ff,/Rooms,Plenty of space,neg,fail,anonymous,,anonymous,1.0
+ce5ac35f85e5461f82d6ef5d1cf8a653,/Facilities/Restaurant,They have milkshakes. Try them,pos,pass,anonymous,,anonymous,0.0
+cf2fc3107ba849628ca3ff4c44f10d7c,/Rooms,Where are the towels?,neg,pass,anonymous,,anonymous,0.039039845402230385
+d02af05847554e829fd8c2a54d25a682,/Facilities/Restaurant,Went to restaurant and were promptly seated,pos,pass,anonymous,,anonymous,0.0
+d38aa871131c411094fb7eff4329eaf2,/Price,Unreasonably high price,neg,pass,anonymous,,anonymous,0.0
+d3aee530ba1c497090a85682d4eedecc,/Rooms,Room was very small and hot and window was broken,neg,pass,anonymous,,anonymous,0.1914782162671484
+d438771ca25e4b789a166f42311a8778,/Service,Booked our son's ski lesson and was not told that was an extra fee,pos,fail,anonymous,,anonymous,1.0
+d55325e8dc5d48be92c94dd76ba92b0d,/Rooms,Windows need new screens,pos,fail,anonymous,,anonymous,0.9633868193121728
+d6fa4ecef1554b108c121c367cea2c09,/Rooms,Shower didn't drain well,neg,pass,anonymous,,anonymous,0.02177738050122612
+d7e456cfc5944b108bfd56e6a28c5fc4,/Rooms,The only view from the room was of the front parking lot,neg,pass,anonymous,,anonymous,0.005614943169105575
+d88da78b2a304af79d7451acac7fbb13,/Facilities/Restaurant,Baked potatoes taste off,neg,pass,anonymous,,anonymous,0.0027625570047995476
+d8e1dc7d1baa4ca696c611a9f15506f3,/Location,Near light rail,pos,pass,anonymous,,anonymous,0.0
+d94d5eb7522746cfa8b2a80aa55d38b8,/Service,Staff was friendly,pos,pass,anonymous,,anonymous,0.0
+df8ce65ef12847e58ea7052b1ecc4e2a,/Service,Housekeeping quick and efficient,pos,pass,anonymous,,,0.0
+e15d2b8a684c429d86d192c3194ae153,/Facilities/Pool,Lockers were broken,pos,fail,anonymous,,,0.9748728620309092
+e2765b3385b7450fa7196361c189bd2f,/Service,Receptionists very attentive,pos,pass,anonymous,,anonymous,0.0
+e33ec9dbd07b4abda6ff020c1e34fe18,/Facilities/Restaurant,There are better places to eat nearby,pos,fail,anonymous,,anonymous,0.9084235104448649
+e36343e0829c4c8a9564662b9b82c2df,/Price,Rigged to rip off,neg,pass,anonymous,,anonymous,0.0
+e58c6478b5e546deaf9c94f95c85f7f8,/Service,Hotel staff will always act like they don't understand what you are saying,neg,pass,anonymous,,anonymous,0.0
+e66ed9065fcd4820bd6f8765eeca2565,/Price,Fairly priced for what you get,pos,pass,anonymous,,anonymous,0.0
+e75cea1ce3274d3cb4e709cd45c62fa3,/Service,Every single person working there made me feel like I'm their only priority,neg,fail,anonymous,,anonymous,0.9832501604566285
+e7a6d4bfe0a845c0b8e2f01ab10cf8a8,/Rooms,Our room had a refrigerator and was very clean,pos,pass,anonymous,,anonymous,0.0
+e8ef75b760bc445585d4f998909425c3,/Service,Tried to reach a concierge twice and never responded to each of our requests.,neg,pass,anonymous,,anonymous,0.0
+e9b85bb224354a7fb311f68bd458be07,/Price,Kind of pricey,neg,pass,anonymous,,anonymous,0.0
+ece3562bf84044ed9cb56d27566766f6,/Location,"Nice, quiet neighborhood",pos,pass,anonymous,,anonymous,0.0
+ed88f3124b224e61a7286dbb26d694e8,/Price,Quite expensive,neg,pass,anonymous,,anonymous,0.0
+f2011cf43eb642f6a503c4ed612bb767,/Facilities/Restaurant,Served my meal in less than 15 minutes,neg,fail,anonymous,,anonymous,1.0
+f29cfe9996ad40c8957df6208abeda39,/Price,A bit pricey for what it is,pos,fail,anonymous,,anonymous,0.9759607533207704
+f30ef67be728417a956e6438bd1ff375,/Service,Clothes came back neatly folded from laundry,pos,pass,anonymous,,,0.0
+f3d016316bfa4d20bfb93e971c8c021c,/Price,Four-star amenities on a one-star budget,pos,pass,anonymous,,anonymous,0.0
+f44b30d794014d5f964c3908f5eb63be,/Location,Easy to get to transit,pos,pass,anonymous,,,0.0
+f7cd947b83754f7788cf3b6eee47a1f5,/Price,Very expensive for the quality,pos,fail,anonymous,,anonymous,0.976195779895292
+f9d57eb623564826bdc697f7dd43be77,/Price,Fair value for money,pos,pass,anonymous,,anonymous,0.0
+fa4d7f67a3f14fa79a380afa5764ef80,/Price,Cheap for what you get,neg,fail,anonymous,,anonymous,0.014309784957217955
+fb9866889c414e2593158a1ddaa0e610,/Price,Costs have crept up a lot since last time I was here,pos,fail,anonymous,,anonymous,1.0
+fc6f00cf6dea4459811bb3d9ba84cec4,/Rooms,,,topic_marker,anonymous,,,
+fedd0976a40b49ad84fad703f6d70837,/Rooms,The toilet kept flooding,pos,fail,anonymous,,anonymous,0.945428799227947
+fef922cf2a62466584f4582da641ca2c,/Rooms,No door to bathroom!,pos,fail,anonymous,,anonymous,0.5445216298103333
+ff38155ab75945caac5c9e08eba4e1c4,/Rooms,Rooms were clean,pos,pass,anonymous,,anonymous,0.0
+fff299cde43e42ab8f7ba0a64c7f1a7d,,New test,pos,pass,imputed,,anonymous,0.0
