@@ -807,6 +807,9 @@ class TestTreeBrowser():
                 log.warn(e)
                 pass # try the next generator
             
+        # USER STUDY: Limit to 50 generations for Perspective API rate limit
+        proposals = proposals[:50]
+
         # all topics should be URI encoded
         if mode == "topics":
             proposals = [urllib.parse.quote(x) for x in proposals]
