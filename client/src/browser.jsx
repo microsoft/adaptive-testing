@@ -20,7 +20,7 @@ export default class Browser extends React.Component {
 
     // our starting state 
     this.state = {
-      topic: "/",
+      topic: "",
       suggestions: [],
       tests: [],
       selections: {},
@@ -43,7 +43,9 @@ export default class Browser extends React.Component {
   	  topicPrompt: "",
       testPrompt: "",
       topicPromptError: false,
-      testPromptError: false
+      testPromptError: false,
+      isControl: false, // true if we are in the control group
+      description: ""
     };
 
     console.log("this.props.location", this.props.location)
@@ -169,7 +171,8 @@ export default class Browser extends React.Component {
     return (
     <div onKeyDown={this.keyDownHandler} tabIndex="0" className="adatest-browser-container" ref={(el) => this.divRef = el}>
         <div style={{gridArea: "header", fontSize: "20px", textAlign: "left", color: "#999999", height: "15px"}}>
-          <ContentEditable defaultText="Describe your model's input (e.g., tweets, movie reviews)" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
+          {/* <ContentEditable defaultText="Describe your model's input (e.g., tweets, movie reviews)" text={this.state.description} onFinish={this.finishTopicDescription} /> */}
+          <span>{this.state.description}</span>
         </div>
         
     {/* john edit */}
@@ -185,40 +188,47 @@ export default class Browser extends React.Component {
           </div>
           <div  style={{padding: "10px", height: "50%", marginRight: "1rem"}}>
             <div className='adatest-title'>Suggested Topics</div>
-            <Autocomplete 
-                placeholder={"▼ Suggest more sub-topics for this folder ▼"}
-                value={this.state.topicPrompt}
-                onChange={this.changeTopicPrompt} 
-                id={"topic_prompt_input_box"}
-                error={this.state.topicPromptError}
-                limit={15}
-                data={[
-                  {
-                    value: "List important/common topics/domains in (task domain)",
-                    group: "Where do I start/Where do I look next?"
-                  },
-                  {
-                    value: "List some common types of (task input description)",
-                    group: "Where do I start/Where do I look next?"
-                  },
-                  {
-                    value: "I am working on (task). List the different topics and sub-topics I should consider.",
-                    group: "Where do I start/Where do I look next?"
-                  },
-                  {
-                    value: "Suggest sibling topics for this folder",
-                    group: "Expand the tree"
-                  },
-                  {
-                    value: "Suggest sub-topics for this folder",
-                    group: "Expand the tree"
-                  },
-                  {
-                    value: "Suggest parent topics for this folder",
-                    group: "Expand the tree"
-                  }
+            <div style={{position: "relative"}}>
+              <Autocomplete 
+                  placeholder={"▼ Suggest more sub-topics for this folder ▼"}
+                  value={this.state.topicPrompt}
+                  onChange={this.changeTopicPrompt} 
+                  id={"topic_prompt_input_box"}
+                  error={this.state.topicPromptError}
+                  disabled={this.state.isControl}
+                  dropdownPosition={"bottom"}
+                  limit={15}
+                  data={[
+                    {
+                      value: "List important/common topics/domains in (task domain)",
+                      group: "Where do I start/Where do I look next?"
+                    },
+                    {
+                      value: "List some common types of (task input description)",
+                      group: "Where do I start/Where do I look next?"
+                    },
+                    {
+                      value: "I am working on (task). List the different topics and sub-topics I should consider.",
+                      group: "Where do I start/Where do I look next?"
+                    },
+                    {
+                      value: "Suggest sibling topics for this folder",
+                      group: "Expand the tree"
+                    },
+                    {
+                      value: "Suggest sub-topics for this folder",
+                      group: "Expand the tree"
+                    },
+                    {
+                      value: "Suggest parent topics for this folder",
+                      group: "Expand the tree"
+                    }
 
-              ]} />
+                ]} />
+                <button disabled={this.state.isControl} onClick={() => this.setState({topicPrompt: ""})} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
+                  <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
+                </button>
+              </div>
               <div style={{display: "flex", flexDirection: "row", justifyContent: "end", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
                 <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "end"}}>
                 <FontAwesomeIcon className={this.state.loading_topic_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
@@ -280,6 +290,8 @@ export default class Browser extends React.Component {
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
+              disabled={this.state.isControl}
+              dropdownPosition={"bottom"}
               limit={15}
               id={"test_prompt_input_box"}
               data={[
@@ -326,9 +338,14 @@ export default class Browser extends React.Component {
 
               ]}
               />
-            <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
-              <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
-            </Button>
+            <div style={{position: "relative"}} >
+              <button disabled={this.state.isControl} onClick={() => this.setState({testPrompt: ""})} style={{right: "65px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
+                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
+              </button>
+              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
+                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </Button>
+            </div>
             <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
             </Button>
@@ -891,7 +908,8 @@ export default class Browser extends React.Component {
     console.log("refreshSuggestions");
     if (this.state.loading_test_suggestions) return;
 
-    if (this.state.tests.length === 0 && this.state.testPrompt === "") {
+    const tests = this.state.tests.find(test => !test.startsWith("/"));
+    if (!this.state.isControl && this.state.topic === "" && tests == null && this.state.testPrompt === "") {
       this.setState({testPromptError: "Please provide a prompt."})
       return;
     }
@@ -920,7 +938,8 @@ export default class Browser extends React.Component {
     console.log("refreshSuggestions");
     if (this.state.loading_topic_suggestions) return;
 
-    if (this.state.tests.length === 0 && this.state.topicPrompt === "") {
+    const topics = this.state.tests.find(test => test.startsWith("/"));
+    if (!this.state.isControl && this.state.topic === "" && topics == null && this.state.topicPrompt === "") {
       this.setState({topicPromptError: "Please provide a prompt."})
       return;
     }

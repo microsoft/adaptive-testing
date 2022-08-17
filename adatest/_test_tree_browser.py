@@ -148,7 +148,7 @@ class TestTreeBrowser():
 
     def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
                  max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
-                 score_filter, topic_model_scale):
+                 score_filter, topic_model_scale, control, description):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -169,6 +169,8 @@ class TestTreeBrowser():
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
+        self.control = control
+        self.description = description
 
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
@@ -517,6 +519,8 @@ class TestTreeBrowser():
             elif "topic" in msg[k] and len(msg[k]) == 1:
                 NOT_SURE_TOPIC = "/Not%20Sure"
 
+                msg[k]["topic"] = msg[k]["topic"].replace(" ", "%20") # encode spaces as %20
+
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
                     if msg[k]["topic"] == "_DELETE_": # this means delete the test
@@ -714,6 +718,7 @@ class TestTreeBrowser():
             #crv
             "structure": structure, 
             "topic": self.current_topic,
+            "description": self.description,
             "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",
             "topic_marker_id": topic_marker_id if topic_marker_id is not None else uuid.uuid4().hex,
             "score_filter": score_filter,
@@ -725,6 +730,7 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
+            "isControl": self.control
             # "test_types": test_types,
             # "test_type_parts": test_type_parts,
         }
@@ -833,7 +839,8 @@ class TestTreeBrowser():
                 if mode == "topics":
                     # Format the generated topic string
                     input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
-                    input = input.replace("  ", "%20").strip() # kill any double spaces we may have introduced and encode spaces as %20
+                    input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
+                    input = input.replace(" ", "%20").strip() # encode spaces as %20
                     str_val = self.current_topic + "/" + input + " __topic_marker__"
                 else:
                     str_val = self.current_topic + " __JOIN__ " + input

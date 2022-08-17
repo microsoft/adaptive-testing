@@ -14,6 +14,7 @@ from ._topic_model import TopicLabelingModel, TopicMembershipModel
 import adatest
 from pathlib import Path
 import torch
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 # class TestTreeIterator():
@@ -234,6 +235,11 @@ class TestTree():
         no_suggestions = self._tests.loc[["/__suggestions__" not in topic for topic in self._tests["topic"]]]
         if file is None:
             no_suggestions.to_csv(self._tests_location)
+            # Make a backup every minute
+            current_time = datetime.now().strftime("%H-%M")
+            backup_file = self._tests_location.replace(".csv", "_"+current_time+".csv")
+            if not os.path.exists(backup_file):
+                no_suggestions.to_csv(backup_file)
         else:
             no_suggestions.to_csv(file)
 
@@ -250,7 +256,7 @@ class TestTree():
 
     def adapt(self, scorer=None, generator=adatest.generators.OpenAI(), auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
               max_suggestions=50, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
-              score_filter=-1e10, topic_model_scale=0): # TODO: remove active_generator and replace with the ability to set the generator?
+              score_filter=-1e10, topic_model_scale=0, control=False, description=""): # TODO: remove active_generator and replace with the ability to set the generator?
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
 
         Applying a test tree to a target model (wrapped by a scorer) creates a TestTreeBrowser object that can be used to
@@ -315,7 +321,9 @@ class TestTree():
             active_generator=active_generator,
             starting_path=starting_path,
             score_filter=score_filter,
-            topic_model_scale=topic_model_scale
+            topic_model_scale=topic_model_scale,
+            control=control,
+            description=description
         )
 
     def __repr__(self):
