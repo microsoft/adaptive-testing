@@ -14,6 +14,7 @@ from ._topic_model import TopicLabelingModel, TopicMembershipModel
 import adatest
 from pathlib import Path
 import torch
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 # class TestTreeIterator():
@@ -234,6 +235,11 @@ class TestTree():
         no_suggestions = self._tests.loc[["/__suggestions__" not in topic for topic in self._tests["topic"]]]
         if file is None:
             no_suggestions.to_csv(self._tests_location)
+            # Make a backup every minute
+            current_time = datetime.now().strftime("%H-%M")
+            backup_file = self._tests_location.replace(".csv", "_"+current_time+".csv")
+            if not os.path.exists(backup_file):
+                no_suggestions.to_csv(backup_file)
         else:
             no_suggestions.to_csv(file)
 
