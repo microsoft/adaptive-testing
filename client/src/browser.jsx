@@ -296,31 +296,31 @@ export default class Browser extends React.Component {
               id={"test_prompt_input_box"}
               data={[
                   {
-                    value: "Write (input task description)",
+                    value: "Write a "+ this.state.description,
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a sentence from (input task description)",
+                    value: "Write a sentence from a " + this.state.description,
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write (input task description) that are (output type)",
+                    value: "Write a " + this.state.description + " that is (output type)",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write (input task description) that are/contain/talk about/refer to (input feature)",
+                    value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to (input feature)",
                     group: "Where to start/Where to look next"
                   }, 
                   {
-                    value: 'Write a sentence that is a (type of input description + output/context, if available), such as "(example of input)" ',
+                    value: 'Write a sentence that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
                     group: "Found one or more errors, now what? (Focused exploration)"
                   }, 
                   {
-                    value: 'Write a sentence using the phrase/word "(phrase)" that that is a (input description + output/context, if available), such as "(example of input)" ',
+                    value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
-                    value: 'Write a (input description + context) with the template: "(template)", such as "(example)"',
+                    value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
