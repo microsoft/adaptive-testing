@@ -807,6 +807,9 @@ class TestTreeBrowser():
                 log.warn(e)
                 pass # try the next generator
             
+        # USER STUDY: Limit to 50 generations for Perspective API rate limit
+        proposals = proposals[:50]
+
         # all topics should be URI encoded
         if mode == "topics":
             proposals = [urllib.parse.quote(x) for x in proposals]
@@ -827,9 +830,10 @@ class TestTreeBrowser():
             # suggestions = []
             test_map_tmp = copy.copy(test_map)
             for input in proposals:
-                if mode == "topics" and ("/" in input or "\n" in input):
+                if mode == "topics":
+                    # Format the generated topic string
                     input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
-                    input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
+                    input = input.replace("  ", "%20").strip() # kill any double spaces we may have introduced and encode spaces as %20
                     str_val = self.current_topic + "/" + input + " __topic_marker__"
                 else:
                     str_val = self.current_topic + " __JOIN__ " + input
