@@ -2,32 +2,12 @@ import "./adatest.css";
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { withRouter } from 'react-router-dom';
+import { BrowserRouter } from "react-router-dom";
+import { MemoryRouter } from 'react-router';
 import Browser from './browser'
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-  BrowserRouter,
-  MemoryRouter
-} from "react-router-dom";
 
-// function withRouter(Component) {
-//   function ComponentWithRouterProp(props) {
-//     let location = useLocation();
-//     let navigate = useNavigate();
-//     let params = useParams();
-//     return (
-//       <Component
-//         {...props}
-//         router={{ location, navigate, params }}
-//       />
-//     );
-//   }
-
-//   return ComponentWithRouterProp;
-// }
-
-// const BrowserWithRouter = withRouter(Browser);
+const BrowserWithRouter = withRouter(Browser);
 
 export default class AdaTest extends React.Component {
 
@@ -39,21 +19,16 @@ export default class AdaTest extends React.Component {
   }
   render() {
 
-    // let location = useLocation();
-    // let navigate = useNavigate();
-    // let params = useParams();
-
     const Router = this.props.environment === "web" ? BrowserRouter : MemoryRouter;
 
     return (
-      <div style={{maxWidth: "1200px", marginLeft: "auto", marginRight: "auto"}}>
+      <div style={{maxWidth: "1000px", marginLeft: "auto", marginRight: "auto"}}>
         <div style={{paddingLeft: "0px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
           <Router>
-            <Browser
+            <BrowserWithRouter
               interfaceId={this.props.interfaceId} environment={this.props.environment}
               websocket_server={this.props.websocket_server} enabled={this.state.enabled}
               startingTopic={this.props.startingTopic} prefix={this.props.prefix}
-              // router={{ location, navigate, params }}
             />
           </Router>
         </div>

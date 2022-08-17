@@ -11,7 +11,7 @@ import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
 import Tree from './tree';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 export default class Browser extends React.Component {
   constructor(props) {
@@ -102,6 +102,7 @@ export default class Browser extends React.Component {
     if (Object.keys(this.state.selections).length === 0) {
       // this.divRef.focus();
     }
+    // self.query = useQuery();
   }
 
 
@@ -109,7 +110,10 @@ export default class Browser extends React.Component {
   render() {
     console.log("----- render AdaTest browser -----", );
 
-    const [searchParams, setSearchParams] = useSearchParams();
+    // 
+    // console.log("query", query)
+
+    // const [searchParams, setSearchParams] = useSearchParams();
     // compute the width of the largest type selection option (used to size the type column)
     let selectWidths = {};
     for (const i in this.state.test_types) {
@@ -544,6 +548,8 @@ export default class Browser extends React.Component {
   }
 
   locationChanged(location, action) {
+    let query_params = new URLSearchParams(pair_chart.props.history.location.search);
+    query_params.getAll("filter_tag");
     console.log("locationChanged", location, action);
     this.goToTopic(this.stripPrefix(location.pathname));
   }
@@ -974,4 +980,10 @@ function red_blue_color(value, min, max) {
 
 function stripSlash(str) {
   return str.endsWith('/') ? str.slice(0, -1) : str;
+}
+
+function useQuery() {
+  const { search } = useLocation();
+
+  return React.useMemo(() => new URLSearchParams(search), [search]);
 }
