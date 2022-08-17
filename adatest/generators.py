@@ -22,14 +22,14 @@ from urllib.parse import unquote
 import pickle
 
 profanity.set_censor_characters("x")
-profanity.load_words(["fuck", "shit"])
+profanity.load_words(["fuck", "nigga", "nigger"])
 
 def my_cos_sim(a, b):
     """
     Based on the sentence_transformers implementation.
     """
-    a = torch.Tensor([a])
-    b = torch.Tensor([b])
+    a = torch.Tensor(np.array([a]))
+    b = torch.Tensor(np.array([b]))
     a_norm = torch.nn.functional.normalize(a, p=2, dim=1)
     b_norm = torch.nn.functional.normalize(b, p=2, dim=1)
     return torch.mm(a_norm, b_norm.transpose(0, 1)).numpy()[0][0]
@@ -69,8 +69,9 @@ def make_tree_unit(concept, parent ='', sibling=[], child=[]):
 def get_closest_instances( concept_embed, compare_with=[], embeddings=[], num=7):
 
     similarity = [my_cos_sim(concept_embed, i) for i in embeddings]
-    indices = np.argsort(similarity)[-num:]
-    return ([compare_with[i] for i in indices])
+    indices = np.argsort(similarity)[-30:]
+    new_indices = indices[np.sort( np.random.permutation(np.arange(30))[:num])]
+    return ([compare_with[i] for i in new_indices])
 
 def get_terms_embedding(concept, parent='', sibling=[] , child=[]):
     out = concept + ' '+parent 
@@ -81,7 +82,7 @@ def get_terms_embedding(concept, parent='', sibling=[] , child=[]):
 
     return out
 
-def read_list(filename):
+def read_pkl(filename):
    
     root = os.path.abspath(os.path.dirname(__file__))
     filepath =  os.path.join(root, filename)
@@ -99,9 +100,11 @@ def read_txt(filename):
         return f.read()
 
     
-def get_trees(file1='tree_list.pkl' , file2='tree_embeddings.pkl'):
-    tree_list = read_list(file1)
-    tree_embeddings = read_list(file2)
+def get_trees(file1='tree_units.txt' , file2='tree_embeddings_curie.pkl'):
+    tree_list1 = read_txt(file1)
+    tree_embeddings1 = read_pkl(file2)
+    tree_list = tree_list1.split( '\n-----\n')
+    tree_embeddings = np.matrix.transpose(tree_embeddings1)
     return tree_list, tree_embeddings
 
 
@@ -376,7 +379,7 @@ class OpenAI(TextCompletionGenerator):
         # substitute user provided prompt/temperature if available
         call_temp =  self.temperature #temperature if temperature is not None else
 
-        if (user_prompt in ['Suggest children topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
+        if (user_prompt in ['Suggest sub-topics for this folder',  'Suggest sibling topics for this folder',  'Suggest parent topics for this folder']) and (mode=='topics'):
             parent, concept = topic.split('/')[-2:]
             concept = unquote(concept)
 
@@ -397,28 +400,27 @@ class OpenAI(TextCompletionGenerator):
                         sibling.append(unquote(test_topic.split('/')[1]))
 
             sibling = list(set(sibling))
-            if 'NotSure' in sibling:
-                sibling.remove('NotSure')
-            
+            if 'Not Sure' in sibling:
+                sibling.remove('Not Sure')
+            if '__suggestions__' in sibling: 
+                sibling.remove('__suggestions__')
+            if concept in sibling: 
+                sibling.remove(concept)
             child = list(set(child))
             print('\n\n', '  parent---', parent, '  child---', child, '  sibling---', sibling)    
             
             tree_list, tree_embeddings = get_trees()
-            b = read_txt('onetree.txt')
-            tree_list_new = b.split('\n-----\n')
-            
+        
+        
 
             if user_prompt == 'Suggest parent topics for this folder' :
                 concept_terms = get_terms_embedding(concept, parent='', child=child, sibling=sibling)
-                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-davinci-001")["data"][0]["embedding"]
+                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
                 
-                # few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
-                few_shot_instances = tree_list_new
-                # sibling3 = np.random.permutation(sibling)[:3]
-                # concept_tree = make_tree_unit(concept, parent=parent, child=[], sibling=random.sample(sibling,3))
-                # print(concept_tree)
+                few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
                 
-                prompts_topic = [make_prompt(make_tree_unit(concept, parent=[], child=random.sample(child,np.min([3,len(child)])), sibling=random.sample(sibling,np.min([3,len(sibling)]))) ,few_shot_instances = few_shot_instances,problem='') for _ in range(5)]
+                
+                prompts_topic = [make_prompt(make_tree_unit(concept, parent=[], child=random.sample(child,np.min([3,len(child)])), sibling=random.sample(sibling,np.min([3,len(sibling)]))) ,few_shot_instances = few_shot_instances,problem='') for _ in range(8)]
                 print(prompts_topic) 
                 response = openai.Completion.create(
                     engine=self.source, prompt=prompts_topic, max_tokens=200,
@@ -428,18 +430,14 @@ class OpenAI(TextCompletionGenerator):
                 output = get_parent(response)
             
             
-            if user_prompt == 'Suggest children topics for this folder':
+            if user_prompt == 'Suggest sub-topics for this folder':
                 
                 concept_terms = get_terms_embedding(concept, parent=parent, child=[], sibling=sibling)
                 concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
 
-                # few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
-                few_shot_instances = tree_list_new
-                prompts_topic = [make_prompt(make_tree_unit(concept, parent=parent, child=[], sibling=random.sample(sibling,np.min([3,len(sibling)]))) ,few_shot_instances = few_shot_instances,problem='') for _ in range(5)]
-
+                few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
                 
-
-                print(prompts_topic) 
+                prompts_topic = [make_prompt(make_tree_unit(concept, parent=parent, child=[], sibling=random.sample(sibling,np.min([3,len(sibling)]))) ,few_shot_instances = few_shot_instances,problem='') for _ in range(8)]
                 
             
                 response = openai.Completion.create(
@@ -452,11 +450,10 @@ class OpenAI(TextCompletionGenerator):
             elif user_prompt == 'Suggest sibling topics for this folder':
                 concept_terms = get_terms_embedding(concept, parent=parent, child=child, sibling=[])
                 concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
-
-                concept_tree = make_tree_unit(concept, parent=parent, child=child, sibling=[])
+                
                 few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
-                few_shot_instances = tree_list_new
-                prompts_topic = [make_prompt(make_tree_unit(concept, parent=parent, child=random.sample(child,np.min([3,len(child)])), sibling=[]) ,few_shot_instances = few_shot_instances,problem='') for _ in range(5)]
+                #
+                prompts_topic = [make_prompt(make_tree_unit(concept, parent=parent, child=random.sample(child,np.min([3,len(child)])), sibling=[]) ,few_shot_instances = few_shot_instances,problem='') for _ in range(8)]
                 print(prompts_topic) 
                                 
                 response = openai.Completion.create(
