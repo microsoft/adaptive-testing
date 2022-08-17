@@ -44,7 +44,8 @@ export default class Browser extends React.Component {
       testPrompt: "",
       topicPromptError: false,
       testPromptError: false,
-      isControl: false // true if we are in the control group
+      isControl: false, // true if we are in the control group
+      description: ""
     };
 
     console.log("this.props.location", this.props.location)
@@ -170,7 +171,8 @@ export default class Browser extends React.Component {
     return (
     <div onKeyDown={this.keyDownHandler} tabIndex="0" className="adatest-browser-container" ref={(el) => this.divRef = el}>
         <div style={{gridArea: "header", fontSize: "20px", textAlign: "left", color: "#999999", height: "15px"}}>
-          <ContentEditable defaultText="Describe your model's input (e.g., tweets, movie reviews)" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
+          {/* <ContentEditable defaultText="Describe your model's input (e.g., tweets, movie reviews)" text={this.state.description} onFinish={this.finishTopicDescription} /> */}
+          <span>{this.state.description}</span>
         </div>
         
     {/* john edit */}
@@ -223,7 +225,7 @@ export default class Browser extends React.Component {
 
                 ]} />
                 <button disabled={this.state.isControl} onClick={() => this.setState({topicPrompt: ""})} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
-                  <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /> 
+                  <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
                 </button>
               </div>
               <div style={{display: "flex", flexDirection: "row", justifyContent: "end", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
@@ -336,7 +338,7 @@ export default class Browser extends React.Component {
               />
             <div style={{position: "relative"}} >
               <button disabled={this.state.isControl} onClick={() => this.setState({testPrompt: ""})} style={{right: "65px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
-                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /> 
+                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
               </button>
               <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
                 <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 

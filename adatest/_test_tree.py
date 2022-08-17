@@ -256,7 +256,7 @@ class TestTree():
 
     def adapt(self, scorer=None, generator=adatest.generators.OpenAI(), auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
               max_suggestions=50, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
-              score_filter=-1e10, topic_model_scale=0, control=False): # TODO: remove active_generator and replace with the ability to set the generator?
+              score_filter=-1e10, topic_model_scale=0, control=False, description=""): # TODO: remove active_generator and replace with the ability to set the generator?
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
 
         Applying a test tree to a target model (wrapped by a scorer) creates a TestTreeBrowser object that can be used to
@@ -322,7 +322,8 @@ class TestTree():
             starting_path=starting_path,
             score_filter=score_filter,
             topic_model_scale=topic_model_scale,
-            control=control
+            control=control,
+            description=description
         )
 
     def __repr__(self):
