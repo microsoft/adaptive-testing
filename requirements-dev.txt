@@ -1,5 +1,0 @@
-# Packages required for development
-black
-flake8
-pytest
-pytest-mock
