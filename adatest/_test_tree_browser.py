@@ -164,7 +164,7 @@ class TestTreeBrowser():
         # ensure that each scorer's score column is in the test tree dataframe
         for c in self.score_columns:
             if c not in self.test_tree.columns:
-                self.test_tree[c] = [np.nan for _ in range(self.test_tree.shape[0])]
+                self.test_tree[c] = ["__TOEVAL__" for _ in range(self.test_tree.shape[0])]
 
         # a unique identifier for this test set instance, used for UI connections
         self._id = uuid.uuid4().hex
@@ -820,7 +820,7 @@ class TestTreeBrowser():
             # for i, (id, test) in enumerate(tests.iterrows()):
             #     if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "__TOOVERWRITE__") and test.label != "topic_marker" and test.label != "off_topic":
             #         eval_ids.append(id)
-            eval_ids = tests.index[(tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__") & (tests["label"] != "topic_marker") & (tests["label"] != "off_topic")]
+            eval_ids = tests.index[((tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__")) & (tests["label"] != "topic_marker") & (tests["label"] != "off_topic")]
 
             if len(eval_ids) > 0:
 
