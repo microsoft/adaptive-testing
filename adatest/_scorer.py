@@ -235,9 +235,9 @@ class GeneratorScorer(Scorer):
         out_strings = [[] for _ in range(len(eval_ids))]
         i = 0
         while i < len(model_out):
-            out_strings[eval_inds[i]].append(model_out[i])
+            out_strings[eval_inds[i]].append(str(model_out[i]))
             i += 1
-        for i in eval_inds:
+        for i in set(eval_inds):
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
 
         scores = []
