@@ -20,7 +20,7 @@ export default class Browser extends React.Component {
 
     // our starting state 
     this.state = {
-      topic: "/",
+      topic: "",
       suggestions: [],
       tests: [],
       selections: {},
@@ -43,7 +43,8 @@ export default class Browser extends React.Component {
   	  topicPrompt: "",
       testPrompt: "",
       topicPromptError: false,
-      testPromptError: false
+      testPromptError: false,
+      isControl: false // true if we are in the control group
     };
 
     console.log("this.props.location", this.props.location)
@@ -326,9 +327,14 @@ export default class Browser extends React.Component {
 
               ]}
               />
-            <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
-              <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
-            </Button>
+            <div style={{position: "relative"}} >
+              <button>
+                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </button>
+              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
+                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </Button>
+            </div>
             <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
             </Button>
@@ -891,7 +897,8 @@ export default class Browser extends React.Component {
     console.log("refreshSuggestions");
     if (this.state.loading_test_suggestions) return;
 
-    if (this.state.tests.length === 0 && this.state.testPrompt === "") {
+    const tests = this.state.tests.find(test => !test.startsWith("/"));
+    if (!this.state.isControl && this.state.topic === "" && tests == null && this.state.testPrompt === "") {
       this.setState({testPromptError: "Please provide a prompt."})
       return;
     }
@@ -920,7 +927,7 @@ export default class Browser extends React.Component {
     console.log("refreshSuggestions");
     if (this.state.loading_topic_suggestions) return;
 
-    if (this.state.tests.length === 0 && this.state.topicPrompt === "") {
+    if (!this.state.isControl && this.state.topic === "" && this.state.tests.length === 0 && this.state.topicPrompt === "") {
       this.setState({topicPromptError: "Please provide a prompt."})
       return;
     }

@@ -148,7 +148,7 @@ class TestTreeBrowser():
 
     def __init__(self, test_tree, scorer, generators, user, auto_save, recompute_scores, drop_inactive_score_columns,
                  max_suggestions, suggestion_thread_budget, prompt_builder, active_generator, starting_path,
-                 score_filter, topic_model_scale):
+                 score_filter, topic_model_scale, control):
         """ Initialize the TestTreeBrowser.
         
         See the __call__ method of TreeBrowser for parameter documentation.
@@ -169,6 +169,7 @@ class TestTreeBrowser():
         self.score_filter = score_filter
         self.topic_model_scale = topic_model_scale
         self.filter_text = ""
+        self.control = control
 
         # convert single generator to the multi-generator format
         if not isinstance(self.generators, dict):
@@ -725,6 +726,7 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
+            "isControl": self.control
             # "test_types": test_types,
             # "test_type_parts": test_type_parts,
         }
