@@ -518,6 +518,8 @@ class TestTreeBrowser():
             elif "topic" in msg[k] and len(msg[k]) == 1:
                 NOT_SURE_TOPIC = "/Not%20Sure"
 
+                msg[k]["topic"] = msg[k]["topic"].replace(" ", "%20") # encode spaces as %20
+
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
                     if msg[k]["topic"] == "_DELETE_": # this means delete the test
@@ -831,7 +833,8 @@ class TestTreeBrowser():
                 if mode == "topics":
                     # Format the generated topic string
                     input = input.replace("/", " or ").replace("\n", " ") # topics can't have newlines or slashes in their names
-                    input = input.replace("  ", "%20").strip() # kill any double spaces we may have introduced and encode spaces as %20
+                    input = input.replace("  ", " ").strip() # kill any double spaces we may have introduced
+                    input = input.replace(" ", "%20").strip() # encode spaces as %20
                     str_val = self.current_topic + "/" + input + " __topic_marker__"
                 else:
                     str_val = self.current_topic + " __JOIN__ " + input
