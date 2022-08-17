@@ -196,6 +196,7 @@ export default class Browser extends React.Component {
                   id={"topic_prompt_input_box"}
                   error={this.state.topicPromptError}
                   disabled={this.state.isControl}
+                  dropdownPosition={"bottom"}
                   limit={15}
                   data={[
                     {
@@ -290,6 +291,7 @@ export default class Browser extends React.Component {
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
               disabled={this.state.isControl}
+              dropdownPosition={"bottom"}
               limit={15}
               id={"test_prompt_input_box"}
               data={[
