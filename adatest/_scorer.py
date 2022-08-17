@@ -138,7 +138,7 @@ class ClassifierScorer(Scorer):
             out_strings[eval_inds[i]].append(self.model.output_names[np.argmax(model_out[i])])
             out_probs[eval_inds[i]].append(model_out[i])
             i += 1
-        for i in eval_inds:
+        for i in set(eval_inds):
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
             out_probs[i] = np.column_stack(out_probs[i]) # the probability of a set of items is the prob of the min item
 
