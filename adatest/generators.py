@@ -410,7 +410,7 @@ class OpenAI(TextCompletionGenerator):
 
             if user_prompt == 'Suggest parent topics for this folder' :
                 concept_terms = get_terms_embedding(concept, parent='', child=child, sibling=sibling)
-                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-curie-001")["data"][0]["embedding"]
+                concept_embedding  = openai.Embedding.create(input=concept_terms,engine="text-similarity-davinci-001")["data"][0]["embedding"]
                 
                 # few_shot_instances = get_closest_instances(concept_embedding, compare_with=tree_list, embeddings=tree_embeddings)
                 few_shot_instances = tree_list_new
