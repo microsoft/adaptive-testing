@@ -13,3 +13,5 @@ local_data
 notebooks/TDD/data
 env/
 build/
+adatest/resources/main.js
+

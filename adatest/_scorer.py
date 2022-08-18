@@ -508,7 +508,7 @@ class ImageScorer(Scorer):
             finally:
                 self.pending_inputs_lock.release()
     
-    def update_dataframe(self, image_filenames: list[str], id: str, tests: DataFrame, score_column: str):
+    def update_dataframe(self, image_filenames: list, id: str, tests: DataFrame, score_column: str):
         """ Store the generated image path and its scores in the dataframe.
 
         Parameters
