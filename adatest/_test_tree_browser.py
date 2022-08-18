@@ -947,7 +947,9 @@ class TestTreeBrowser():
             if len(eval_ids) > 0:
 
                 # run the scorer
+                log.debug(f"compute_embeddings_and_scores running scorer {k} on rows {','.join(eval_ids)}")
                 new_outputs,scores = self.scorer[k](tests, eval_ids)
+                log.debug(f"compute_embeddings_and_scores scorer {k} successfully run on {len(eval_ids)} rows")
 
                 # update the scores in the test tree
                 current_outputs = tests["output"]

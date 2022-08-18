@@ -3,8 +3,15 @@ import adatest
 import os
 import openai
 import numpy as np
-with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
-    openai.api_key = file.read().replace('\n', '')
+
+
+if os.path.exists('~/.openai_api_key.txt'):
+    with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
+        openai.api_key = file.read().replace('\n', '')
+elif os.getenv("OPENAI_API_KEY") is not None:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+else:
+    raise Exception("You need to set your OpenAI API key in ~/.openai_api_key.txt or OPENAI_API_KEY environment variable")
 
 
 huggingface =  "textattack/distilbert-base-uncased-CoLA"
@@ -12,13 +19,29 @@ huggingface =  "textattack/distilbert-base-uncased-CoLA"
 # create a HuggingFace sentiment analysis model
 
 import logging
-logging.basicConfig(
-    filename='practice.log',
-    format='{asctime}\t{levelname}\t{message}',
-    style='{',
-    level=logging.STUDY,
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+formatter = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+formatter.datefmt = '%Y-%m-%d %H:%M:%S'
+
+study_handler = logging.FileHandler("practice.log")
+study_handler.setFormatter(formatter)
+study_handler.setLevel(logging.STUDY)
+
+dbg_handler = logging.FileHandler('practice_debug.log')
+dbg_handler.setFormatter(formatter)
+dbg_handler.setLevel(logging.DEBUG)
+
+logging.root.addHandler(dbg_handler)
+logging.root.addHandler(study_handler)
+logging.root.setLevel(logging.DEBUG)
+
+# logging.basicConfig(
+#     filename='practice.log',
+#     format='{asctime}\t{levelname}\t{message}',
+#     style='{',
+#     level=logging.STUDY,
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
+
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
