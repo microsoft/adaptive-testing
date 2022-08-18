@@ -805,7 +805,7 @@ class TestTreeBrowser():
         #crv
         generators = [self._active_generator_obj] + list(self.generators.values())
         for generator in generators:
-            print(generator)
+            # print(generator)
             try:
                 proposals = generator(prompts, self.current_topic, desc, mode,  self.test_tree,self.scorer, num_samples=self.max_suggestions // len(prompts) if len(prompts) > 0 else self.max_suggestions, user_prompt = user_prompt) #   temperature=temperature ,
                 break

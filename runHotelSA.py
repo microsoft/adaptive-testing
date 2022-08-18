@@ -6,14 +6,11 @@ import numpy as np
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
-
-huggingface =  "textattack/distilbert-base-uncased-CoLA"
-# 'BellaAndBria/distilbert-base-uncased-finetuned-emotion'
-# create a HuggingFace sentiment analysis model
-
+id = '0001'
+logname  = 'hotelsa' + id + '.log'
 import logging
 logging.basicConfig(
-    filename='practice.log',
+    filename=logname,
     format='{asctime}\t{levelname}\t{message}',
     style='{',
     level=logging.STUDY,
@@ -22,27 +19,35 @@ logging.basicConfig(
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-tokenizer = AutoTokenizer.from_pretrained(huggingface)
+huggingfacemodel = 'nlptown/bert-base-multilingual-uncased-sentiment'
+# 'BellaAndBria/distilbert-base-uncased-finetuned-emotion'
+# huggingfacemodel = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+tokenizer = AutoTokenizer.from_pretrained(huggingfacemodel)
 
-model = AutoModelForSequenceClassification.from_pretrained(huggingface)
+model = AutoModelForSequenceClassification.from_pretrained(huggingfacemodel)
+
+
+# create a HuggingFace sentiment analysis model
+# classifier = transformers.pipeline("sentiment-analysis", return_all_scores=True)
+
 classifier = transformers.pipeline("text-classification", model=model, tokenizer=tokenizer, top_k=1)
-labels = ['Unacceptable', 'Acceptable']
+labels = ['negative','negative', 'neutral', 'positive', 'positive']
 model = adatest.Model(classifier, output_names = labels)
 # specify the backend generator used to help you write tests
 generator = adatest.generators.OpenAI('text-davinci-002')
-
-
 
 # ...or you can use an open source generator
 #neo = transformers.pipeline('text-generation', model="EleutherAI/gpt-neo-125M")
 #generator = adatest.generators.Transformers(neo.model, neo.tokenizer)
 
 # create a new test tree
-tests = adatest.TestTree("practice.csv")
+# tests = adatest.TestTree("hotel_reviews.csv")
+csv_filename = 'hotelsa' +id + '.csv'
+# create a new test tree
+tests = adatest.TestTree(csv_filename)
+
 
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
-# adatest.serve(tests.adapt(classifier, generator, auto_save=True), port=8089)
-adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence"), port=8069)
 
-
+adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="hotel review"), port=8067)
