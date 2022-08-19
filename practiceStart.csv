@@ -1,0 +1,22 @@
+,topic,input,output,label,labeler,description,model score
+57544b960eb24e37882bd314a62951eb,/Punctuation,,,topic_marker,anonymous,,
+d96ace5ad92946a9ae745ddc069ab503,/Tense,,,topic_marker,anonymous,,
+538c8bd350ea49cdba1dd46d9b4566b4,/Pronoun,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__
+ed26bf2280ae40c29bce26f830d397e7,/Capitalization,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__
+4ac3c988fa1d408c98ea5a8aa500adbe,/Spelling,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__
+1278596d988f415d877533d45a046096,/Punctuation/Comma,,,topic_marker,anonymous,,
+ac740522763746feb7b9114dbe5b76e8,/Punctuation/Period,,,topic_marker,anonymous,,
+364956b21b334380a8d8a08a0eb28c48,/Punctuation/Comma/Oxford%20comma,,,topic_marker,anonymous,,
+8e64222832ef46a39c82680bb1bdcd9e,/Punctuation/Comma/Oxford%20comma,"I want bread, butter and jelly.",Acceptable,fail,anonymous,,0.0
+ecd7ab0bfbdd4fc29f695106a7bd4778,/Punctuation/Comma/Oxford%20comma,"I have three classes: Math, Science and English.",Acceptable,fail,anonymous,,0.0
+7aed205cca954a3381c470246eeaf819,/Punctuation,She is going to the market; he is going to the tailor.,Acceptable,pass,anonymous,,0.0
+4d21c9bee6df4263832573bdb5edce9a,/Punctuation/Comma/Oxford%20comma,I want jelly and peanut butter.,Acceptable,pass,anonymous,,0.0
+904ffc3c11c74ce8bd068115daefc6d0,/Punctuation/Period,They are out They are not going to be back anytime soon.,Acceptable,fail,anonymous,,0.0
+915118aa7536430e99089f0ec8ff51ae,/Punctuation/Period,They are out.,Acceptable,pass,anonymous,,0.0
+42338efef6754812b6d44d2f4ec5e942,/Tense,He will be going to the park. He had taken an umbrella.,Acceptable,fail,anonymous,,0.0
+12c93acd41af4fadbcfe08fd366b6543,/Tense,They are walking their dog. They would bring him here after.,Unacceptable,pass,anonymous,,0.0
+8c0c349f12974cdd85005962d669b037,/Tense,"I can help you, but I had no time.",Acceptable,fail,anonymous,,0.0
+41bcd1e22b3a42508e1a493e81698940,/Pronoun,"Aurelia's mother is out, she will be back soon.",Acceptable,pass,anonymous,,1.0
+f151cd7222874841b699c7fb37d9b2dd,/Capitalization,you are doing great.,Acceptable,fail,anonymous,,1.0
+c0ba7622b6ff47e2aa70e5593e866dca,/Spelling,you are doing grt,Acceptable,fail,anonymous,,1.0
+0ae92afe2f274d84b4d7993d95d8780c,/Spelling,me mother is out,Unacceptable,pass,anonymous,,0.0
