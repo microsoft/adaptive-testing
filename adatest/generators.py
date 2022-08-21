@@ -153,7 +153,7 @@ class TextCompletionGenerator(Generator):
             #     samples.append(tuple(suggestion))
         return list(set(samples))
 
-class  HuggingFace(TextCompletionGenerator):
+class HuggingFace(TextCompletionGenerator):
     """This class exists to embed the StopAtSequence class."""
     import transformers
 
@@ -258,7 +258,7 @@ class Pipelines(HuggingFace):
                         pad_token_id=self.source.model.config.eos_token_id,
                         stopping_criteria=[self._sep_stopper])
             for gen in generations:
-                generated_text: str = gen['generated_text'][len(p):]
+                generated_text = gen['generated_text'][len(p):]
                 # Trim off text after stop_sequence
                 stop_seq_index = generated_text.find(self.stop_sequence)
                 if (stop_seq_index != -1):
