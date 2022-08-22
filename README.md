@@ -79,7 +79,7 @@ This is just a short example of how to find bugs in a sentiment analysis model, 
 
 ## Citation
 
-If you find AdaTest or test trees useful in your work feel free to cite our ACL paper:
+If you find AdaTest or test trees useful in your work feel free to cite our ACL'22 paper:
 [Adaptive Testing and Debugging of NLP Models](https://aclanthology.org/2022.acl-long.230) (Ribeiro & Lundberg, ACL 2022)
 
 ## Contributing
