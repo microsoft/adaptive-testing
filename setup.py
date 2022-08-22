@@ -30,8 +30,8 @@ setup(
     package_data={"adatest": ["resources/*"]},
     install_requires=[
         "aiohttp",
-        "aiohttp_session",
         "aiohttp_security",
+        "aiohttp_session",
         "appdirs",
         "cryptography",
         "diskcache",
