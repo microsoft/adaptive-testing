@@ -10,6 +10,7 @@ def build_client():
     # Find our initial directory
     _logger.info("Starting build_client")
     _logger.info("Running npm install")
+    # The following appears to need 'shell=true' to get it working in Powershell
     subprocess.run(["npm", "install"], cwd="client", check=True)
     _logger.info("Running npx webpack")
     subprocess.run(["npx", "webpack"], cwd="client", check=True)
