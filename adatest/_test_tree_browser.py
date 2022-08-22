@@ -956,7 +956,10 @@ class TestTreeBrowser():
                 for i,id in enumerate(eval_ids):
                     # tests.loc[id, k+" score"] = scores[i]
 
-                    if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
+                    if scores[i] is None or scores[i] == "":
+                        # TODO: Figure out why the scorer returns None or an empty string sometimes
+                        tests.loc[id, k+" score"] = "__TOEVAL__"
+                    elif not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
 
                         # mark the current row as nan score (meaning the output does not match)
                         tests.loc[id, k+" score"] = np.nan
