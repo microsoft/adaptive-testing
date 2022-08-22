@@ -2,8 +2,6 @@ import os
 import logging
 import subprocess
 
-from typing import List
-
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
 
