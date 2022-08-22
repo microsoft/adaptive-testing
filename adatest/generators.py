@@ -153,33 +153,39 @@ class TextCompletionGenerator(Generator):
             #     samples.append(tuple(suggestion))
         return list(set(samples))
 
-           
-class Transformers(TextCompletionGenerator):
-    def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
-        import transformers
+class HuggingFace(TextCompletionGenerator):
+    """This class exists to embed the StopAtSequence class."""
+    import transformers
 
+    def __init__(self, source, sep, subsep, quote, filter):
+        super().__init__(source, sep, subsep, quote, filter)
+        
+
+    class StopAtSequence(transformers.StoppingCriteria):
+        def __init__(self, stop_string, tokenizer, window_size=10):
+            self.stop_string = stop_string
+            self.tokenizer = tokenizer
+            self.window_size = 10
+            self.max_length = None
+            self.prompt_length = 0
+            
+        def __call__(self, input_ids, scores):
+            if len(input_ids[0]) > self.max_length + self.prompt_length:
+                return True
+
+            # we need to decode rather than check the ids directly because the stop_string may get enocded differently in different contexts
+            return self.tokenizer.decode(input_ids[0][-self.window_size:])[-len(self.stop_string):] == self.stop_string
+
+           
+class Transformers(HuggingFace):
+    def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
         self.tokenizer = tokenizer
         self.device = self.source.device
 
-        class StopAtSequence(transformers.StoppingCriteria):
-            def __init__(self, stop_string, tokenizer, window_size=10):
-                self.stop_string = stop_string
-                self.tokenizer = tokenizer
-                self.window_size = 10
-                self.max_length = None
-                self.prompt_length = 0
-                
-            def __call__(self, input_ids, scores):
-                if len(input_ids[0]) > self.max_length + self.prompt_length:
-                    return True
-
-                # we need to decode rather than check the ids directly because the stop_string may get enocded differently in different contexts
-                return self.tokenizer.decode(input_ids[0][-self.window_size:])[-len(self.stop_string):] == self.stop_string
-
-        self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
+        self._sep_stopper = HuggingFace.StopAtSequence(self.quote+self.sep, self.tokenizer)
     
     def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
@@ -223,6 +229,45 @@ class Transformers(TextCompletionGenerator):
         # restore the old function that prevents the past_key_values argument from getting passed
         self.source.prepare_inputs_for_generation = saved_func
         
+        return self._parse_suggestion_texts(suggestion_texts, prompts)
+
+
+class Pipelines(HuggingFace):
+    import transformers
+    def __init__(self, pipeline: transformers.pipelines.base.Pipeline , sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
+        super().__init__(pipeline, sep, subsep, quote, filter)
+        self.gen_type = "model"
+        self.stop_sequence = self.quote + self.sep
+        self._sep_stopper = HuggingFace.StopAtSequence(self.stop_sequence, pipeline.tokenizer)
+
+    def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
+        if len(prompts) == 0:
+            raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
+        prompts, prompt_ids = self._validate_prompts(prompts)
+        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
+
+        suggestion_texts = []
+        for p in prompt_strings:
+            prompt_length = len(self.source.tokenizer.tokenize(p))
+            self._sep_stopper.prompt_length = prompt_length
+            self._sep_stopper.max_length = max_length
+            generations = self.source(p,
+                        do_sample=True,
+                        max_length=prompt_length + max_length,
+                        num_return_sequences=num_samples,
+                        pad_token_id=self.source.model.config.eos_token_id,
+                        stopping_criteria=[self._sep_stopper])
+            for gen in generations:
+                generated_text = gen['generated_text'][len(p):]
+                # Trim off text after stop_sequence
+                stop_seq_index = generated_text.find(self.stop_sequence)
+                if (stop_seq_index != -1):
+                    generated_text = generated_text[:stop_seq_index]
+                elif generated_text[-1] == self.quote:
+                    # Sometimes the quote is at the end without a trailing newline
+                    generated_text = generated_text[:-1]
+                suggestion_texts.append(generated_text)
+
         return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
