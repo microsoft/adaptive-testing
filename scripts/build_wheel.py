@@ -12,9 +12,9 @@ def build_client():
     # Find our initial directory
     _logger.info("Starting build_client")
     _logger.info("Running npm install")
-    subprocess.run(["npm", "install"], cwd="client", shell=True, check=True)
+    subprocess.run(["npm", "install"], cwd="client", check=True)
     _logger.info("Running npx webpack")
-    subprocess.run(["npx", "webpack"], cwd="client", shell=True, check=True)
+    subprocess.run(["npx", "webpack"], cwd="client", check=True)
     _logger.info("Ending build_client")
 
 
