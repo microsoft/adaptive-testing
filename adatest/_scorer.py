@@ -3,17 +3,9 @@ import re
 import logging
 import uuid
 import itertools
-import openai
-import scipy.stats
-import transformers
 import shap
-
-import adatest
 from ._model import Model
-from ._embedding import cos_sim
-from .utils import isinstance_ipython
-#from transformers.tokenization_utils_base import ExplicitEnum
-#from ._explorer import file_log
+import adatest
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +13,7 @@ class Scorer():
     def __new__(cls, model, *args, **kwargs):
         """ If we are wrapping an object that is already a Scorer, we just return it.
         """
-        if isinstance_ipython(model, Scorer):
+        if shap.utils.safe_isinstance(model, "adatest.Scorer"):
             return model
         else:
             return super().__new__(cls)
@@ -31,9 +23,9 @@ class Scorer():
         """
 
         # ensure we have a model of type Model
-        if isinstance_ipython(getattr(self, "model", None), Model) or isinstance_ipython(getattr(self, "model", None), shap.models.Model):
+        if shap.utils.safe_isinstance(getattr(self, "model", None), "adatest.Model") or shap.utils.safe_isinstance(getattr(self, "model", None), "shap.models.Model"):
             pass
-        elif isinstance_ipython(model, Model) or isinstance_ipython(model, shap.models.Model):
+        elif shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             self.model = model
         else:
             self.model = Model(model)
@@ -42,7 +34,7 @@ class Scorer():
         if self.__class__ is Scorer:
 
             # finish early if we are wrapping an object that is already a Scorer (__new__ will have already done the work)
-            if isinstance_ipython(model, Scorer):
+            if shap.utils.safe_isinstance(model, "adatest.Scorer"):
                 return
             
             # see if we are scoring a generator or a classifier
@@ -146,9 +138,12 @@ class ClassifierScorer(Scorer):
             out_strings[eval_inds[i]].append(self.model.output_names[np.argmax(model_out[i])])
             out_probs[eval_inds[i]].append(model_out[i])
             i += 1
-        for i in eval_inds:
+        for i in set(eval_inds):
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
             out_probs[i] = np.column_stack(out_probs[i]) # the probability of a set of items is the prob of the min item
+
+        # compute the embeddings as a batch (this fills a cache we will use when scoring below)
+        adatest.embed(list(tests.loc[eval_ids, "input"]))
 
         # score all the tests
         scores = []
@@ -187,20 +182,6 @@ class ClassifierScorer(Scorer):
                 return fail_prob / (pass_prob + fail_prob)
         else:
             raise NotImplementedError("TODO: implement classifer scoring for templated tests")
-
-    def suggest_outputs(self, current, num_suggestions=20):
-        prompt = ""
-        for c in current:
-            prompt += '"'+c+'"\n'
-        prompt += '"{output}'
-        response = openai.Completion.create(
-            engine='curie-instruct-beta', prompt=[prompt.format(output=o) for o in self.output_names], max_tokens=0, # self.engine
-            temperature=0, n=1, stop='\"', logprobs=0, echo=True
-        )
-        lines = [sum(choice["logprobs"]["token_logprobs"][11:]) for choice in response["choices"]]
-        pairs = list([v for v in zip(lines, self.output_names) if v[1] not in current])
-        pairs.sort()
-        return [v[1] for v in list(reversed(pairs))[:num_suggestions]]
 
 class GeneratorScorer(Scorer):
     """ Wraps a text generation model as a callable scorer that can be applied to a test tree.
@@ -254,9 +235,9 @@ class GeneratorScorer(Scorer):
         out_strings = [[] for _ in range(len(eval_ids))]
         i = 0
         while i < len(model_out):
-            out_strings[eval_inds[i]].append(model_out[i])
+            out_strings[eval_inds[i]].append(str(model_out[i]))
             i += 1
-        for i in eval_inds:
+        for i in set(eval_inds):
             out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
 
         scores = []
@@ -277,6 +258,75 @@ class GeneratorScorer(Scorer):
         else:
             return 1.0
 
+class RawScorer(Scorer):
+    """ Wraps a model that directly outputs a score each input as a callable scorer.
+
+    The score from the model should be in the range [0,1] with higher scores indicating failures
+    (or just more interesting behavior).
+    """
+
+    def __init__(self, model):
+        """ Create a new scorer given a model that returns a bounded real value for each input string.
+        
+        Parameters:
+        -----------
+        model : callable
+            A model that is callable with a single argument (which is a list of strings) and returns a vector of score in the range [0,1].
+        """
+        super().__init__(model)
+
+    def __call__(self, tests, eval_ids):
+        """ Compute the scores (and model outputs) for the tests matching the given ids.
+
+        Parameters
+        ----------
+        tests : TestTree
+            A test tree for scoring. Note this should be the full test tree since it defines the local topic label
+            models used for scoring.
+
+        eval_ids : list of strings
+            The ids of the tests to score.
+        """
+        
+        # expand templates in the test tree
+        eval_inputs = []
+        eval_inds = []
+        for i, id in enumerate(eval_ids):
+            test = tests.loc[id]
+            template_expansions = expand_template(test.input)
+            for expansion in template_expansions:
+                eval_inputs.append(expansion)
+                eval_inds.append(i)
+
+        # run the model
+        try:
+            model_out = self.model(eval_inputs)
+        except Exception as e:
+            model_out = np.zeros(len(eval_inputs)) * np.nan # TODO: remove this hack after the user study
+            log.error(e)
+            log.error(eval_inputs)
+            log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
+
+        # compute the output strings and scores for each output in template form
+        out_strings = [[] for _ in range(len(eval_ids))]
+        out_scores = [[] for _ in range(len(eval_ids))]
+        i = 0
+        while i < len(model_out):
+            out_strings[eval_inds[i]].append(str(np.round(model_out[i], 6))) # convert float to string with precision of 6
+            out_scores[eval_inds[i]].append(model_out[i])
+            i += 1
+        for i in eval_inds:
+            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
+            out_scores[i] = np.max(out_scores[i]) # the score of a set of items is the score of the max item
+
+        # score all the tests
+        scores = []
+        outputs = []
+        for i, ind in enumerate(eval_inds):
+            outputs.append(out_strings[ind])
+            scores.append(out_scores[ind])
+
+        return outputs,scores
 
 def expand_template(s, keep_braces=False):
     """ Expand a template string into a list of strings.

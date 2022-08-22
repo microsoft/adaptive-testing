@@ -2,15 +2,12 @@
 """
 import asyncio
 import aiohttp
-import transformers
-import openai
 from profanity import profanity
 import numpy as np
-import torch
 import os
 import adatest
-import spacy
-from ._embedding import cos_sim
+from .embedders import cos_sim
+import urllib
 
 try:
     import clip
@@ -156,8 +153,31 @@ class TextCompletionGenerator(Generator):
             #     samples.append(tuple(suggestion))
         return list(set(samples))
 
+class HuggingFace(TextCompletionGenerator):
+    """This class exists to embed the StopAtSequence class."""
+    import transformers
+
+    def __init__(self, source, sep, subsep, quote, filter):
+        super().__init__(source, sep, subsep, quote, filter)
+        
+
+    class StopAtSequence(transformers.StoppingCriteria):
+        def __init__(self, stop_string, tokenizer, window_size=10):
+            self.stop_string = stop_string
+            self.tokenizer = tokenizer
+            self.window_size = 10
+            self.max_length = None
+            self.prompt_length = 0
+            
+        def __call__(self, input_ids, scores):
+            if len(input_ids[0]) > self.max_length + self.prompt_length:
+                return True
+
+            # we need to decode rather than check the ids directly because the stop_string may get enocded differently in different contexts
+            return self.tokenizer.decode(input_ids[0][-self.window_size:])[-len(self.stop_string):] == self.stop_string
+
            
-class Transformers(TextCompletionGenerator):
+class Transformers(HuggingFace):
     def __init__(self, model, tokenizer, sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
@@ -165,22 +185,7 @@ class Transformers(TextCompletionGenerator):
         self.tokenizer = tokenizer
         self.device = self.source.device
 
-        class StopAtSequence(transformers.StoppingCriteria):
-            def __init__(self, stop_string, tokenizer, window_size=10):
-                self.stop_string = stop_string
-                self.tokenizer = tokenizer
-                self.window_size = 10
-                self.max_length = None
-                self.prompt_length = 0
-                
-            def __call__(self, input_ids, scores):
-                if len(input_ids[0]) > self.max_length + self.prompt_length:
-                    return True
-
-                # we need to decode rather than check the ids directly because the stop_string may get enocded differently in different contexts
-                return self.tokenizer.decode(input_ids[0][-self.window_size:])[-len(self.stop_string):] == self.stop_string
-
-        self._sep_stopper = StopAtSequence(self.quote+self.sep, self.tokenizer)
+        self._sep_stopper = HuggingFace.StopAtSequence(self.quote+self.sep, self.tokenizer)
     
     def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
         prompts, prompt_ids = self._validate_prompts(prompts)
@@ -227,11 +232,52 @@ class Transformers(TextCompletionGenerator):
         return self._parse_suggestion_texts(suggestion_texts, prompts)
 
 
+class Pipelines(HuggingFace):
+    import transformers
+    def __init__(self, pipeline: transformers.pipelines.base.Pipeline , sep="\n", subsep=" ", quote="\"", filter=profanity.censor):
+        super().__init__(pipeline, sep, subsep, quote, filter)
+        self.gen_type = "model"
+        self.stop_sequence = self.quote + self.sep
+        self._sep_stopper = HuggingFace.StopAtSequence(self.stop_sequence, pipeline.tokenizer)
+
+    def __call__(self, prompts, topic, topic_description, mode, scorer=None, num_samples=1, max_length=100):
+        if len(prompts) == 0:
+            raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
+        prompts, prompt_ids = self._validate_prompts(prompts)
+        prompt_strings = self._create_prompt_strings(prompts, topic, mode)
+
+        suggestion_texts = []
+        for p in prompt_strings:
+            prompt_length = len(self.source.tokenizer.tokenize(p))
+            self._sep_stopper.prompt_length = prompt_length
+            self._sep_stopper.max_length = max_length
+            generations = self.source(p,
+                        do_sample=True,
+                        max_length=prompt_length + max_length,
+                        num_return_sequences=num_samples,
+                        pad_token_id=self.source.model.config.eos_token_id,
+                        stopping_criteria=[self._sep_stopper])
+            for gen in generations:
+                generated_text = gen['generated_text'][len(p):]
+                # Trim off text after stop_sequence
+                stop_seq_index = generated_text.find(self.stop_sequence)
+                if (stop_seq_index != -1):
+                    generated_text = generated_text[:stop_seq_index]
+                elif generated_text[-1] == self.quote:
+                    # Sometimes the quote is at the end without a trailing newline
+                    generated_text = generated_text[:-1]
+                suggestion_texts.append(generated_text)
+
+        return self._parse_suggestion_texts(suggestion_texts, prompts)
+
+
 class OpenAI(TextCompletionGenerator):
     """ Backend wrapper for the OpenAI API that exposes GPT-3.
     """
     
     def __init__(self, model="curie", api_key=None, sep="\n", subsep=" ", quote="\"", temperature=1.0, top_p=0.95, filter=profanity.censor):
+        import openai
+
         # TODO [Harsha]: Add validation logic to make sure model is of supported type.
         super().__init__(model, sep, subsep, quote, filter)
         self.gen_type = "model"
@@ -248,6 +294,8 @@ class OpenAI(TextCompletionGenerator):
                     openai.api_key = f.read().strip()
 
     def __call__(self, prompts, topic, topic_description, mode, scorer, num_samples=1, max_length=100):
+        import openai
+
         if len(prompts[0]) == 0:
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
@@ -262,7 +310,7 @@ class OpenAI(TextCompletionGenerator):
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
-            engine=self.source, prompt=prompt_strings, max_tokens=max_length,
+            model=self.source, prompt=prompt_strings, max_tokens=max_length, user="adatest",
             temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=self.quote
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]
@@ -332,26 +380,26 @@ class TestTreeSource(Generator):
             for id, test in self.source.iterrows():
                 # check if requested topic is *direct* parent of test topic
                 if test.label == "topic_marker" and topic == test.topic[0:test.topic.rfind('/')] and test.topic != "":
-                    proposals.append(test.topic.rsplit("/", 2)[1])
+                    proposals.append(urllib.parse.unquote(test.topic.rsplit("/", 2)[1]))
             return proposals
 
         # Find tests closest to the proposals in the embedding space
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # TODO: Handle case when suggestion_threads>1 better than just selecting the first set of prompts as we do here
-        topic_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for topic,input in prompts[0]]) 
-        data_embeddings = torch.vstack([torch.tensor(adatest._embedding_cache[input]) for input in self.source["input"]])
+        topic_embeddings = np.vstack([adatest._embedding_cache[input] for topic,input in prompts[0]]) 
+        data_embeddings = np.vstack([adatest._embedding_cache[input] for input in self.source["input"]])
         
         max_suggestions = min(num_samples * len(prompts), len(data_embeddings))
         method = 'distance_to_avg'
         if method == 'avg_distance':
             dist = cos_sim(topic_embeddings, data_embeddings)
-            closest_indices = torch.topk(dist.mean(axis=0), k=max_suggestions).indices
+            closest_indices = np.argpartition(dist.mean(axis=0), -max_suggestions)[-max_suggestions:]
             
         elif method == 'distance_to_avg':
             avg_topic_embedding = topic_embeddings.mean(axis=0)
 
             distance = cos_sim(avg_topic_embedding, data_embeddings)
-            closest_indices = torch.topk(distance, k=max_suggestions).indices
+            closest_indices = np.argpartition(distance, -max_suggestions)[-max_suggestions:]
 
         output = self.source.iloc[np.array(closest_indices).squeeze()].copy()
         output['topic'] = topic
@@ -426,6 +474,7 @@ class ClipRetrieval(Generator):
         return list(set(suggestion_texts))
     
     def get_text_embedding(self, text):
+        import torch
         with torch.no_grad():
             text_emb = self.clip_model.encode_text(clip.tokenize([text], truncate=True).to("cpu"))
             text_emb /= text_emb.norm(dim=-1, keepdim=True)
