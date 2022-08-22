@@ -43,6 +43,18 @@ logging.root.setLevel(logging.DEBUG)
 # )
 
 
+formatter = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+formatter.datefmt = '%Y-%m-%d %H:%M:%S'
+study_handler = logging.FileHandler("practice.log")
+study_handler.setFormatter(formatter)
+study_handler.setLevel(logging.STUDY)
+dbg_handler = logging.FileHandler('practice_debug.log')
+dbg_handler.setFormatter(formatter)
+dbg_handler.setLevel(logging.DEBUG)
+logging.root.addHandler(dbg_handler)
+logging.root.addHandler(study_handler)
+logging.root.setLevel(logging.DEBUG)
+
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 tokenizer = AutoTokenizer.from_pretrained(huggingface)
@@ -61,11 +73,11 @@ generator = adatest.generators.OpenAI('text-davinci-002')
 #generator = adatest.generators.Transformers(neo.model, neo.tokenizer)
 
 # create a new test tree
-tests = adatest.TestTree("practice.csv")
+tests = adatest.TestTree("practiceStart.csv")
 
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
 # adatest.serve(tests.adapt(classifier, generator, auto_save=True), port=8089)
-adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence"), port=8069)
+adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=True, description="sentence"), port=8069)
 
 
