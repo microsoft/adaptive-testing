@@ -21,7 +21,7 @@ def build_client():
 
 def build_wheel():
     _logger.info("Starting build_wheel")
-    subprocess.run(["python", "setup.py", "sdist", "bdist_wheel"], check=True)
+    subprocess.run(["pip", "wheel", "-w", ".", "dist"], check=True)
     _logger.info("Ending build_wheel")
 
 
