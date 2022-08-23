@@ -28,5 +28,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools
+    - name: Install Adatest locally
+      run: pip install -e .
     - name: Run build_wheel script
       run: python scripts/build_wheel.py
