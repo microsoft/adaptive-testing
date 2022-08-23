@@ -947,14 +947,19 @@ class TestTreeBrowser():
             if len(eval_ids) > 0:
 
                 # run the scorer
+                log.debug(f"compute_embeddings_and_scores running scorer {k} on rows {','.join(eval_ids)}")
                 new_outputs,scores = self.scorer[k](tests, eval_ids)
+                log.debug(f"compute_embeddings_and_scores scorer {k} successfully run on {len(eval_ids)} rows")
 
                 # update the scores in the test tree
                 current_outputs = tests["output"]
                 for i,id in enumerate(eval_ids):
                     # tests.loc[id, k+" score"] = scores[i]
 
-                    if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
+                    if scores[i] is None or scores[i] == "":
+                        # TODO: Figure out why the scorer returns None or an empty string sometimes
+                        tests.loc[id, k+" score"] = "__TOEVAL__"
+                    elif not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
 
                         # mark the current row as nan score (meaning the output does not match)
                         tests.loc[id, k+" score"] = np.nan
