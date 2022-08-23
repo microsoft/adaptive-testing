@@ -34,3 +34,20 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         path: dist/adatest-0.3.4-py3-none-any.whl
+
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Remove adatest source directory
+      run: rm -rf adatest/
