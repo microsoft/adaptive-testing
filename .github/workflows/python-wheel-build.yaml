@@ -30,3 +30,6 @@ jobs:
         pip install --upgrade setuptools wheel
     - name: Run build_wheel script
       run: python scripts/build_wheel.py
+    - name: Save wheel artifact
+      uses: actions/upload-artifact@v3
+      path: dist/adatest-0.3.4-py3-none-any.whl
