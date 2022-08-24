@@ -18,3 +18,4 @@ local_data
 /dist
 /test_trainer/runs
 *.pkl
+*.csv

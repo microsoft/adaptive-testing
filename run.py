@@ -6,7 +6,33 @@ import numpy as np
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
+import logging
 
+id = '0001'
+logname  = 'run' + id + '.log'
+
+logging.basicConfig(
+    filename=logname,
+    format='{asctime}\t{levelname}\t{message}',
+    style='{',
+    level=logging.STUDY,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+formatter = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+formatter.datefmt = '%Y-%m-%d %H:%M:%S'
+
+study_handler = logging.FileHandler("practice.log")
+study_handler.setFormatter(formatter)
+study_handler.setLevel(logging.STUDY)
+
+dbg_handler = logging.FileHandler('practice_debug.log')
+dbg_handler.setFormatter(formatter)
+dbg_handler.setLevel(logging.DEBUG)
+
+logging.root.addHandler(dbg_handler)
+logging.root.addHandler(study_handler)
+logging.root.setLevel(logging.DEBUG)
 # create a HuggingFace sentiment analysis model
 classifier = transformers.pipeline("sentiment-analysis", top_k = 1)
 
