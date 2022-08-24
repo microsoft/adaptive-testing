@@ -12,6 +12,7 @@ import ContentEditable from './content-editable';
 import { Button, Autocomplete, Loader } from '@mantine/core';
 import FolderBrowser from './folder_browser';
 import TopicSuggestion from './topic-suggestion';
+import PromptInput from './PromptInput';
 
 export default class Browser extends React.Component {
   constructor(props) {
@@ -284,55 +285,64 @@ export default class Browser extends React.Component {
         </div>
         </div>
         <div style={{display: "flex"}} >  
-            <Autocomplete 
+            <PromptInput 
               style={{width:"auto", flexGrow: "1"}}
               placeholder={"▼ Give me more tests similar to the saved tests below. ▼" }
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
               disabled={this.state.isControl}
-              dropdownPosition={"bottom"}
               limit={15}
               id={"test_prompt_input_box"}
-              data={[
+              dropdownOptions={[
                   {
                     value: "Write a "+ this.state.description,
+                    prefix: "A.",
                     group: "Where to start/Where to look next"
                   },
                   {
                     value: "Write a sentence from a " + this.state.description,
+                    prefix: "B.",
                     group: "Where to start/Where to look next"
                   },
                   {
                     value: "Write a " + this.state.description + " that is (output type)",
+                    prefix: "C.",
                     group: "Where to start/Where to look next"
                   },
                   {
                     value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to (input feature)",
+                    prefix: "D.",
                     group: "Where to start/Where to look next"
                   }, 
                   {
                     value: 'Write a sentence that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
+                    prefix: "A.",
                     group: "Found one or more errors, now what? (Focused exploration)"
                   }, 
                   {
                     value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
+                    prefix: "B.",
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
                     value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
+                    prefix: "C.",
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
                     value: '{insert name} is {insert profession}.',
+                    prefix: "A.",
                     group: "Template examples (Focused exploration)"
                   },
                   {
                     value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
+                    prefix: "B.",
                     group: "Template examples (Focused exploration)"
                   },
                   {
                     value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
+                    prefix: "C.",
                     group: "Template examples (Focused exploration)"
                   },
 
