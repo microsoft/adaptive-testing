@@ -378,11 +378,10 @@ class TestTreeBrowser():
                         "description": ""
                     }
                     for c in self.score_columns:
-                        row[c] = "__TOEVAL__"
+                        row[c] = np.nan
                         row[c[:-6] + " raw outputs"] = "{}"
                     self.test_tree.loc[uuid.uuid4().hex] = row
 
-                    self._compute_embeddings_and_scores(self.test_tree)
                     self._auto_save()
                     self._refresh_interface()
 
