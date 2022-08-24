@@ -5,13 +5,8 @@ import openai
 import numpy as np
 
 
-if os.path.exists('~/.openai_api_key.txt'):
-    with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
-        openai.api_key = file.read().replace('\n', '')
-elif os.getenv("OPENAI_API_KEY") is not None:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-else:
-    raise Exception("You need to set your OpenAI API key in ~/.openai_api_key.txt or OPENAI_API_KEY environment variable")
+with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
+    openai.api_key = file.read().replace('\n', '')
 
 
 huggingface =  "textattack/distilbert-base-uncased-CoLA"
