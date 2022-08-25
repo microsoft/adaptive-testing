@@ -4,7 +4,6 @@ import pandas as pd
 import json
 import re
 from tqdm import tqdm
-import time
 
 from adatest.generators import TestTreeSource
 
@@ -38,7 +37,6 @@ def throttle(interval):
     return decorator
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 # import sys
 # sys.stderr = open('/tmp/err.txt', 'w')
@@ -328,8 +326,6 @@ class TestTreeBrowser():
                 
                 # change the current topic
                 elif action == "change_topic":
-                    print("Starting change_topic")
-                    start = time.monotonic()
                     self.current_topic = msg[k]["topic"]
                     # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
 
@@ -350,11 +346,8 @@ class TestTreeBrowser():
                         self.mode = "topics"
                     else:
                         self.mode = "tests"
-                    stop = time.monotonic()
-                    print(f"Loop took {stop-start} secs")
 
                     self._refresh_interface()
-                    print("Ending change_topic")
                 
                 # clear the current set of suggestions
                 elif action == "clear_suggestions":
