@@ -15,3 +15,6 @@ class TestIsSubTopic:
     )
     def test_topic_is_not_subtopic(self, topic, not_sub_topic):
         assert not utils.is_subtopic(topic, not_sub_topic)
+
+    def test_topic_own_subtopic(self):
+        assert utils.is_subtopic('/A', '/A')

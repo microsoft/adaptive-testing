@@ -56,4 +56,9 @@ def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     # Both arguments are strings, which look like UNIX paths
     # Return is boolean
-    return True if re.search(r"^%s(/|$)" % re.escape(topic), candidate) else False
+    #return True if re.search(r"^%s(/|$)" % re.escape(topic), candidate) else False
+    #return candidate.startswith(topic) and candidate[len(topic)]=='/'
+    if len(topic)==len(candidate):
+        return topic == candidate
+    else:
+        return candidate.startswith(topic) and candidate[len(topic)]=='/'
