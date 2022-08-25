@@ -22,6 +22,9 @@ export default function PromptInput({placeholder, value, onChange, disabled, dro
         <input 
           ref={inputRef}
           type="text"
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
           onChange={(e) => {
             setDropdownOpen(false);
             onChange(e.target.value);
