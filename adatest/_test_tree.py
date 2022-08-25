@@ -210,6 +210,9 @@ class TestTree():
     def str(self):
         return self._tests.str
     @property
+    def apply(self):
+        return self._tests.apply
+    @property
     def iterrows(self):
         return self._tests.iterrows
     @property

@@ -4,6 +4,7 @@ import pandas as pd
 import json
 import re
 from tqdm import tqdm
+import time
 
 from adatest.generators import TestTreeSource
 
@@ -37,6 +38,7 @@ def throttle(interval):
     return decorator
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 # import sys
 # sys.stderr = open('/tmp/err.txt', 'w')
@@ -326,24 +328,33 @@ class TestTreeBrowser():
                 
                 # change the current topic
                 elif action == "change_topic":
+                    print("Starting change_topic")
+                    start = time.monotonic()
                     self.current_topic = msg[k]["topic"]
                     # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
 
                     # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
                     has_direct_tests = False
                     has_known_subtopics = False
-                    for k, test in self.test_tree.iterrows():
-                        if test["topic"] == self.current_topic:
-                            if test["label"] != "topic_marker":
-                                has_direct_tests = True
-                        elif is_subtopic(self.current_topic, test["topic"]):
-                            has_known_subtopics = True
+                    hdt_df = self.test_tree.apply(
+                        lambda row: row['topic']==self.current_topic and row['label'] != 'topic_marker',
+                        axis=1
+                        )
+                    has_direct_tests = hdt_df.any()
+                    has_subtopics_df = self.test_tree.apply(
+                        lambda row: is_subtopic(self.current_topic, row["topic"]),
+                        axis=1
+                    )
+                    has_known_subtopics = has_subtopics_df.any()
                     if not has_direct_tests and has_known_subtopics:
                         self.mode = "topics"
                     else:
                         self.mode = "tests"
+                    stop = time.monotonic()
+                    print(f"Loop took {stop-start} secs")
 
                     self._refresh_interface()
+                    print("Ending change_topic")
                 
                 # clear the current set of suggestions
                 elif action == "clear_suggestions":
