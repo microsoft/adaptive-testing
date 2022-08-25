@@ -213,15 +213,15 @@ export default class Browser extends React.Component {
                       group: "Where do I start/Where do I look next?"
                     },
                     {
-                      value: "Suggest sibling topics for this folder",
+                      value: "Suggest sibling topics for " + this.state.topic,
                       group: "Expand the tree"
                     },
                     {
-                      value: "Suggest sub-topics for this folder",
+                      value: "Suggest sub-topics for " + this.state.topic,
                       group: "Expand the tree"
                     },
                     {
-                      value: "Suggest parent topics for this folder",
+                      value: "Suggest parent topics for " + this.state.topic,
                       group: "Expand the tree"
                     }
 
@@ -301,7 +301,7 @@ export default class Browser extends React.Component {
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a sentence from a " + this.state.description,
+                    value: "Write a " + this.state.description + " that is about " + this.state.topic,
                     prefix: "B.",
                     group: "Where to start/Where to look next"
                   },
@@ -311,7 +311,7 @@ export default class Browser extends React.Component {
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to (input feature)",
+                    value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to/contains (input feature)",
                     prefix: "D.",
                     group: "Where to start/Where to look next"
                   }, 
@@ -320,31 +320,32 @@ export default class Browser extends React.Component {
                     prefix: "A.",
                     group: "Found one or more errors, now what? (Focused exploration)"
                   }, 
-                  {
-                    value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
-                    prefix: "B.",
-                    group: "Found one or more errors, now what? (Focused exploration)"
-                  },
+                  // {
+                  //   value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
+                  //   prefix: "B.",
+                  //   group: "Found one or more errors, now what? (Focused exploration)"
+                  // },
                   {
                     value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
-                    prefix: "C.",
+                    prefix: "B.",
+                    suffix: '(e.g. Write a ' + this.state.description + ' with the template: "{insert person name} is {insert adjective} at {insert activity}", such as "Maya is mediocre at cursive handwriting")' ,
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
-                  {
-                    value: '{insert name} is {insert profession}.',
-                    prefix: "A.",
-                    group: "Template examples (Focused exploration)"
-                  },
-                  {
-                    value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
-                    prefix: "B.",
-                    group: "Template examples (Focused exploration)"
-                  },
-                  {
-                    value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
-                    prefix: "C.",
-                    group: "Template examples (Focused exploration)"
-                  },
+                  // {
+                  //   value: '{insert name} is {insert profession}.',
+                  //   prefix: "A.",
+                  //   group: "Template examples (Focused exploration)"
+                  // },
+                  // {
+                  //   value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
+                  //   prefix: "B.",
+                  //   group: "Template examples (Focused exploration)"
+                  // },
+                  // {
+                  //   value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
+                  //   prefix: "C.",
+                  //   group: "Template examples (Focused exploration)"
+                  // },
 
               ]}
               />

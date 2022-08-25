@@ -79,6 +79,7 @@ export default function PromptInput({placeholder, value, onChange, disabled, dro
                     }}>
                     { data.prefix && <span style={{ marginRight: "0.5rem" }}>{data.prefix}</span> }
                     <span>{data.value}</span>
+                    { data.suffix && <span style={{ marginRight: "0.5rem" }}>{data.suffix}</span> }
                   </div>
                 ))}
               </div>

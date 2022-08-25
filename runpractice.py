@@ -70,6 +70,6 @@ tests = adatest.TestTree("practiceStart.csv")
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
 # adatest.serve(tests.adapt(classifier, generator, auto_save=True), port=8089)
-adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=True, description="sentence"), port=8069)
+adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence"), port=8069)
 
 
