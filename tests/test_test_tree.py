@@ -59,7 +59,7 @@ def test_to_csv():
 def test_has_subtopic_or_tests():
     curr_file = pathlib.Path(__file__)
     curr_dir = curr_file.parent
-    input_csv = curr_dir / 'simple_test_tree.csv'
+    input_csv = curr_dir / "simple_test_tree.csv"
     assert input_csv.exists()
     tree = adatest.TestTree(str(input_csv))
     # The top level topic appears to be an empty string, which is odd
