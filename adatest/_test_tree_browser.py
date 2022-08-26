@@ -333,7 +333,7 @@ class TestTreeBrowser():
             # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
             has_direct_tests = False
             has_known_subtopics = False
-            for event_id, test in self.test_tree.iterrows():
+            for _, test in self.test_tree.iterrows():
                 if test["topic"] == self.current_topic:
                     if test["label"] != "topic_marker":
                         has_direct_tests = True
@@ -363,6 +363,7 @@ class TestTreeBrowser():
                 "description": ""
             }
             self._recompute_embeddings_and_save()
+            self._refresh_interface()
             
         # add a new empty test to the current topic
         elif event_id == "add_new_test":
@@ -382,6 +383,7 @@ class TestTreeBrowser():
             self.test_tree.loc[uuid.uuid4().hex] = row
 
             self._recompute_embeddings_and_save()
+            self._refresh_interface()
 
         # change which scorer/model is used for sorting tests
         elif event_id == "set_first_model":
@@ -416,6 +418,7 @@ class TestTreeBrowser():
                 self.test_tree.loc[id, 'label'] = "topic_marker"
             self.test_tree.loc[msg['topic_marker_id'], 'description'] = msg['description']
             self._auto_save()
+            self._refresh_interface()
 
         elif event_id == 'change_filter':
             print("change_filter")
@@ -438,6 +441,7 @@ class TestTreeBrowser():
                             self.test_tree.loc[id, "topic"] = msg["topic"] + test.topic[len(test_id):]
             # Recompute any missing embeddings to handle any changes
             self._recompute_embeddings_and_save()
+            self._refresh_interface()
 
         elif event_id == "delete_test":
             log.debug("delete_test")
@@ -452,6 +456,7 @@ class TestTreeBrowser():
                         if is_subtopic(test_id, test.topic):
                             self.test_tree.drop(id, inplace=True)
             self._recompute_embeddings_and_save()
+            self._refresh_interface()
         
         # if we are just updating a single row in tests then we only recompute the scores
         elif event_id == "change_label" or event_id == "change_input" or event_id == "change_output":
@@ -465,21 +470,25 @@ class TestTreeBrowser():
                 sendback_data[msg["value"]] = template_value
 
             # update the row and recompute scores
+            metadata_fields = ["event_id", "test_ids"]
             for k2 in msg:
-                if k2 != "event_id":
+                if k2 not in metadata_fields:
                     self.test_tree.loc[test_id, k2] = msg[k2]
             if event_id == "change_input":
-                self.test_tree.loc[test_id, self.score_columns] = ""
-                self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="input" in msg)
+                self.test_tree.loc[test_id, self.score_columns] = "__TOEVAL__"
+                self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg)
             elif event_id == "change_label":
-                sign = -1 if msg["label"] == "pass" else 1
-                self.test_tree.loc[test_id, self.score_columns] = abs(float(self.test_tree.loc[test_id, self.score_columns])) * sign
+                # sign = -1 if msg["label"] == "pass" else 1
+                # self.test_tree.loc[test_id, self.score_columns] = abs(float(self.test_tree.loc[test_id, self.score_columns])) * sign
+                pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
+                # self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs=False)
 
             # send just the data that changed back to the frontend
-            sendback_data["scores"] = {c: [[test_id, v] for v in score_parts(self.test_tree.loc[test_id, c])] for c in self.score_columns}
+            sendback_data["scores"] = {c: [[test_id, v] for v in ui_score_parts(self.test_tree.loc[test_id, c], self.test_tree.loc[test_id, "label"])] for c in self.score_columns}
             outputs = {c: [[test_id, json.loads(self.test_tree.loc[test_id].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
             sendback_data["raw_outputs"] = outputs
-            sendback_data["output"] = self.test_tree.loc[test_id, "output"]
+            if "output" not in msg: # if the output was given to us the client is managing its current state so we shouldn't send it back
+                sendback_data["output"] = self.test_tree.loc[test_id, "output"]
             sendback_data["label"] = self.test_tree.loc[test_id, "label"]
             sendback_data["labeler"] = self.test_tree.loc[test_id, "labeler"]
             sendback_data.update(self.test_display_parts(self.test_tree.loc[test_id]))
@@ -492,7 +501,6 @@ class TestTreeBrowser():
 
     def _recompute_embeddings_and_save(self):
         self._compute_embeddings_and_scores(self.test_tree)
-        self._refresh_interface()
         self._auto_save()
 
     def _refresh_interface(self):
