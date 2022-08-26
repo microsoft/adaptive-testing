@@ -281,7 +281,7 @@ class TestTree():
     def topic_has_subtopics(self, target_topic: str) -> bool:
         """Check if a topic has subtopics."""
         has_subtopics_df = self.apply(
-            lambda row: is_subtopic(target_topic, row["topic"]),
+            lambda row: row['topic']!=target_topic and is_subtopic(target_topic, row["topic"]),
             axis=1
         )
         return has_subtopics_df.any()
