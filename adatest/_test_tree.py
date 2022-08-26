@@ -210,9 +210,6 @@ class TestTree():
     def str(self):
         return self._tests.str
     @property
-    def apply(self):
-        return self._tests.apply
-    @property
     def iterrows(self):
         return self._tests.iterrows
     @property
@@ -272,7 +269,7 @@ class TestTree():
 
     def topic_has_direct_tests(self, target_topic: str)-> bool:
         """Check if a topic has direct tests."""
-        hdt_df = self.apply(
+        hdt_df = self._tests.apply(
             lambda row: row['topic']==target_topic and row['label'] != 'topic_marker',
             axis=1
         )
@@ -280,7 +277,7 @@ class TestTree():
 
     def topic_has_subtopics(self, target_topic: str) -> bool:
         """Check if a topic has subtopics."""
-        has_subtopics_df = self.apply(
+        has_subtopics_df = self._tests.apply(
             lambda row: row['topic']!=target_topic and is_subtopic(target_topic, row["topic"]),
             axis=1
         )
