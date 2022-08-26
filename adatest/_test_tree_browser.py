@@ -330,20 +330,10 @@ class TestTreeBrowser():
                     # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
 
                     # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
-                    has_direct_tests = False
-                    has_known_subtopics = False
-                    hdt_df = self.test_tree.apply(
-                        lambda row: row['topic']==self.current_topic and row['label'] != 'topic_marker',
-                        axis=1
-                        )
-                    has_direct_tests = hdt_df.any()
-                    has_subtopics_df = self.test_tree.apply(
-                        lambda row: is_subtopic(self.current_topic, row["topic"]),
-                        axis=1
-                    )
-                    has_known_subtopics = has_subtopics_df.any()
+                    has_direct_tests = self.test_tree.topic_has_direct_tests(self.current_topic)
+                    has_known_subtopics = self.test_tree.topic_has_subtopics(self.current_topic)
                     if not has_direct_tests and has_known_subtopics:
-                        self.mode = "topics"
+                        self.mode = "topics"    
                     else:
                         self.mode = "tests"
 
