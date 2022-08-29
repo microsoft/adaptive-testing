@@ -74,6 +74,7 @@ class TestTree():
             self._tests_location = tests
             if os.path.isfile(tests) or isinstance(tests, io.TextIOBase):
                 self._tests = pd.read_csv(tests, index_col=0, dtype=str, keep_default_na=False)
+                self._tests.index = self._tests.index.map(str)
             else:
                 raise Exception(f"The provided tests file is not supported: {tests}")
 
@@ -96,7 +97,7 @@ class TestTree():
         elif isinstance(tests, list) and isinstance(tests[0], str):
             self._tests = pd.DataFrame(columns=column_names)
             self._tests['input'] = tests
-            self._tests['output'] = "__TOOVERWRITE__"
+            self._tests['output'] = "[no output]"
             self._tests['topic'] = ''
             self._tests['label'] = ''
             self._tests['labeler'] = ''
