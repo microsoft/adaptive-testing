@@ -378,7 +378,7 @@ class TestTreeBrowser():
                 "description": ""
             }
             for c in self.score_columns:
-                row[c] = "__TOEVAL__"
+                row[c] = np.nan
                 row[c[:-6] + " raw outputs"] = "{}"
             self.test_tree.loc[uuid.uuid4().hex] = row
 
@@ -630,6 +630,7 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
+            "test_tree_name": self.test_tree.name
             # "test_types": test_types,
             # "test_type_parts": test_type_parts,
         }
@@ -735,7 +736,7 @@ class TestTreeBrowser():
                     id = uuid.uuid4().hex
                     self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if self.mode == "topics" else "")
                     self.test_tree.loc[id, "input"] = "" if self.mode == "topics" else input
-                    self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
+                    self.test_tree.loc[id, "output"] = "[no output]"
                     self.test_tree.loc[id, "label"] = "topic_marker" if self.mode == "topics" else ""
                     self.test_tree.loc[id, "labeler"] = "imputed"
                     self.test_tree.loc[id, "description"] = ""
@@ -825,13 +826,17 @@ class TestTreeBrowser():
     def _compute_embeddings_and_scores(self, tests, recompute=False, overwrite_outputs=False, save_outputs=False): # TODO: Rename/refactor/merge with _compute_scores?
         log.debug(f"compute_embeddings_and_scores(tests=<DataFrame shape={tests.shape}>, recompute={recompute})")
 
+        # nothing to do if we don't have a scorer
+        if self.scorer is None:
+            return
+        
         for k in self.scorer:
             # determine which rows we need to evaluate
             # eval_ids = []
             # for i, (id, test) in enumerate(tests.iterrows()):
-            #     if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "__TOOVERWRITE__") and test.label != "topic_marker" and test.label != "off_topic":
+            #     if (recompute or test[k+" score"] == "__TOEVAL__" or test["output"] == "[no output]") and test.label != "topic_marker" and test.label != "off_topic":
             #         eval_ids.append(id)
-            eval_ids = tests.index[((tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "__TOOVERWRITE__")) & (tests["label"] != "topic_marker") & (tests["label"] != "off_topic")]
+            eval_ids = tests.index[((tests[k+" score"] == "__TOEVAL__") | (tests["output"] == "[no output]")) & (tests["label"] != "topic_marker") & (tests["label"] != "off_topic")]
 
             if len(eval_ids) > 0:
 
@@ -843,7 +848,7 @@ class TestTreeBrowser():
                 for i,id in enumerate(eval_ids):
                     # tests.loc[id, k+" score"] = scores[i]
 
-                    if not overwrite_outputs and current_outputs.loc[id] != "__TOOVERWRITE__" and current_outputs.loc[id] != new_outputs[i]:
+                    if not overwrite_outputs and current_outputs.loc[id] != "[no output]" and current_outputs.loc[id] != new_outputs[i]:
 
                         # mark the current row as nan score (meaning the output does not match)
                         tests.loc[id, k+" score"] = np.nan

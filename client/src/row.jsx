@@ -141,30 +141,30 @@ export default class Row extends React.Component {
 
 
     // extract the raw model outputs as strings for tooltips
-    let model_output_strings = {};
-    for (const val of ["value1", "value2", "value3"]) {
-      model_output_strings[val] = [];
-      const val_outputs = this.state[val+"_outputs"] || [];
-      for (const k in val_outputs) {
-        if (val_outputs[k] && val_outputs[k].length == 1) {
-          const d = val_outputs[k][0][1];
-          let str = k.slice(0, -6) + " outputs for " + val + ": \n";
-          for (const name in d) {
-            if (name === "string") {
-              str += d[name] + "\n";
-            } else {
-              if (typeof d[name] === 'string') {
-                str += name + ": " + "|".join(d[name].split("|").map(x => "" + parseFloat(x).toFixed(3)));
-              } else {
-                str += name + ": " + d[name].toFixed(3) + "\n";
-              }
-            }
-          }
-          model_output_strings[val].push(str);
-        }
-      }
-      model_output_strings[val] = model_output_strings[val].join("\n");
-    }
+    // let model_output_strings = {};
+    // for (const val of ["value1", "value2", "value3"]) {
+    //   model_output_strings[val] = [];
+    //   const val_outputs = this.state[val+"_outputs"] || [];
+    //   for (const k in val_outputs) {
+    //     if (val_outputs[k] && val_outputs[k].length == 1) {
+    //       const d = val_outputs[k][0][1];
+    //       let str = k.slice(0, -6) + " outputs for " + val + ": \n";
+    //       for (const name in d) {
+    //         if (name === "string") {
+    //           str += d[name] + "\n";
+    //         } else {
+    //           if (typeof d[name] === 'string') {
+    //             str += name + ": " + "|".join(d[name].split("|").map(x => "" + parseFloat(x).toFixed(3)));
+    //           } else {
+    //             str += name + ": " + d[name].toFixed(3) + "\n";
+    //           }
+    //         }
+    //       }
+    //       model_output_strings[val].push(str);
+    //     }
+    //   }
+    //   model_output_strings[val] = model_output_strings[val].join("\n");
+    // }
     
 
     let outerClasses = "adatest-row-child";
