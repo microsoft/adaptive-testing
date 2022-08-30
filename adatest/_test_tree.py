@@ -3,6 +3,7 @@ import uuid
 import os
 import io
 import time
+import re
 import numpy as np
 import pandas as pd
 from ._prompt_builder import PromptBuilder
@@ -74,6 +75,7 @@ class TestTree():
             self._tests_location = tests
             if os.path.isfile(tests) or isinstance(tests, io.TextIOBase):
                 self._tests = pd.read_csv(tests, index_col=0, dtype=str, keep_default_na=False)
+                self._tests.index = self._tests.index.map(str)
             else:
                 raise Exception(f"The provided tests file is not supported: {tests}")
 
@@ -96,7 +98,7 @@ class TestTree():
         elif isinstance(tests, list) and isinstance(tests[0], str):
             self._tests = pd.DataFrame(columns=column_names)
             self._tests['input'] = tests
-            self._tests['output'] = "__TOOVERWRITE__"
+            self._tests['output'] = "[no output]"
             self._tests['topic'] = ''
             self._tests['label'] = ''
             self._tests['labeler'] = ''
@@ -161,6 +163,10 @@ class TestTree():
         # # keep track of our original state
         # if self.auto_save:
         #     self._last_saved_tests = self._tests.copy()
+
+    @property
+    def name(self):
+        return re.split(r"\/", self._tests_location)[-1] if self._tests_location is not None else "Tests"
 
     def ensure_topic_markers(self):
         marked_topics = {t: True for t in set(self._tests.loc[self._tests["label"] == "topic_marker"]["topic"])}

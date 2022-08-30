@@ -183,7 +183,7 @@ export default class Browser extends React.Component {
             // name = decodeURIComponent(name);
             const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
               {index > 0 && <span style={{color: "black"}}> / </span>}
-              <BreadCrum topic={topicPath} name={name} onDrop={this.onDrop} onClick={this.setLocation} />
+              <BreadCrum topic={topicPath} name={name} defaultName={this.state.test_tree_name} onDrop={this.onDrop} onClick={this.setLocation} />
             </span>
             if (index !== 0) topicPath += "/";
             topicPath += name;

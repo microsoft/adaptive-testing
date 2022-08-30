@@ -34,7 +34,7 @@ def test_simple_init_with_list():
     outputs = np.unique(tree["output"].to_list(), return_counts=True)
     assert outputs[0][0] == ""
     assert outputs[1][0] == 1
-    assert outputs[0][1] == "__TOOVERWRITE__"
+    assert outputs[0][1] == "[no output]"
     assert outputs[1][1] == 2
 
 
