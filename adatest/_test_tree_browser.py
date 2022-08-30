@@ -497,7 +497,7 @@ class TestTreeBrowser():
             self._auto_save()
         
         else:
-            log.debug(f"Unable to parse the interface message: {msg}")
+            log.error(f"Unable to parse the interface message: {msg}")
 
     def _recompute_embeddings_and_save(self):
         self._compute_embeddings_and_scores(self.test_tree)

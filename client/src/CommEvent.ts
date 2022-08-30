@@ -15,7 +15,7 @@ export class CommEvent {
 
 
 export function finishTopicDescription(topic_marker_id: string, description: string) {
-  return new CommEvent("finish_topic_description", {"topic_marker_id": topic_marker_id, "description": description});
+  return new CommEvent("change_description", {"topic_marker_id": topic_marker_id, "description": description});
 }
 
 
