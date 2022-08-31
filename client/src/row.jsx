@@ -470,11 +470,9 @@ export default class Row extends React.Component {
   }
 
   labelAsOffTopic(e) {
-    this.props.comm.sendEvent(deleteTest(this.props.id));
-    // TODO: Test and merge this with above line of code
-    this.props.comm.send(this.props.id, {"label": "off_topic", "labeler": this.props.user});
+    this.props.comm.sendEvent(changeLabel(this.props.id, "off_topic", this.props.user));
     if (this.props.isSuggestion) {
-      this.props.comm.send(this.props.id, {"topic": this.props.topic});
+      this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
     }
     this.setState({label: "off_topic"});
   }

@@ -362,7 +362,8 @@ class TestTreeBrowser():
                 "labeler": self.user,
                 "description": ""
             }
-            self._recompute_embeddings_and_save()
+            self._compute_embeddings_and_scores(self.test_tree)
+            self._auto_save()
             self._refresh_interface()
             
         # add a new empty test to the current topic
@@ -382,7 +383,7 @@ class TestTreeBrowser():
                 row[c[:-6] + " raw outputs"] = "{}"
             self.test_tree.loc[uuid.uuid4().hex] = row
 
-            self._recompute_embeddings_and_save()
+            self._auto_save()
             self._refresh_interface()
 
         # change which scorer/model is used for sorting tests
@@ -440,7 +441,8 @@ class TestTreeBrowser():
                         if is_subtopic(test_id, test.topic):
                             self.test_tree.loc[id, "topic"] = msg["topic"] + test.topic[len(test_id):]
             # Recompute any missing embeddings to handle any changes
-            self._recompute_embeddings_and_save()
+            self._compute_embeddings_and_scores(self.test_tree)
+            self._auto_save()
             self._refresh_interface()
 
         elif event_id == "delete_test":
@@ -455,7 +457,8 @@ class TestTreeBrowser():
                     for id, test in self.test_tree.iterrows():
                         if is_subtopic(test_id, test.topic):
                             self.test_tree.drop(id, inplace=True)
-            self._recompute_embeddings_and_save()
+            self._compute_embeddings_and_scores(self.test_tree)
+            self._auto_save()
             self._refresh_interface()
         
         # if we are just updating a single row in tests then we only recompute the scores
@@ -498,10 +501,6 @@ class TestTreeBrowser():
         
         else:
             log.error(f"Unable to parse the interface message: {msg}")
-
-    def _recompute_embeddings_and_save(self):
-        self._compute_embeddings_and_scores(self.test_tree)
-        self._auto_save()
 
     def _refresh_interface(self):
         """ Send our entire current state to the frontend interface.
