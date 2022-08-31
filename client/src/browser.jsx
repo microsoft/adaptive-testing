@@ -1,7 +1,7 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter, faQuestion } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter, faQuestion, faThList } from '@fortawesome/free-solid-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
@@ -9,7 +9,7 @@ import Row from './row';
 import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
-import { Button, Autocomplete, Loader } from '@mantine/core';
+import { Button, Autocomplete, SegmentedControl } from '@mantine/core';
 import FolderBrowser from './folder_browser';
 import TopicSuggestion from './topic-suggestion';
 import PromptInput from './PromptInput';
@@ -45,6 +45,7 @@ export default class Browser extends React.Component {
       testPrompt: "",
       topicPromptError: false,
       testPromptError: false,
+      testPromptMode: "Auto",
       isControl: false, // true if we are in the control group
       description: ""
     };
@@ -285,6 +286,24 @@ export default class Browser extends React.Component {
         </div>
         </div>
         <div style={{display: "flex"}} >  
+          <SegmentedControl 
+            data={['Auto', 'Select examples', 'Custom prompt']}
+            value={this.state.testPromptMode}
+            onChange={(mode) => this.setState({testPromptMode: mode})} />
+          { this.state.testPromptMode !== "Custom prompt" && 
+            <>
+              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
+                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </Button>
+              <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
+                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </Button>
+            </>
+          }
+        </div>
+
+        { this.state.testPromptMode === "Custom prompt" && 
+          <div style={{display: "flex", marginTop: "10px"}} >  
             <PromptInput 
               style={{width:"auto", flexGrow: "1"}}
               placeholder={"▼ Give me more tests similar to the saved tests below. ▼" }
@@ -347,33 +366,15 @@ export default class Browser extends React.Component {
                   },
 
               ]}
-              />
-            <div style={{position: "relative"}} >
-              <button disabled={this.state.isControl} onClick={() => this.setState({testPrompt: ""})} style={{right: "65px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
-                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
-              </button>
-              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
-                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
-              </Button>
-            </div>
+            />
+            <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
+              <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+            </Button>
             <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
             </Button>
-              {/* <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
-                  Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
-              </div>
-              <div style={{textAlign: "right",   paddingRight: "10px",    color: "#999999" , marginBottom: "4px"   }} >
-                <Slider
-                  step={0.5}
-                  style={{ display: "inline-block", minWidth: "100px" }}
-                  onChange={this.changeTemperature}
-                  min={0}
-                  max={1}
-                  defaultValue={this.state.active_temperature}
-                  tipFormatter={null}
-              />
-              </div> */}
           </div>
+        }
         <div className='adatest-title' style={{alignSelf: "start", marginRight: "20px", marginTop: "20px"}} >Suggested Tests</div>
             
         {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${testSuggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }

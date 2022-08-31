@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export default function PromptInput({placeholder, value, onChange, disabled, dropdownOptions, style}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -38,6 +39,9 @@ export default function PromptInput({placeholder, value, onChange, disabled, dro
             width: "100%",
             padding: "0.5rem"
           }} />
+          <button onClick={() => { setDropdownOpen(false); onChange("") }} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
+            <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
+          </button>
       </div>
       { dropdownOpen ? 
         <div style={{
