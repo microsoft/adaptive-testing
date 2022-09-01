@@ -939,7 +939,8 @@ export default class Browser extends React.Component {
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
       // temperature: this.state.active_temperature,
-      user_test_prompt: this.state.testPrompt
+      user_test_prompt: this.state.testPromptMode === "Custom prompt" ? this.state.testPrompt : '',
+      selected_tests: this.state.testPromptMode === "Select examples" ? Object.keys(this.state.selections) : null,
     });
   }
 
