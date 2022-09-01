@@ -1,4 +1,6 @@
+from operator import truediv
 import os
+import pathlib
 import tempfile
 
 import numpy as np
@@ -52,3 +54,20 @@ def test_to_csv():
         target_file = os.path.join(td, "adatest_out.csv")
         tree.to_csv(target_file)
         assert os.path.exists(target_file)
+
+
+def test_has_subtopic_or_tests():
+    curr_file = pathlib.Path(__file__)
+    curr_dir = curr_file.parent
+    input_csv = curr_dir / "simple_test_tree.csv"
+    assert input_csv.exists()
+    tree = adatest.TestTree(str(input_csv))
+    # The top level topic appears to be an empty string, which is odd
+    assert tree.topic_has_subtopics("") == True
+    assert tree.topic_has_direct_tests("") == True
+    assert tree.topic_has_direct_tests("/A") == True
+    assert tree.topic_has_subtopics("/A") == True
+    assert tree.topic_has_direct_tests("/A/B") == True
+    assert tree.topic_has_subtopics("/A/B") == False
+    assert tree.topic_has_direct_tests("/A/C") == False
+    assert tree.topic_has_subtopics("/A/C") == False
