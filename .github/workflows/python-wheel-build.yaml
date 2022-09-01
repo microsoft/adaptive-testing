@@ -59,4 +59,4 @@ jobs:
       with:
         name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
     - name: Install wheel from file
-      run: pip install adatest-*y.whl
+      run: pip install adatest-*.whl
