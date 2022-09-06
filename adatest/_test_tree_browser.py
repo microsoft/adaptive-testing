@@ -288,7 +288,6 @@ class TestTreeBrowser():
         if "event_id" not in msg:
             log.error("interface_event: missing event_id. msg dump: %s", msg)
             return
-
         event_id = msg["event_id"]
 
         # redraw the entire interface
@@ -331,14 +330,8 @@ class TestTreeBrowser():
             # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
 
             # see if we have only topics are direct children, if so, we suggest topics, otherwise we suggest tests
-            has_direct_tests = False
-            has_known_subtopics = False
-            for _, test in self.test_tree.iterrows():
-                if test["topic"] == self.current_topic:
-                    if test["label"] != "topic_marker":
-                        has_direct_tests = True
-                elif is_subtopic(self.current_topic, test["topic"]):
-                    has_known_subtopics = True
+            has_direct_tests = self.test_tree.topic_has_direct_tests(self.current_topic)
+            has_known_subtopics = self.test_tree.topic_has_subtopics(self.current_topic)
             if not has_direct_tests and has_known_subtopics:
                 self.mode = "topics"
             else:
