@@ -286,7 +286,7 @@ class TestTreeBrowser():
         log.debug(f"interface_event({msg})")
 
         if "event_id" not in msg:
-            log.error("interface_event: missing event_id")
+            log.error("interface_event: missing event_id. msg dump: %s", msg)
             return
 
         event_id = msg["event_id"]
