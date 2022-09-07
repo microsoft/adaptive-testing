@@ -34,7 +34,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
-        path: dist/adatest-0.3.4-py3-none-any.whl
+        path: dist/*
 
   test:
     needs: build
@@ -59,4 +59,4 @@ jobs:
       with:
         name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
     - name: Install wheel from file
-      run: pip install adatest-0.3.4-py3-none-any.whl
+      run: pip install adatest-*.whl
