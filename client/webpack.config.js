@@ -1,13 +1,25 @@
 const path = require('path');
- 
+
+const isDevelopment = process.env.NODE_ENV === 'dev';
+
 module.exports = {
   entry: path.resolve(__dirname, './src/adatest.jsx'),
+  devtool: isDevelopment ? 'eval-source-map' : false,
   module: {
     rules: [
       {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: ['babel-loader'],
+      },
+      {
+        test: /\.ts(x?)$/,
+        exclude: /node_modules/,
+        use: [
+          {
+              loader: "ts-loader"
+          }
+        ]
       },
       {
         test: /\.css$/i,
@@ -24,11 +36,17 @@ module.exports = {
           search: '</script>',
           replace: '_/script>',
         }
+      },
+      // https://github.com/webpack-contrib/source-map-loader
+      {
+        enforce: "pre",
+        test: /\.js$/,
+        loader: "source-map-loader"
       }
     ],
   },
   resolve: {
-    extensions: ['*', '.js', '.jsx'],
+    extensions: ['*', '.js', '.jsx', '.ts', '.tsx'],
   },
   externals: {
     // 'react': 'React',
@@ -38,6 +56,5 @@ module.exports = {
     path: path.resolve(__dirname, '../adatest/resources'),
     filename: 'main.js',
   },
-  mode: "production"
-  // mode: "development"
+  mode: isDevelopment ? "development" : "production"
 };
