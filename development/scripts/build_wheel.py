@@ -13,7 +13,12 @@ def build_client():
     _logger.info("Running npm install")
     # Spawning npm appears to work differently in PowerShell
     spawn_shell = platform.system() == "Windows"
-    subprocess.run(["npm", "install"], shell=spawn_shell, cwd="client", check=True)
+    subprocess.run(
+        ["npm", "install", "--loglevel", "verbose"],
+        shell=spawn_shell,
+        cwd="client",
+        check=True,
+    )
     _logger.info("Running npx webpack")
     subprocess.run(["npx", "webpack"], shell=spawn_shell, cwd="client", check=True)
     _logger.info("Ending build_client")
