@@ -58,7 +58,7 @@ class TopicLabelingModel:
 
         # empty test tree
         if len(labels) == 0:
-            self.model = ConstantModel("Unknown")
+            self.model = ConstantModel("pass")
 
         # constant label topic
         elif len(set(labels)) == 1:
