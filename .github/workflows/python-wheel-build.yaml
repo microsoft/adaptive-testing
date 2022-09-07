@@ -28,6 +28,8 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools wheel
+    - name: Check node version
+      run: npm --version
     - name: Run build_wheel script
       run: python development/scripts/build_wheel.py
     - name: Save wheel artifact
