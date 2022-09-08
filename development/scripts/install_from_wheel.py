@@ -25,7 +25,7 @@ def main(argv):
     parser = build_argument_parser()
     args = parser.parse_args(argv)
 
-    _logger.info("Finding wheel file"):
+    _logger.info("Finding wheel file")
     target_dir = pathlib.Path(args.wheel_dir)
     # Globbing works from Python, but not in Windows builds
     wheel_list = list(target_dir.glob("adatest*.whl"))
