@@ -60,5 +60,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
+    - name: DEBUG
+      run: ls
     - name: Install wheel from file
       run: pip install adatest-*.whl
