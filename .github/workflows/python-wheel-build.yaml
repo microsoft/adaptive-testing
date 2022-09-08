@@ -62,3 +62,6 @@ jobs:
         name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
     - name: Install wheel from file
       run: python development/scripts/install_from_wheel.py --wheel-dir=.
+    - name: Test with pytest
+      run: |
+        python -m pytest tests/
