@@ -65,7 +65,7 @@ jobs:
     - name: Install testing requirements
       run: |
         pip install flake8 pytest pytest-mock
-        pip install transformers
+        pip install transformers openai
     - name: Test with pytest
       run: |
         python -m pytest tests/
