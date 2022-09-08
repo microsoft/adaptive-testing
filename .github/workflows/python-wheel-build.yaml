@@ -10,13 +10,18 @@ on:
     branches: [ main ]
 
 
+env:
+  # Select the Artifact to be used in the 'test' job
+  blessed-wheel-artifact: wheel-ubuntu-latest-3.10
+
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.10']
 
     steps:
     - uses: actions/checkout@v2
@@ -35,6 +40,7 @@ jobs:
     - name: Save wheel artifact
       uses: actions/upload-artifact@v3
       with:
+        # Name must match blessed-wheel-artifact above
         name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
         path: dist/*
 
@@ -43,7 +49,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ['3.8', '3.9', '3.10']
 
     steps:
@@ -59,7 +65,7 @@ jobs:
     - name: Download wheel artifact
       uses: actions/download-artifact@v3
       with:
-        name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
+        name: ${{ env.blessed-wheel-artifact }}
     - name: Install wheel from file
       run: python development/scripts/install_from_wheel.py --wheel-dir=.
     - name: Install testing requirements
