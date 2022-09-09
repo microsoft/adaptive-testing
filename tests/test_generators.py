@@ -127,7 +127,7 @@ class TestOpenAI:
     def test_smoke(self, mocker):
         OPENAI_API_KEY = "Not for you, CredScan"
 
-        openai_completion = mocker.patch("openai.Completion", auto_spec=True)
+        openai_completion = mocker.patch("openai.Completion", autospec=True)
         patched_response = {"choices": [{"text": "Ret 1"}, {"text": "Ret 2"}]}
         openai_completion.create.return_value = patched_response
 
