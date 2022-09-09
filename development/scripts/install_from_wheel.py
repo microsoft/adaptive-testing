@@ -36,7 +36,7 @@ def main(argv):
 
     _logger.info("Installing wheel")
     # Use this approach so that extras can be added
-    adatest_spec = f"adatest @ {wheel_path.as_uri()}"
+    adatest_spec = f"adatest[dev] @ {wheel_path.as_uri()}"
     subprocess.run(["pip", "install", f"{adatest_spec}"], check=True)
 
 

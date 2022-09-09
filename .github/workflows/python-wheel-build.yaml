@@ -68,10 +68,6 @@ jobs:
         name: ${{ env.blessed-wheel-artifact }}
     - name: Install wheel from file
       run: python development/scripts/install_from_wheel.py --wheel-dir=.
-    - name: Install testing requirements
-      run: |
-        pip install flake8 pytest pytest-mock
-        pip install transformers openai torch
     - name: Test with pytest
       run: |
         python -m pytest tests/
