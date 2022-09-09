@@ -33,14 +33,14 @@ class TopicLabelingModel:
 
         # mask out entries that do not have a pass/fail label
         valid_mask = ~((test_tree["labeler"] == "imputed") | (test_tree["label"] == "topic_marker") | (test_tree["label"] == "off_topic"))
-        
+
         # try and select samples from the current topic
         topic_mask = (test_tree["topic"] == topic) & valid_mask
-        
+
         # if we didn't find enough samples then expand to include subtopics
         if topic_mask.sum() <= 1:
             topic_mask = test_tree["topic"].str.startswith(topic) & valid_mask
-        
+
         # if we still didn't find enough samples then expand to include parent topics
         parts = topic.split("/")
         for i in range(len(parts), 0, -1):
@@ -58,15 +58,15 @@ class TopicLabelingModel:
 
         # empty test tree
         if len(labels) == 0:
-            self.model = ConstantModel("Unknown")
+            self.model = ConstantModel("pass")
 
         # constant label topic
         elif len(set(labels)) == 1:
             self.model = ConstantModel(labels[0])
-        
+
         # enough samples to fit a model
         else:
-            
+
             # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
             # TODO: SML: It seems to me that the SVC seems to do very well as long as there are no "errors" in the data labels. But it will
             # do very poorly if there are errors in the data labels since it will fit them exactly. Perhaps we can help this by
@@ -94,14 +94,14 @@ class TopicMembershipModel:
 
         # mask out entries that do not have a topic membership label
         valid_mask = ~((test_tree["labeler"] == "imputed") | (test_tree["label"] == "topic_marker"))
-        
+
         # try and select samples from the current topic
         topic_mask = (test_tree["topic"] == topic) & valid_mask
-        
+
         # if we didn't find enough samples then expand to include subtopics
         if topic_mask.sum() <= 1:
             topic_mask = test_tree["topic"].str.startswith(topic) & valid_mask
-        
+
         # if we still didn't find enough samples then expand to include parent topics
         parts = topic.split("/")
         for i in range(len(parts), 0, -1):
@@ -118,15 +118,15 @@ class TopicMembershipModel:
 
         # empty test tree
         if len(labels) == 0:
-            self.model = ConstantModel("Unknown")
+            self.model = ConstantModel("pass")
 
         # constant label topic
         elif len(set(labels)) == 1:
             self.model = ConstantModel(labels[0])
-        
+
         # enough samples to fit a model
         else:
-            
+
             # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
             self.model = LinearSVC()
             self.model.fit(embeddings, labels)

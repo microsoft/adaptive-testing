@@ -17,7 +17,7 @@ class Scorer():
             return model
         else:
             return super().__new__(cls)
-    
+
     def __init__(self, model):
         """ Auto detect the model type and subclass to the right scorer object.
         """
@@ -36,7 +36,7 @@ class Scorer():
             # finish early if we are wrapping an object that is already a Scorer (__new__ will have already done the work)
             if shap.utils.safe_isinstance(model, "adatest.Scorer"):
                 return
-            
+
             # see if we are scoring a generator or a classifier
             out = self.model(["string 1", "string 2"])
             if isinstance(out[0], str):
@@ -45,7 +45,7 @@ class Scorer():
             else:
                 self.__class__ = ClassifierScorer
                 ClassifierScorer.__init__(self, model)
-            
+
 
 class DummyScorer(Scorer):
     def __init__(self):
@@ -71,7 +71,7 @@ class ClassifierScorer(Scorer):
 
     def __init__(self, model, top_probs=20, output_names=None):
         """ Create a new scorer given a model that returns a probability vector for each input string.
-        
+
         Parameters:
         -----------
         model : callable
@@ -93,7 +93,7 @@ class ClassifierScorer(Scorer):
             self.output_names = output_names
         elif not hasattr(self, "output_names"):
             self.output_names = None
-        
+
         if not callable(self.output_names):
             self._output_name_to_index = {v: i for i, v in enumerate(self.output_names)}
         self.top_probs = top_probs
@@ -110,7 +110,7 @@ class ClassifierScorer(Scorer):
         eval_ids : list of strings
             The ids of the tests to score.
         """
-        
+
         # expand templates in the test tree
         eval_inputs = []
         eval_inds = []
@@ -153,7 +153,7 @@ class ClassifierScorer(Scorer):
             scores.append(self._score_test(tests, eval_ids[ind], out_probs[ind], self.top_probs))
 
         return outputs,scores
- 
+
     def _score_test(self, tests, id, probs, top_probs):
         test = tests.loc[id]
         fail_prob = 0
@@ -164,11 +164,11 @@ class ClassifierScorer(Scorer):
             inds = np.argsort(probs[:,0])[::-1]
             for ind in inds[:top_probs]:
 
-                # Scott: we could use any manually given labels when possible, but then that would make the score depend on the label 
+                # Scott: we could use any manually given labels when possible, but then that would make the score depend on the label
                 # and so we would either need to save the full output of the model or recompute every time
                 # if self.model.output_names[ind] == test["output"] and test["labeler"] != "imputed":
                 #     label = test["label"]
-                
+
                 # we use the local topic model to predict the label
                 label = tests.topic_labeling_model(test.topic)(test.input, self.model.output_names[ind])
                 if label == "fail":
@@ -189,7 +189,7 @@ class GeneratorScorer(Scorer):
 
     def __init__(self, model):
         """ Create a new scorer for a generative text model.
-        
+
         Parameters:
         -----------
         model : callable
@@ -258,6 +258,86 @@ class GeneratorScorer(Scorer):
         else:
             return 1.0
 
+class GeneratorWithScoreScorer(Scorer):
+    """ Wraps a text generation model as a callable scorer that can be applied to a test tree.
+    """
+
+    def __init__(self, model):
+        """ Create a new scorer for a generative text model.
+
+        Parameters:
+        -----------
+        model : callable
+            A model that is callable with a single argument (which is a list of strings) and returns a list of strings.
+        """
+        super().__init__(model)
+        # self.model = model
+
+        # we don't want to re-init a class if init has alrady been done (this can happen when Scorer(maybe_scorer) is called)
+        if hasattr(self, "_id"):
+            return # already initialized
+
+    def __call__(self, tests, eval_ids):
+        """ Score a set of tests.
+
+        Parameters
+        ----------
+        tests : TestTree or DataFrame
+            A dataframe of tests.
+
+        eval_ids : list of strings
+            The evaluation IDs to use.
+        """
+
+        # determine which rows we need to evaluate
+        eval_inputs = []
+        eval_inds = []
+        for i, id in enumerate(eval_ids):
+            template_expansions = expand_template(tests.loc[id, "input"])
+            for expansion in template_expansions:
+                eval_inputs.append(expansion)
+                eval_inds.append(i)
+
+        # run the model on the rows we need to evaluate
+        try:
+            model_out, scores  = self.model(eval_inputs)
+        except Exception as e:
+            model_out = [""] * len(eval_inputs) # TODO: remove this hack after the user study
+            scores = [0 for _ in range(len(eval_inputs))]
+            log.error(e)
+            log.error(eval_inputs)
+            log.error("The model threw an exception when evaluating inputs! We are patching this disaster with np.nan for the sake of the user study!")
+
+        # compute the output strings for each output
+        out_strings = [[] for _ in range(len(eval_ids))]
+        out_scores = [0 for _ in range(len(eval_ids))]
+        i = 0
+        while i < len(model_out):
+            out_strings[eval_inds[i]].append(str(model_out[i]))
+            out_scores[eval_inds[i]] = scores[i]
+            i += 1
+        for i in set(eval_inds):
+            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
+
+        out_scores = np.array([float(x) for x in out_scores])
+        scores = []
+        outputs = []
+        for i, ind in enumerate(eval_inds):
+            outputs.append(out_strings[ind])
+            label_score = self._score_test(tests, eval_ids[ind], out_strings[ind]) +0.0001
+            scores.append(out_scores[ind] * label_score)
+        return outputs,scores
+
+    def _score_test(self, tests, id, output):
+        test = tests.loc[id]
+
+        label = tests.topic_labeling_model(test.topic)(test.input, output)
+
+        if label == "pass":
+            return 0.0
+        else:
+            return 1.0
+
 class RawScorer(Scorer):
     """ Wraps a model that directly outputs a score each input as a callable scorer.
 
@@ -267,7 +347,7 @@ class RawScorer(Scorer):
 
     def __init__(self, model):
         """ Create a new scorer given a model that returns a bounded real value for each input string.
-        
+
         Parameters:
         -----------
         model : callable
@@ -287,7 +367,7 @@ class RawScorer(Scorer):
         eval_ids : list of strings
             The ids of the tests to score.
         """
-        
+
         # expand templates in the test tree
         eval_inputs = []
         eval_inds = []
