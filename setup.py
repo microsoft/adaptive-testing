@@ -42,4 +42,16 @@ setup(
         "scikit-learn",
         "shap",
     ],
+    extras_require={
+        "dev": [
+            "black",
+            "flake8",
+            "openai",
+            "datasets",
+            "transformers",
+            "pytest",
+            "pytest-mock",
+            "torch",
+        ]
+    },
 )
