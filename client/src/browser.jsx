@@ -1,7 +1,7 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter, faQuestion } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter, faQuestion, faThList } from '@fortawesome/free-solid-svg-icons'
 import { defer, debounce, clone, get } from 'lodash';
 import JupyterComm from './jupyter-comm'
 import WebSocketComm from './web-socket-comm'
@@ -9,7 +9,7 @@ import Row from './row';
 import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
-import { Button, Autocomplete, Loader } from '@mantine/core';
+import { Button, Autocomplete, SegmentedControl } from '@mantine/core';
 import FolderBrowser from './folder_browser';
 import TopicSuggestion from './topic-suggestion';
 import PromptInput from './PromptInput';
@@ -45,6 +45,7 @@ export default class Browser extends React.Component {
       testPrompt: "",
       topicPromptError: false,
       testPromptError: false,
+      testPromptMode: "Auto",
       isControl: false, // true if we are in the control group
       description: ""
     };
@@ -285,9 +286,26 @@ export default class Browser extends React.Component {
         </div>
         </div>
         <div style={{display: "flex"}} >  
+          <SegmentedControl 
+            data={['Auto', 'Select examples', 'Custom prompt']}
+            value={this.state.testPromptMode}
+            onChange={(mode) => this.setState({testPromptMode: mode})} />
+          { this.state.testPromptMode !== "Custom prompt" && 
+            <>
+              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={(e) => this.refreshTestSuggestions(e, '')}>
+                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </Button>
+              <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
+                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+              </Button>
+            </>
+          }
+        </div>
+
+        { this.state.testPromptMode === "Custom prompt" && 
+          <div style={{display: "flex", marginTop: "10px"}} >  
             <PromptInput 
-              style={{width:"auto", flexGrow: "1"}}
-              placeholder={"▼ Give me more tests similar to the saved tests below. ▼" }
+              style={{width:"auto", flexGrow: "1", border: "solid rgb(216, 222, 228) 1px" }}
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
@@ -297,84 +315,89 @@ export default class Browser extends React.Component {
               dropdownOptions={[
                   {
                     value: "Write a "+ this.state.description,
+                    view: `<span>Write a ` + this.state.description + `</span>`,
                     prefix: "A.",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a " + this.state.description + " that is about " + this.state.topic,
+                    value: "Write a sentence from a " + this.state.description,
+                    view: `<span>Write a sentence from a ` + this.state.description + `</span>`,
                     prefix: "B.",
                     group: "Where to start/Where to look next"
                   },
                   {
                     value: "Write a " + this.state.description + " that is (output type)",
+                    view: `
+                        <span>Write a ` + this.state.description + ` that is </span>
+                        <span style="color: red">output type</span>
+                    `,
                     prefix: "C.",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to/contains (input feature)",
+                    value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to (input feature)",
                     prefix: "D.",
                     group: "Where to start/Where to look next"
                   }, 
                   {
                     value: 'Write a sentence that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
+                    view: `
+                        <span>Write a sentence that is a ` + this.state.description + `</span>
+                        <span style="color: red">output/context, if available</span>
+                        <span> such as </span>
+                        <span style="color: red">example of input</span>
+                    `,
                     prefix: "A.",
                     group: "Found one or more errors, now what? (Focused exploration)"
                   }, 
-                  // {
-                  //   value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
-                  //   prefix: "B.",
-                  //   group: "Found one or more errors, now what? (Focused exploration)"
-                  // },
                   {
-                    value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
+                    value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
+                    view: `
+                        <span>Write a sentence using the phrase/word </span>
+                        <span style="color: red">"phrase"</span>
+                        <span> that is a ` + this.state.description +`</span>
+                        <span style="color: red">output/context, if available</span>
+                        <span> such as </span>
+                        <span style="color: red">example of input</span>
+                    `,
                     prefix: "B.",
-                    suffix: '(e.g. Write a ' + this.state.description + ' with the template: "{insert person name} is {insert adjective} at {insert activity}", such as "Maya is mediocre at cursive handwriting")' ,
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
-                  // {
-                  //   value: '{insert name} is {insert profession}.',
-                  //   prefix: "A.",
-                  //   group: "Template examples (Focused exploration)"
-                  // },
-                  // {
-                  //   value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
-                  //   prefix: "B.",
-                  //   group: "Template examples (Focused exploration)"
-                  // },
-                  // {
-                  //   value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
-                  //   prefix: "C.",
-                  //   group: "Template examples (Focused exploration)"
-                  // },
+                  {
+                    value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
+                    prefix: "C.",
+                    group: "Found one or more errors, now what? (Focused exploration)"
+                  },
+                  {
+                    value: '{insert name} is {insert profession}.',
+                    prefix: "A.",
+                    group: "Template examples (Focused exploration)"
+                  },
+                  {
+                    value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
+                    prefix: "B.",
+                    group: "Template examples (Focused exploration)"
+                  },
+                  {
+                    value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
+                    prefix: "C.",
+                    group: "Template examples (Focused exploration)"
+                  },
 
               ]}
-              />
-            <div style={{position: "relative"}} >
-              <button disabled={this.state.isControl} onClick={() => this.setState({testPrompt: ""})} style={{right: "65px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
-                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
-              </button>
-              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.refreshTestSuggestions}>
-                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
-              </Button>
-            </div>
+              onSubmit={this.refreshTestSuggestions}
+              isLoading={this.state.loading_test_suggestions}
+              placeholder={`
+                <span style="color: red">Proof </span> 
+                <span style="color: blue">of </span>
+                <span style="color: orange">concept!</span>
+              `}
+            />
             <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
             </Button>
-              {/* <div style={{textAlign: "right",   paddingRight: "10px",    color:  "rgb(0, 0, 0)" ,marginTop:"4px"    }} >
-                  Creativity: { this.state.active_temperature < 0.5 ? "Low" :this.state.active_temperature==0.5 ? "Medium" : "High"  }
-              </div>
-              <div style={{textAlign: "right",   paddingRight: "10px",    color: "#999999" , marginBottom: "4px"   }} >
-                <Slider
-                  step={0.5}
-                  style={{ display: "inline-block", minWidth: "100px" }}
-                  onChange={this.changeTemperature}
-                  min={0}
-                  max={1}
-                  defaultValue={this.state.active_temperature}
-                  tipFormatter={null}
-              />
-              </div> */}
           </div>
+        }
         <div className='adatest-title' style={{alignSelf: "start", marginRight: "20px", marginTop: "20px"}} >Suggested Tests</div>
             
         {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${testSuggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }
@@ -911,16 +934,14 @@ export default class Browser extends React.Component {
   //   this.setState({topicFilter: text});
   // }
 
-
-
-  refreshTestSuggestions(e) {
+  refreshTestSuggestions(e, testPrompt) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("refreshSuggestions");
+    console.log("refreshSuggestions", e, testPrompt);
     if (this.state.loading_test_suggestions) return;
 
     const tests = this.state.tests.find(test => !test.startsWith("/"));
-    if (!this.state.isControl && this.state.topic === "" && tests == null && this.state.testPrompt === "") {
+    if (!this.state.isControl && this.state.topic === "" && tests == null && testPrompt === "") {
       this.setState({testPromptError: "Please provide a prompt."})
       return;
     }
@@ -939,7 +960,8 @@ export default class Browser extends React.Component {
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
       // temperature: this.state.active_temperature,
-      user_test_prompt: this.state.testPrompt
+      user_test_prompt: testPrompt,
+      selected_tests: this.state.testPromptMode === "Select examples" ? Object.keys(this.state.selections) : null,
     });
   }
 

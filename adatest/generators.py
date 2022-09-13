@@ -363,7 +363,7 @@ class OpenAI(TextCompletionGenerator):
         if len(prompts[0]) == 0 and user_prompt == '':
             raise ValueError("ValueError: Unable to generate suggestions from completely empty TestTree. Consider writing a few manual tests before generating suggestions.") 
 
-        if user_prompt == '':
+        if user_prompt is None or user_prompt == '':
             prompts, prompt_ids = self._validate_prompts(prompts)
             # prompt_strings = self._create_prompt_strings(prompts, topic)
 

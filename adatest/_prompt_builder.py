@@ -48,7 +48,7 @@ class PromptBuilder():
         self.prompt_diversity = prompt_diversity
         self.subtopic_diversity = subtopic_diversity
     
-    def __call__(self, test_tree, topic, score_column, repetitions=1, filter="", suggest_topics=False, working_set_size=100, embeddings=None):
+    def __call__(self, test_tree, topic, score_column, repetitions=1, filter="", suggest_topics=False, working_set_size=100, embeddings=None, selected_tests=None):
         """ This builds a prompt for GPT3 that elicits useful input examples.
 
         Parameters
@@ -124,6 +124,12 @@ class PromptBuilder():
                 if hasattr(test, "output") and filter_compiled.search(test.output) is not None:
                     continue
                 hidden_scaling[i] = 0.0
+
+        # hide the rows that weren't selected by user
+        if selected_tests is not None:
+            for i,k in enumerate(ids):
+                if k not in selected_tests:
+                    hidden_scaling[i] = 0.0
 
         # filter down to a single test type (chosen to match the top scoring test)
         if suggest_topics:

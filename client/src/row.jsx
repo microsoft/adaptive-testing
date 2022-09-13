@@ -614,21 +614,22 @@ export default class Row extends React.Component {
   }
   
   clickRow(e) {
-    const modKey = e.metaKey || e.shiftKey;
+    const metaKey = e.metaKey || e.ctrlKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey);
+      this.props.onSelectToggle(this.props.id, e.shiftKey, metaKey);
     }
   }
 
   clickTopicName(e) {
     console.log("clickTopicName");
-    const modKey = e.metaKey || e.shiftKey;
+    const metaKey = e.metaKey || e.ctrlKey;
+    const modKey = metaKey || e.shiftKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey);
+      this.props.onSelectToggle(this.props.id, e.shiftKey, metaKey);
     }
     if (!modKey && !this.state.editing) {
       this.setState({editing: true});

@@ -1,8 +1,13 @@
 import React, { useState, useRef } from 'react';
+import { Button } from '@mantine/core';
+import { faRedo } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import sanitizeHtml from 'sanitize-html';
 
-export default function PromptInput({placeholder, value, onChange, disabled, dropdownOptions, style}) {
+export default function PromptInput({value, onSubmit, disabled, dropdownOptions, style, placeholder, isLoading}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const inputRef = useRef();
+  const [inputContent, setInputContent] = useState(placeholder);
+  const contentRef = useRef(null);
 
   const optionMap = {};
   dropdownOptions.map(data => {
@@ -15,6 +20,11 @@ export default function PromptInput({placeholder, value, onChange, disabled, dro
     }
     optionMap[group] = groupList;
   })
+
+  function handleSubmit(e) {
+    console.log("HANDLESUBMIT", contentRef, contentRef.current.innerText);
+    onSubmit(e, contentRef.current.innerText)
+  }
 
   return (
     <div style={style}>
@@ -82,7 +92,6 @@ export default function PromptInput({placeholder, value, onChange, disabled, dro
                     }}>
                     { data.prefix && <span style={{ marginRight: "0.5rem" }}>{data.prefix}</span> }
                     <span>{data.value}</span>
-                    { data.suffix && <span style={{ marginRight: "0.5rem" }}>{data.suffix}</span> }
                   </div>
                 ))}
               </div>

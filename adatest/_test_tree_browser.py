@@ -332,7 +332,7 @@ class TestTreeBrowser():
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
                     # self._generate_suggestions(filter=msg[k].get("filter", ""))
                     # crv
-                    self._generate_suggestions(filter=msg[k].get("filter", ""), user_prompt = msg[k].get("user_test_prompt",""), mode="tests")
+                    self._generate_suggestions(filter=msg[k].get("filter", ""), user_prompt = msg[k].get("user_test_prompt",""), mode="tests", selected_tests=msg[k].get("selected_tests"))
                     # temperature=msg[k].get("temperature",1)
                     # if self._active_generator_obj is None:
                     #     self._suggestions_error = "No AdaTest generator has been set!"
@@ -753,7 +753,7 @@ class TestTreeBrowser():
         self.test_tree.retrain_topic_membership_model(self.current_topic)
         self._generate_suggestions(filter=filter)
     #crv
-    def _generate_suggestions(self, filter, user_prompt, mode): # temperature
+    def _generate_suggestions(self, filter, user_prompt, mode, selected_tests): # temperature
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -791,7 +791,8 @@ class TestTreeBrowser():
             score_column=self.score_columns[0],
             repetitions=suggestion_threads,
             filter=filter,
-            suggest_topics=mode == "topics"
+            suggest_topics=mode == "topics",
+            selected_tests=selected_tests
         )
 
         # get the current topic description
