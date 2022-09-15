@@ -388,9 +388,8 @@ export default class Browser extends React.Component {
               onSubmit={this.refreshTestSuggestions}
               isLoading={this.state.loading_test_suggestions}
               placeholder={`
-                <span style="color: red">Proof </span> 
-                <span style="color: blue">of </span>
-                <span style="color: orange">concept!</span>
+                <span style="color: #828587; font-size: 10px; margin-left: 0.5em; margin-right: 0.5em">▼</span> 
+                <span style="color: #828587;">Select a prompt or input your own</span> 
               `}
             />
             <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
@@ -941,7 +940,8 @@ export default class Browser extends React.Component {
     if (this.state.loading_test_suggestions) return;
 
     const tests = this.state.tests.find(test => !test.startsWith("/"));
-    if (!this.state.isControl && this.state.topic === "" && tests == null && testPrompt === "") {
+    if (!this.state.isControl && this.state.testPromptMode === "Custom prompt" &&
+         this.state.topic === "" && tests == null && testPrompt === "") {
       this.setState({testPromptError: "Please provide a prompt."})
       return;
     }
@@ -952,6 +952,12 @@ export default class Browser extends React.Component {
       }
     }
     this.setState({suggestions: [], loading_test_suggestions: true, suggestions_pos: 0, do_score_filter: true, testPromptError: false});
+    let selectedTests;
+    if (this.state.testPromptMode === "Select examples" && Object.keys(this.state.suggestions).length > 0) {
+      selectedTests = Object.keys(this.state.suggestions);
+    } else {
+      selectedTests = null;
+    }
     this.comm.send(this.id, {
       action: "generate_test_suggestions", value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
@@ -961,7 +967,7 @@ export default class Browser extends React.Component {
       checklist_mode: !!this.suggestionsTemplateRow,
       // temperature: this.state.active_temperature,
       user_test_prompt: testPrompt,
-      selected_tests: this.state.testPromptMode === "Select examples" ? Object.keys(this.state.selections) : null,
+      selected_tests: selectedTests
     });
   }
 

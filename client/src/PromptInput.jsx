@@ -33,8 +33,16 @@ export default function PromptInput({value, onSubmit, disabled, dropdownOptions,
           <div contentEditable
             suppressContentEditableWarning={true}
             ref={contentRef}
+            onClick={() => {
+              if (inputContent === placeholder) {
+                setInputContent("");
+              }
+            }}
             onKeyDown={(e) => {
               e.stopPropagation();
+              if (e.key === "Enter") {
+                handleSubmit(e);
+              }
             }}
             onChange={(e) => {
               console.log("PROMPTINPUT change event", e);
@@ -58,7 +66,7 @@ export default function PromptInput({value, onSubmit, disabled, dropdownOptions,
         { dropdownOpen ? 
           <div style={{
             position: "relative",
-            marginTop: "10px" }}>
+            marginTop: "0px" }}>
             <div style={{
               position: "absolute",
               background: "white",
