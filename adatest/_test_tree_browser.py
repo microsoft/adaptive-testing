@@ -326,7 +326,7 @@ class TestTreeBrowser():
                 # generate a new set of suggested tests
                 # elif action == "generate_suggestions":
                 elif action == "generate_test_suggestions":
-                    log.study(f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\tN/A")
+                    log.study(f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'prompt_mode': '{msg[k]['prompt_mode']}'}}")
                     self._clear_suggestions()
                     self.test_tree.retrain_topic_labeling_model(self.current_topic)
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
@@ -395,8 +395,8 @@ class TestTreeBrowser():
 
                 # add a new empty subtopic to the current topic
                 elif action == "add_new_topic":
-                    log.study(f"Add new topic\t{'ROOT' if not self.current_topic else self.current_topic}\tN/A")
-                    self.test_tree.loc[uuid.uuid4().hex] = {
+                    topic_id = uuid.uuid4().hex
+                    self.test_tree.loc[topic_id] = {
                         "topic": self.current_topic + "/New topic",
                         "label": "topic_marker",
                         "input": "",
@@ -404,13 +404,13 @@ class TestTreeBrowser():
                         "labeler": self.user,
                         "description": ""
                     }
+                    log.study(f"Add new topic\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{topic_id}'}}")
                     self._compute_embeddings_and_scores(self.test_tree)
                     self._auto_save()
                     self._refresh_interface()
                 
                 # add a new empty test to the current topic
                 elif action == "add_new_test":
-                    log.study(f"Add new test\t{'ROOT' if not self.current_topic else self.current_topic}\tN/A")
                     # add the new test row
                     row = {
                         "topic": self.current_topic,
@@ -423,7 +423,9 @@ class TestTreeBrowser():
                     for c in self.score_columns:
                         row[c] = "__TOEVAL__"
                         row[c[:-6] + " raw outputs"] = "{}"
-                    self.test_tree.loc[uuid.uuid4().hex] = row
+                    test_id = uuid.uuid4().hex
+                    self.test_tree.loc[test_id] = row
+                    log.study(f"Add new test\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{test_id}'}}")
 
                     self._compute_embeddings_and_scores(self.test_tree)
                     self._auto_save()
@@ -485,15 +487,15 @@ class TestTreeBrowser():
                 # update the row and recompute scores
                 for k2 in msg[k]:
                     if k2 == "input": # Log modifications to user inputs/outputs
-                        log.study(f"Modified test input\t{'ROOT' if not self.current_topic else self.current_topic}\t{self.test_tree.loc[k, 'input']} | {msg[k]['input']}")
+                        log.study(f"Modified test input\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'old': {self.test_tree.loc[k, 'input']}, 'new': {msg[k]['input']}}}")
                     elif k2 == "output":
-                        log.study(f"Modified test output\t{'ROOT' if not self.current_topic else self.current_topic}\t{self.test_tree.loc[k, 'output']} | {msg[k]['output']}")
+                        log.study(f"Modified test output\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'old': {self.test_tree.loc[k, 'output']}, 'new': {msg[k]['output']}}}")
 
                     self.test_tree.loc[k, k2] = msg[k][k2]
                 if "input" in msg[k] or "output" in msg[k]:
                     self.test_tree.loc[k, self.score_columns] = "__TOEVAL__"
                     self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
-                    log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{self.test_tree.loc[k, 'input']} | {self.test_tree.loc[k, 'label']}")
+                    log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'label': {self.test_tree.loc[k, 'label']}}}")
 
                 elif "label" in msg[k]:
                     #self.test_tree.retrain_topic_model(self.current_topic)
@@ -549,8 +551,7 @@ class TestTreeBrowser():
                     else:
                         # Accepted a test from suggestions, log input + label
                         if "__suggestions__" in self.test_tree.loc[k, "topic"]:
-                            badchars = '\n\t'
-                            log.study(f"Accepted test suggestion\t{'ROOT' if not self.current_topic else self.current_topic}\t{self.test_tree.loc[k, 'input'].strip(badchars)} | {self.test_tree.loc[k, 'label']}")
+                            log.study(f"Accepted test suggestion\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, label: {self.test_tree.loc[k, 'label']}}}")
 
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
                         self.test_tree.loc[k, "author"] = self.user

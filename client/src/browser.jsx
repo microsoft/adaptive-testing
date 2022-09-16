@@ -336,6 +336,10 @@ export default class Browser extends React.Component {
                   },
                   {
                     value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to (input feature)",
+                    view: `
+                        <span>Write a ` + this.state.description + ` that is/mentions/talks about/refers to</span>
+                        <span style="color: red">input feature</span>
+                    `,
                     prefix: "D.",
                     group: "Where to start/Where to look next"
                   }, 
@@ -365,21 +369,51 @@ export default class Browser extends React.Component {
                   },
                   {
                     value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
+                    view: `
+                        <span>Write a ` + this.state.description + ` with the template: </span>
+                        <span style="color: red">template</span>
+                        <span>, such as </span>
+                        <span style="color: red">example</span>
+                    `,
                     prefix: "C.",
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
                     value: '{insert name} is {insert profession}.',
+                    view: `
+                        <span style="color: red">name</span>
+                        <span> is </span>
+                        <span style="color: red">profession</span>
+                        <span>.</span>
+                    `,
                     prefix: "A.",
                     group: "Template examples (Focused exploration)"
                   },
                   {
                     value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
+                    view: `
+                        <span>My </span>
+                        <span style="color: red">person</span>
+                        <span> is </span>
+                        <span style="color: red">positive event</span>
+                        <span>, but </span>
+                        <span style="color: red">negative event</span>
+                        <span>.</span>
+                    `,
                     prefix: "B.",
                     group: "Template examples (Focused exploration)"
                   },
                   {
                     value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
+                    view: `
+                        <span>Watching </span>
+                        <span style="color: red">movie name</span>
+                        <span> is as </span>
+                        <span style="color: red">positive adjective</span>
+                        <span> as </span>
+                        <span style="color: red">boring thing</span>
+                        <span>.</span>
+                    `,
                     prefix: "C.",
                     group: "Template examples (Focused exploration)"
                   },
@@ -967,7 +1001,8 @@ export default class Browser extends React.Component {
       checklist_mode: !!this.suggestionsTemplateRow,
       // temperature: this.state.active_temperature,
       user_test_prompt: testPrompt,
-      selected_tests: selectedTests
+      selected_tests: selectedTests,
+      prompt_mode: this.state.testPromptMode,
     });
   }
 
