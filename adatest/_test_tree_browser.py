@@ -754,7 +754,7 @@ class TestTreeBrowser():
         self.test_tree.retrain_topic_membership_model(self.current_topic)
         self._generate_suggestions(filter=filter)
     #crv
-    def _generate_suggestions(self, filter, user_prompt, mode, selected_tests): # temperature
+    def _generate_suggestions(self, filter, user_prompt, mode, selected_tests=None): # temperature
         """ Generate suggestions for the current topic.
 
         Parameters
@@ -827,7 +827,7 @@ class TestTreeBrowser():
 
         
 
-
+        suggestion_log = []
         if isinstance(proposals, pd.DataFrame) or proposals.__class__.__name__ == "TestTree":
             suggestions = proposals
             suggestions['topic'] = self.current_topic + "/__suggestions__" + suggestions['topic'].apply(lambda x: x[len(self.current_topic):] if x != "" else "")
@@ -848,7 +848,9 @@ class TestTreeBrowser():
                     str_val = self.current_topic + " __JOIN__ " + input
                 if str_val not in test_map_tmp:
                     id = uuid.uuid4().hex
-                    self.test_tree.loc[id, "topic"] = self.current_topic + "/__suggestions__" + ("/"+input if mode == "topics" else "")
+                    s_topic = self.current_topic + "/__suggestions__" + ("/"+input if mode == "topics" else "")
+                    suggestion_log.append({'id': id, 'suggestion': s_topic if mode == "topics" else input})
+                    self.test_tree.loc[id, "topic"] = s_topic
                     self.test_tree.loc[id, "input"] = "" if mode == "topics" else input
                     self.test_tree.loc[id, "output"] = "__TOOVERWRITE__"
                     self.test_tree.loc[id, "label"] = "topic_marker" if mode == "topics" else ""
@@ -870,6 +872,9 @@ class TestTreeBrowser():
                     # suggestions.append(s)
                     if str_val is not None:
                         test_map_tmp[str_val] = True
+
+            study_log = {'Custom Prompt':  user_prompt, 'Mode': {mode} , 'Suggestions': suggestion_log}
+            log.study(f"Generated suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{study_log}")
 
             # suggestions = pd.DataFrame(suggestions, index=[uuid.uuid4().hex for _ in range(len(suggestions))], columns=self.test_tree.columns)
             start = time.time()
