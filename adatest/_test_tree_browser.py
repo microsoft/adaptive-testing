@@ -326,7 +326,11 @@ class TestTreeBrowser():
                 # generate a new set of suggested tests
                 # elif action == "generate_suggestions":
                 elif action == "generate_test_suggestions":
-                    log.study(f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'prompt_mode': '{msg[k]['prompt_mode']}'}}")
+                    if msg[k].get("selected_tests", None) is not None:
+                        study_log = f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'prompt_mode': '{msg[k]['prompt_mode']}', 'selected_tests': {msg[k]['selected_tests']}}}"
+                    else:
+                        study_log = f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'prompt_mode': '{msg[k]['prompt_mode']}'}}"
+                    log.study(study_log)
                     self._clear_suggestions()
                     self.test_tree.retrain_topic_labeling_model(self.current_topic)
                     self.test_tree.retrain_topic_membership_model(self.current_topic)
@@ -487,17 +491,17 @@ class TestTreeBrowser():
                 # update the row and recompute scores
                 for k2 in msg[k]:
                     if k2 == "input": # Log modifications to user inputs/outputs
-                        log.study(f"Modified test input\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'old': {self.test_tree.loc[k, 'input']}, 'new': {msg[k]['input']}}}")
+                        log.study(f"Modified test input\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'old': '{self.test_tree.loc[k, 'input']}', 'new': '{msg[k]['input']}'}}")
                     elif k2 == "output":
-                        log.study(f"Modified test output\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'old': {self.test_tree.loc[k, 'output']}, 'new': {msg[k]['output']}}}")
+                        log.study(f"Modified test output\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'old': '{self.test_tree.loc[k, 'output']}', 'new': '{msg[k]['output']}'}}")
 
                     self.test_tree.loc[k, k2] = msg[k][k2]
                 if "input" in msg[k] or "output" in msg[k]:
                     self.test_tree.loc[k, self.score_columns] = "__TOEVAL__"
                     self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
-                    log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'label': {self.test_tree.loc[k, 'label']}}}")
 
                 elif "label" in msg[k]:
+                    log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'label': '{msg[k]['label']}'}}")
                     #self.test_tree.retrain_topic_model(self.current_topic)
                     pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
                     # sign = -1 if msg[k]["label"] == "pass" else 1
@@ -526,6 +530,7 @@ class TestTreeBrowser():
                 # move a test that is in the test tree
                 if k in self.test_tree.index:
                     if msg[k]["topic"] == "_DELETE_": # this means delete the test
+                        log.study(f"Deleted test\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}}}")
                         self.test_tree.drop(k, inplace=True)
                     elif msg[k]["topic"] == NOT_SURE_TOPIC: # this means move the test to the not sure topic
                         # See if not sure topic exists, create if not
@@ -548,11 +553,13 @@ class TestTreeBrowser():
                         self.test_tree.loc[k, "topic"] = NOT_SURE_TOPIC
                         self.test_tree.loc[k, "label"] = "not_sure"
                         self.test_tree.loc[k, "labeler"] = self.user
+                        log.study(f"Moved test to not sure\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}}}")
                     else:
                         # Accepted a test from suggestions, log input + label
                         if "__suggestions__" in self.test_tree.loc[k, "topic"]:
-                            log.study(f"Accepted test suggestion\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, label: {self.test_tree.loc[k, 'label']}}}")
+                            log.study(f"Accepted test suggestion\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', label: '{self.test_tree.loc[k, 'label']}'}}")
 
+                        log.study(f"Moved test to different folder\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': {k}, 'old': {self.test_tree.loc[k, 'topic']}, 'new': {msg[k]['topic']}}}")
                         self.test_tree.loc[k, "topic"] = msg[k]["topic"]
                         self.test_tree.loc[k, "author"] = self.user
                 

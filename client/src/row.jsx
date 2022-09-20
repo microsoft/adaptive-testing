@@ -353,13 +353,13 @@ export default class Row extends React.Component {
         return <div key={k} className="adatest-row-score-plot-box">
           {/* {overall_score[k] > 0 ? */}
           <svg height="30" width="150">(total_pass / (total_pass + total_fail))
-            {scaled_score < 0 &&
+            {scaled_score < 0 && this.state.labeler !== "imputed" &&
               <g opacity="0.05">
                 <line x1="50" y1="15" x2={50 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(26, 127, 55, 1.0)", strokeWidth: "25"}}></line>
                 <rect x="0" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(26, 127, 55, 1)", strokeWidth: "1"}} />
               </g>
             }
-            {scaled_score > 0 &&
+            {scaled_score > 0 && this.state.labeler !== "imputed" &&
               <g opacity="0.05">
                 <line x1="50" y1="15" x2={50 + 50*scale_score(overall_score[k])} y2="15" style={{stroke: "rgb(207, 34, 46, 1.0)", strokeWidth: "25"}}></line>
                 <rect x="50" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
@@ -367,27 +367,9 @@ export default class Row extends React.Component {
             }
             {this.state.topic_name === null &&
               <React.Fragment>
-                {/* {this.state.label == "pass" &&
-                  <line x1="100" y1="15" x2={100 - (100-bar_width)/2} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
-                }
-                {this.state.label == "fail" &&
-                  <line x1="100" y1="15" x2={100 + bar_width/2} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
-                } */}
-                {this.state.labeler === "imputed" && this.state.label === "pass" ?
-                  <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
-                :
-                  <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-50px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-                }
-                {this.state.labeler === "imputed" && this.state.label === "fail" ?
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
-                :
-                  <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="0px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-                }
-                {this.state.labeler === "imputed" && this.state.label === "not_sure" ?
-                  <FontAwesomeIcon icon={faQuestion} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(37, 46, 207, 1.0)" textAnchor="middle" />
-                :
-                  <FontAwesomeIcon icon={faQuestion} height="17px" y="7px" x="50px" style={{color: this.state.label === "not_sure" ? "rgb(37, 46, 207, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
-                }
+                <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-50px" style={{color: this.state.labeler !== "imputed" && this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="0px" style={{color: this.state.labeler !== "imputed" && this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                <FontAwesomeIcon icon={faQuestion} height="17px" y="7px" x="50px" style={{color: this.state.labeler !== "imputed" && this.state.label === "not_sure" ? "rgb(37, 46, 207, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
                 <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
                 <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>

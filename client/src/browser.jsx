@@ -987,8 +987,8 @@ export default class Browser extends React.Component {
     }
     this.setState({suggestions: [], loading_test_suggestions: true, suggestions_pos: 0, do_score_filter: true, testPromptError: false});
     let selectedTests;
-    if (this.state.testPromptMode === "Select examples" && Object.keys(this.state.suggestions).length > 0) {
-      selectedTests = Object.keys(this.state.suggestions);
+    if (this.state.testPromptMode === "Select examples" && Object.keys(this.state.selections).length > 0) {
+      selectedTests = Object.keys(this.state.selections);
     } else {
       selectedTests = null;
     }
