@@ -525,19 +525,19 @@ export default class Browser extends React.Component {
     this.setState(data);
 
     // TODO: this is just a hack for the Checklist baseline user study
-    defer(() => {
-      //console.log("this.state.suggestions", this.state.suggestions, this.suggestionsTemplateRow.state.value2);
-      // fill in the value of the template output if it is blank and we have a guess
-      if (this.state.suggestions && this.suggestionsTemplateRow && (this.suggestionsTemplateRow.state.value2 === null || this.suggestionsTemplateRow.state.value2 === "")) {
+    // defer(() => {
+    //   //console.log("this.state.suggestions", this.state.suggestions, this.suggestionsTemplateRow.state.value2);
+    //   // fill in the value of the template output if it is blank and we have a guess
+    //   if (this.state.suggestions && this.suggestionsTemplateRow && (this.suggestionsTemplateRow.state.value2 === null || this.suggestionsTemplateRow.state.value2 === "")) {
         
-        const key = this.state.suggestions[this.state.suggestions.length - 1];
-        //console.log("key", key, Object.keys(this.comm.data))
-        if (key in this.comm.data) {
-          //console.log("DDFSSS")
-          this.suggestionsTemplateRow.setState({value2: this.comm.data[key].value2, comparator: this.comm.data[key].comparator});
-        }
-      }
-    });
+    //     const key = this.state.suggestions[this.state.suggestions.length - 1];
+    //     //console.log("key", key, Object.keys(this.comm.data))
+    //     if (key in this.comm.data) {
+    //       //console.log("DDFSSS")
+    //       this.suggestionsTemplateRow.setState({value2: this.comm.data[key].value2, comparator: this.comm.data[key].comparator});
+    //     }
+    //   }
+    // });
   }
 
   clockFinished() {
@@ -755,10 +755,10 @@ export default class Browser extends React.Component {
     this.comm.sendEvent(generateSuggestions({
       value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
-      suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
-      suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
-      suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
-      checklist_mode: !!this.suggestionsTemplateRow
+      // suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
+      // suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
+      // suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
+      checklist_mode: false //!!this.suggestionsTemplateRow
     }))
   }
 
@@ -901,9 +901,9 @@ export default class Browser extends React.Component {
 
   goToTopic(topic) {
     console.log("goToTopic", topic);
-    if (this.suggestionsTemplateRow) {
-      this.suggestionsTemplateRow.setState({value2: null});
-    }
+    // if (this.suggestionsTemplateRow) {
+    //   this.suggestionsTemplateRow.setState({value2: null});
+    // }
     this.comm.sendEvent(changeTopic(stripSlash(topic).replaceAll(" ", "%20")))
   }
 

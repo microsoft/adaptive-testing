@@ -1,16 +1,34 @@
+// @ts-nocheck
+
 import React from 'react';
 import autoBind from 'auto-bind';
 import sanitizeHtml from 'sanitize-html';
 import { defer } from 'lodash';
 
-export default class ContentEditable extends React.Component {
+interface ContentEditableProps {
+  id: string;
+  text: string; // current text value
+  defaultText: string; // text to show when empty
+  editable: boolean; // if true, allow editing
+  finishOnReturn: boolean; // if true, call onFinish when return is pressed
+  onInput: Function; // called when text is changed
+  onFinish: Function; // called when editing is finished
+  onClick: Function; // called when the element is clicked
+}
+
+export default class ContentEditable extends React.Component<ContentEditableProps> {
+  lastText;
+  divRef;
+  lastEditable;
+  skipBlurAction;
+
   static defaultProps = {
     editable: true,
     defaultText: "",
     finishOnReturn: false
   };
 
-  constructor(props) {
+  constructor(props: ContentEditableProps) {
     super(props);
     autoBind(this);
     this.lastText = null;

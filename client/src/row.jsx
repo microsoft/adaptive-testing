@@ -14,7 +14,6 @@ export default class Row extends React.Component {
 
     this.state = {
       editing: false,
-      topic: null,
       input: null,
       output: null,
       label: null,
@@ -30,7 +29,7 @@ export default class Row extends React.Component {
 
     this.dataLoadActions = [];
 
-    this.props.comm.subscribe(this.props.id, this.dataLoaded);
+    // this.props.comm.subscribe(this.props.id, this.dataLoaded);
 
     window["row_"+this.props.id] = this;
     window.faTimes = faTimes;

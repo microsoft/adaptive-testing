@@ -8,10 +8,12 @@ export default class WebSocketComm {
     this.interfaceId = interfaceId;
     this.websocketServer = websocketServer;
     this.callbackMap = {};
-    this.data = {};
+    // this.data = {};
     this.pendingData = {};
+    this.pendingResponses = {};
     this.onopen = onopen;
     this.reconnectDelay = 100;
+    this.seqNumber = 0;
 
     this.debouncedSendPendingData500 = debounce(this.sendPendingData, 500);
     this.debouncedSendPendingData1000 = debounce(this.sendPendingData, 1000);
@@ -54,7 +56,7 @@ export default class WebSocketComm {
     for (const i in keys) {
       const k = keys[i];
       this.pendingData[k] = data;
-      this.data[k] = Object.assign(this.data[k] || {}, data); // pretend it has already changed in our data cache
+      // this.data[k] = Object.assign(this.data[k] || {}, data); // pretend it has already changed in our data cache
     }
   }
 
@@ -62,23 +64,29 @@ export default class WebSocketComm {
     let wsUri = (window.location.protocol=='https:' ? 'wss://' : 'ws://') + (this.websocketServer.startsWith("/") ? window.location.host : "") + this.websocketServer;
     this.wcomm = new WebSocket(wsUri);
     this.wcomm.onopen = this.onopen;
-    this.wcomm.onmessage = this.updateData;
+    this.wcomm.onmessage = this.handleResponse;
     this.wcomm.onerror = this.onError;
     this.wcomm.onclose = this.onClose;
   }
 
-  updateData(e) {
-    // console.log("updateData", e)
+  handleResponse(e) {
     let data = JSON5.parse(e.data);
-    console.log("updateData", data)
-    for (const k in data) {
-      // console.log("data[k]", data[k])
-      this.data[k] = Object.assign(this.data[k] || {}, data[k]);
-      if (k in this.callbackMap) {
-        this.callbackMap[k](data[k]);
-      }
+    const keys = Object.keys(data);
+    if (keys.includes("sequence_number")) {
+      console.log(`received message#${data.sequence_number}`, data);
     }
   }
+
+  // updateData(e) {
+  //   console.log("WEBSOCKET UPDATEDATA, received unexpected data", data)
+    // for (const k in data) {
+    //   // console.log("data[k]", data[k])
+    //   this.data[k] = Object.assign(this.data[k] || {}, data[k]);
+    //   if (k in this.callbackMap) {
+    //     this.callbackMap[k](data[k]);
+    //   }
+    // }
+  // }
 
   onError(e) {
     console.log("Websocket error", e);
@@ -91,13 +99,39 @@ export default class WebSocketComm {
   }
 
   subscribe(key, callback) {
-    this.callbackMap[key] = callback;
-    defer(_ => this.callbackMap[key](this.data[key]));
+    console.log("WEBSOCKET SUBSCRIBE", key, callback);
+    // this.callbackMap[key] = callback;
+    // defer(_ => this.callbackMap[key](this.data[key]));
+  }
+
+  getSeqNumber() {
+    return this.seqNumber++;
   }
 
   sendPendingData() {
-    console.log("sending", this.pendingData);
+    const seqNumber = this.getSeqNumber();
+    this.pendingData["sequence_number"] = seqNumber;
+    console.log(`sending message#${seqNumber}`, this.pendingData);
     this.wcomm.send(JSON.stringify(this.pendingData));
     this.pendingData = {};
+    return this.waitForResponse(seqNumber);
   }
+
+  waitForResponse(seqNumber) {
+    const timeout_ms = 30000;
+    this.pendingResponses[seqNumber] = "pending";
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(`timeout waiting for response to message#${seqNumber}`);
+      }, timeout_ms);
+      const interval = setInterval(() => {
+        if (this.pendingResponses[seqNumber] !== "pending") {
+          clearTimeout(timeout);
+          clearInterval(interval);
+          resolve(this.pendingResponses[seqNumber]);
+        }
+      }, 10);
+    });
+  }
+
 }
