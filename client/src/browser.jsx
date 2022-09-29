@@ -285,31 +285,15 @@ export default class Browser extends React.Component {
           </div>
         </div>
         </div>
-        <div style={{display: "flex"}} >  
-          <SegmentedControl 
-            data={['Auto', 'Select examples', 'Custom prompt']}
-            value={this.state.testPromptMode}
-            onChange={(mode) => this.setState({testPromptMode: mode})} />
-          { this.state.testPromptMode !== "Custom prompt" && 
-            <>
-              <Button style={{marginLeft: "10px", alignSelf: "end"}} onClick={(e) => this.refreshTestSuggestions(e, '')}>
-                <FontAwesomeIcon className={this.state.loading_test_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
-              </Button>
-              <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
-                <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
-              </Button>
-            </>
-          }
-        </div>
-
-        { this.state.testPromptMode === "Custom prompt" && 
-          <div style={{display: "flex", marginTop: "10px"}} >  
+        <h3 style={{fontSize: "18px", margin: "0px", textAlign: "left"}}>Generate Tests</h3>
+        <div style={{display: "flex", marginTop: "10px"}} >  
             <PromptInput 
-              style={{width:"auto", flexGrow: "1", border: "solid rgb(216, 222, 228) 1px" }}
+              style={{width:"auto", flexGrow: "1", border: "solid rgb(216, 222, 228) 1px", cursor: "pointer" }}
               value={this.state.testPrompt}
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
               disabled={this.state.isControl}
+              onSetPromptMode={(mode) => this.setState({testPromptMode: mode})} 
               limit={15}
               id={"test_prompt_input_box"}
               dropdownOptions={[
@@ -430,7 +414,6 @@ export default class Browser extends React.Component {
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
             </Button>
           </div>
-        }
         <div className='adatest-title' style={{alignSelf: "start", marginRight: "20px", marginTop: "20px"}} >Suggested Tests</div>
             
         {!this.state.read_only && <div className={`adatest-suggestions-box ${this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted" : ""} ${testSuggestions.length > 1 ? "adatest-suggestions-box-active" : ""}` }

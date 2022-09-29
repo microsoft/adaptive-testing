@@ -1,10 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@mantine/core';
-import { faRedo } from '@fortawesome/free-solid-svg-icons'
+import { faRedo, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import sanitizeHtml from 'sanitize-html';
 
-export default function PromptInput({value, onSubmit, disabled, dropdownOptions, style, placeholder, isLoading}) {
+export default function PromptInput({value, onSubmit, onSetPromptMode, disabled, dropdownOptions, style, placeholder, isLoading}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [inputContent, setInputContent] = useState(placeholder);
   const contentRef = useRef(null);
@@ -59,7 +58,7 @@ export default function PromptInput({value, onSubmit, disabled, dropdownOptions,
             }}
             dangerouslySetInnerHTML={{__html: inputContent}}
             />
-            <button onClick={() => { setDropdownOpen(false); setInputContent("") }} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
+            <button onClick={() => { setDropdownOpen(false); setInputContent("") }} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent", cursor: "pointer"}}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
             </button>
         </div>
@@ -78,6 +77,42 @@ export default function PromptInput({value, onSubmit, disabled, dropdownOptions,
               paddingBottom: "15px",
               zIndex: "300",
               width: "100%" }}>
+              <div key="auto"
+                  className="adatest-hover-gray"
+                  style={{
+                    padding: "0.25rem 0.5rem",
+                    cursor: "pointer"
+                  }}
+                  onMouseDown={(e) => {
+                    // Avoid triggering the input's onBlur event
+                    // https://stackoverflow.com/a/57630197
+                    e.preventDefault();
+                  }}
+                  onClick={(() => {
+                    setInputContent("Auto");
+                    setDropdownOpen(false);
+                    onSetPromptMode("Auto")
+                  })}>
+                    Auto
+              </div>
+              <div key="select"
+                  className="adatest-hover-gray"
+                  style={{
+                    padding: "0.25rem 0.5rem",
+                    cursor: "pointer"
+                  }}
+                  onMouseDown={(e) => {
+                    // Avoid triggering the input's onBlur event
+                    // https://stackoverflow.com/a/57630197
+                    e.preventDefault();
+                  }}
+                  onClick={(() => {
+                    setInputContent("Select examples");
+                    setDropdownOpen(false);
+                    onSetPromptMode("Select examples");
+                  })}>
+                    Select examples
+              </div>
               {Object.keys(optionMap).map(group => (
                 <div key={group}>
                   <div style={{
