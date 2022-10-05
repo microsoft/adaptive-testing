@@ -69,7 +69,11 @@ export default class FolderBrowser extends React.Component{
 
     Drop(e, key){
         const id = e.dataTransfer.getData("id");
-        this.props.onDrop(id, {topic: key});
+        let suffix = "";
+        if (id.includes("/")) {
+            suffix = "/" + id.split("/").pop();
+        }
+        this.props.onDrop(id, {topic: key + suffix});
         // console.log('drop', id, key, this.props.mother_this.state.hovered_part)
         // var key_split = key.split('/')
         // var cur_key = ''
