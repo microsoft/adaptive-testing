@@ -267,7 +267,7 @@ export default class Browser extends React.Component {
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
             </div>
           })} */}
-          <span>Add tests for: </span>
+          <span>Generate tests for: </span>
           <span>
             {breadCrumbParts.map((name, index) => {
               //console.log("bread crum", name, index);
@@ -285,7 +285,7 @@ export default class Browser extends React.Component {
           </div>
         </div>
         </div>
-        <h3 style={{fontSize: "18px", margin: "0px", textAlign: "left"}}>Generate Tests</h3>
+        {/* <h3 style={{fontSize: "18px", margin: "0px", textAlign: "left"}}>Generate Tests</h3> */}
         <div style={{display: "flex", marginTop: "10px"}} >  
             <PromptInput 
               style={{width:"auto", flexGrow: "1", border: "solid rgb(216, 222, 228) 1px", cursor: "pointer" }}
@@ -303,28 +303,28 @@ export default class Browser extends React.Component {
                     prefix: "A.",
                     group: "Where to start/Where to look next"
                   },
-                  {
-                    value: "Write a sentence from a " + this.state.description,
-                    view: `<span>Write a sentence from a ` + this.state.description + `</span>`,
-                    prefix: "B.",
-                    group: "Where to start/Where to look next"
-                  },
+                  // {
+                  //   value: "Write a sentence from a " + this.state.description,
+                  //   view: `<span>Write a sentence from a ` + this.state.description + `</span>`,
+                  //   prefix: "B.",
+                  //   group: "Where to start/Where to look next"
+                  // },
                   {
                     value: "Write a " + this.state.description + " that is (output type)",
                     view: `
                         <span>Write a ` + this.state.description + ` that is </span>
                         <span style="color: red">output type</span>
                     `,
-                    prefix: "C.",
+                    prefix: "B.",
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a " + this.state.description +  " that is/mentions/talks about/refers to (input feature)",
+                    value: "Write a " + this.state.description +  " that refers to " + decodeURIComponent(this.state.topic),
                     view: `
-                        <span>Write a ` + this.state.description + ` that is/mentions/talks about/refers to</span>
+                        <span>Write a ` + this.state.description + ` that refers to</span>
                         <span style="color: red">input feature</span>
                     `,
-                    prefix: "D.",
+                    prefix: "C.",
                     group: "Where to start/Where to look next"
                   }, 
                   {
@@ -361,47 +361,7 @@ export default class Browser extends React.Component {
                     `,
                     prefix: "C.",
                     group: "Found one or more errors, now what? (Focused exploration)"
-                  },
-                  {
-                    value: '{insert name} is {insert profession}.',
-                    view: `
-                        <span style="color: red">name</span>
-                        <span> is </span>
-                        <span style="color: red">profession</span>
-                        <span>.</span>
-                    `,
-                    prefix: "A.",
-                    group: "Template examples (Focused exploration)"
-                  },
-                  {
-                    value: 'My {insert person} is {insert positive event}, but {insert negative event}.',
-                    view: `
-                        <span>My </span>
-                        <span style="color: red">person</span>
-                        <span> is </span>
-                        <span style="color: red">positive event</span>
-                        <span>, but </span>
-                        <span style="color: red">negative event</span>
-                        <span>.</span>
-                    `,
-                    prefix: "B.",
-                    group: "Template examples (Focused exploration)"
-                  },
-                  {
-                    value: 'Watching {insert movie name} is as {insert positive adjective} as {insert boring thing}.',
-                    view: `
-                        <span>Watching </span>
-                        <span style="color: red">movie name</span>
-                        <span> is as </span>
-                        <span style="color: red">positive adjective</span>
-                        <span> as </span>
-                        <span style="color: red">boring thing</span>
-                        <span>.</span>
-                    `,
-                    prefix: "C.",
-                    group: "Template examples (Focused exploration)"
-                  },
-
+                  }
               ]}
               onSubmit={this.refreshTestSuggestions}
               isLoading={this.state.loading_test_suggestions}
