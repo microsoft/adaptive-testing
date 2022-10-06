@@ -45,7 +45,6 @@ export default class Browser extends React.Component {
       testPrompt: "",
       topicPromptError: false,
       testPromptError: false,
-      testPromptMode: "Auto",
       isControl: false, // true if we are in the control group
       description: ""
     };
@@ -293,12 +292,10 @@ export default class Browser extends React.Component {
               onChange={this.changeTestPrompt} 
               error={this.state.testPromptError}
               disabled={this.state.isControl}
-              onSetPromptMode={(mode) => this.setState({testPromptMode: mode})} 
               limit={15}
               id={"test_prompt_input_box"}
               dropdownOptions={[
                   {
-                    value: "Write a "+ this.state.description,
                     view: `<span>Write a ` + this.state.description + `</span>`,
                     prefix: "A.",
                     group: "Where to start/Where to look next"
@@ -310,7 +307,6 @@ export default class Browser extends React.Component {
                   //   group: "Where to start/Where to look next"
                   // },
                   {
-                    value: "Write a " + this.state.description + " that is (output type)",
                     view: `
                         <span>Write a ` + this.state.description + ` that is </span>
                         <span style="color: red">output type</span>
@@ -319,7 +315,6 @@ export default class Browser extends React.Component {
                     group: "Where to start/Where to look next"
                   },
                   {
-                    value: "Write a " + this.state.description +  " that refers to " + decodeURIComponent(this.state.topic),
                     view: `
                         <span>Write a ` + this.state.description + ` that refers to</span>
                         <span style="color: red">input feature</span>
@@ -328,7 +323,6 @@ export default class Browser extends React.Component {
                     group: "Where to start/Where to look next"
                   }, 
                   {
-                    value: 'Write a sentence that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
                     view: `
                         <span>Write a sentence that is a ` + this.state.description + `</span>
                         <span style="color: red">output/context, if available</span>
@@ -339,7 +333,6 @@ export default class Browser extends React.Component {
                     group: "Found one or more errors, now what? (Focused exploration)"
                   }, 
                   {
-                    value: 'Write a sentence using the phrase/word "(phrase)" that that is a '+ this.state.description +' (output/context, if available), such as "(example of input)" ',
                     view: `
                         <span>Write a sentence using the phrase/word </span>
                         <span style="color: red">"phrase"</span>
@@ -352,7 +345,6 @@ export default class Browser extends React.Component {
                     group: "Found one or more errors, now what? (Focused exploration)"
                   },
                   {
-                    value: 'Write a '+ this.state.description +' with the template: "(template)", such as "(example)"',
                     view: `
                         <span>Write a ` + this.state.description + ` with the template: </span>
                         <span style="color: red">template</span>
@@ -361,14 +353,26 @@ export default class Browser extends React.Component {
                     `,
                     prefix: "C.",
                     group: "Found one or more errors, now what? (Focused exploration)"
-                  }
+                  },
+                  {
+                    view: `
+                        <span>Write more tests similar to the tests saved below</span>
+                    `,
+                    prefix: "D.",
+                    editable: false,
+                    group: "Found one or more errors, now what? (Focused exploration)"
+                  },
+                  {
+                    view: `
+                        <span>Write more tests similar to the <b>selected</b> tests saved below</span>
+                    `,
+                    prefix: "E.",
+                    editable: false,
+                    group: "Found one or more errors, now what? (Focused exploration)"
+                  },
               ]}
               onSubmit={this.refreshTestSuggestions}
               isLoading={this.state.loading_test_suggestions}
-              placeholder={`
-                <span style="color: #828587; font-size: 10px; margin-left: 0.5em; margin-right: 0.5em">▼</span> 
-                <span style="color: #828587;">Select a prompt or input your own</span> 
-              `}
             />
             <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
@@ -917,7 +921,7 @@ export default class Browser extends React.Component {
     if (this.state.loading_test_suggestions) return;
 
     const tests = this.state.tests.find(test => !test.startsWith("/"));
-    if (!this.state.isControl && this.state.testPromptMode === "Custom prompt" &&
+    if (!this.state.isControl && 
          this.state.topic === "" && tests == null && testPrompt === "") {
       this.setState({testPromptError: "Please provide a prompt."})
       return;
@@ -930,8 +934,9 @@ export default class Browser extends React.Component {
     }
     this.setState({suggestions: [], loading_test_suggestions: true, suggestions_pos: 0, do_score_filter: true, testPromptError: false});
     let selectedTests;
-    if (this.state.testPromptMode === "Select examples" && Object.keys(this.state.selections).length > 0) {
+    if (testPrompt === "Select examples" && Object.keys(this.state.selections).length > 0) {
       selectedTests = Object.keys(this.state.selections);
+      testPrompt = "";
     } else {
       selectedTests = null;
     }
@@ -945,7 +950,6 @@ export default class Browser extends React.Component {
       // temperature: this.state.active_temperature,
       user_test_prompt: testPrompt,
       selected_tests: selectedTests,
-      prompt_mode: this.state.testPromptMode,
     });
   }
 

@@ -327,9 +327,9 @@ class TestTreeBrowser():
                 # elif action == "generate_suggestions":
                 elif action == "generate_test_suggestions":
                     if msg[k].get("selected_tests", None) is not None:
-                        study_log = f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'prompt_mode': '{msg[k]['prompt_mode']}', 'selected_tests': {msg[k]['selected_tests']}}}"
+                        study_log = f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'selected_tests': {msg[k]['selected_tests']}}}"
                     else:
-                        study_log = f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'prompt_mode': '{msg[k]['prompt_mode']}'}}"
+                        study_log = f"Request test suggestions\t{'ROOT' if not self.current_topic else self.current_topic}"
                     log.study(study_log)
                     self._clear_suggestions()
                     self.test_tree.retrain_topic_labeling_model(self.current_topic)
