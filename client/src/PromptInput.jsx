@@ -3,9 +3,19 @@ import { Button } from '@mantine/core';
 import { faRedo, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-export default function PromptInput({value, onSubmit, onSetPromptMode, disabled, dropdownOptions, style, placeholder, isLoading}) {
+const placeholder=`
+  <span style="color: #828587; font-size: 10px; margin-left: 0.5em; margin-right: 0.5em">▼</span> 
+  <span style="color: #828587;">Select a prompt or input your own</span> 
+`
+// Magic values - TODO: clean up in future
+const autoText = "Write more tests similar to the tests saved below";
+const selectExamplesText = "Write more tests similar to the selected tests saved below";
+
+export default function PromptInput({value, onSubmit, disabled, dropdownOptions, style, isLoading}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [inputContent, setInputContent] = useState(placeholder);
+  const [showError, setShowError] = useState(false);
+  const [editable, setEditable] = useState(true);
   const contentRef = useRef(null);
 
   const optionMap = {};
@@ -22,14 +32,33 @@ export default function PromptInput({value, onSubmit, onSetPromptMode, disabled,
 
   function handleSubmit(e) {
     console.log("HANDLESUBMIT", contentRef, contentRef.current.innerText);
-    onSubmit(e, contentRef.current.innerText)
+    const inputText = contentRef.current.innerText.trim();
+    if (inputText === "" || inputContent === placeholder) {
+      setShowError(true);
+      return;
+    } 
+    
+    let submitText = "";
+    if (inputText === autoText) {
+      submitText = "";
+    } else if (inputText === selectExamplesText) {
+      submitText = "Select examples";
+    } else {
+      submitText = inputText;
+    }
+
+    setShowError(false);
+    onSubmit(e, submitText);
   }
 
   return (
     <>
       <div style={style}>
         <div style={{position: "relative"}} >
-          <div contentEditable
+          { showError && <div style={{position: "absolute", top: "-20px", left: "0px", color: "red"}}>Please enter a value</div> }
+          <div 
+            contentEditable={editable}
+            tabIndex={0}
             suppressContentEditableWarning={true}
             ref={contentRef}
             onClick={() => {
@@ -77,42 +106,6 @@ export default function PromptInput({value, onSubmit, onSetPromptMode, disabled,
               paddingBottom: "15px",
               zIndex: "300",
               width: "100%" }}>
-              <div key="auto"
-                  className="adatest-hover-gray"
-                  style={{
-                    padding: "0.25rem 0.5rem",
-                    cursor: "pointer"
-                  }}
-                  onMouseDown={(e) => {
-                    // Avoid triggering the input's onBlur event
-                    // https://stackoverflow.com/a/57630197
-                    e.preventDefault();
-                  }}
-                  onClick={(() => {
-                    setInputContent("Auto");
-                    setDropdownOpen(false);
-                    onSetPromptMode("Auto")
-                  })}>
-                    Auto
-              </div>
-              <div key="select"
-                  className="adatest-hover-gray"
-                  style={{
-                    padding: "0.25rem 0.5rem",
-                    cursor: "pointer"
-                  }}
-                  onMouseDown={(e) => {
-                    // Avoid triggering the input's onBlur event
-                    // https://stackoverflow.com/a/57630197
-                    e.preventDefault();
-                  }}
-                  onClick={(() => {
-                    setInputContent("Select examples");
-                    setDropdownOpen(false);
-                    onSetPromptMode("Select examples");
-                  })}>
-                    Select examples
-              </div>
               {Object.keys(optionMap).map(group => (
                 <div key={group}>
                   <div style={{
@@ -122,8 +115,8 @@ export default function PromptInput({value, onSubmit, onSetPromptMode, disabled,
                     marginBottom: "10px" }}>
                     {group}
                   </div>
-                  {optionMap[group].map(data => (
-                    <div key={data.value}
+                  {optionMap[group].map((data, i) => (
+                    <div key={group + "_option" + i}
                       className="adatest-hover-gray"
                       onMouseDown={(e) => {
                         // Avoid triggering the input's onBlur event
@@ -131,8 +124,9 @@ export default function PromptInput({value, onSubmit, onSetPromptMode, disabled,
                         e.preventDefault();
                       }}
                       onClick={() => { 
-                        console.log("User clicked on ", data.value);
+                        console.log("User clicked on ", data);
                         setInputContent(data.view);
+                        setEditable(data.editable ?? true);
                         setDropdownOpen(false);
                       }}
                       style={{
@@ -140,7 +134,7 @@ export default function PromptInput({value, onSubmit, onSetPromptMode, disabled,
                         cursor: "pointer"
                       }}>
                       { data.prefix && <span style={{ marginRight: "0.5rem" }}>{data.prefix}</span> }
-                      <span>{data.value}</span>
+                      <div style={{display: "inline-block"}} dangerouslySetInnerHTML={{__html: data.view}}/>
                     </div>
                   ))}
                 </div>
