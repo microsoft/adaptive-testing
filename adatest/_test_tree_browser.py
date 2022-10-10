@@ -494,16 +494,18 @@ class TestTreeBrowser():
                         log.study(f"Modified test input\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'old': '{self.test_tree.loc[k, 'input']}', 'new': '{msg[k]['input']}'}}")
                     elif k2 == "output":
                         log.study(f"Modified test output\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'old': '{self.test_tree.loc[k, 'output']}', 'new': '{msg[k]['output']}'}}")
+                    elif k2 == "label":
+                        log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'old': '{self.test_tree.loc[k, 'label']}, 'new': '{msg[k]['label']}'}}")
 
                     self.test_tree.loc[k, k2] = msg[k][k2]
                 if "input" in msg[k] or "output" in msg[k]:
                     self.test_tree.loc[k, self.score_columns] = "__TOEVAL__"
                     self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs="output" not in msg[k])
 
-                elif "label" in msg[k]:
-                    log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'label': '{msg[k]['label']}'}}")
+                # elif "label" in msg[k]:
+                #     log.study(f"Modified test label\t{'ROOT' if not self.current_topic else self.current_topic}\t{{'id': '{k}', 'old': '{self.test_tree.loc[k, 'label']}, 'new': '{msg[k]['label']}'}}")
                     #self.test_tree.retrain_topic_model(self.current_topic)
-                    pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
+                    # pass # SML: we could recompute the scores here but then that would change the output of stochastic output models
                     # sign = -1 if msg[k]["label"] == "pass" else 1
                     # self.test_tree.loc[k, self.score_columns] = ""#abs(float(self.test_tree.loc[k, self.score_columns])) #* sign
                     # self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs=False)
