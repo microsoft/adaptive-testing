@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 import adatest.utils as utils
@@ -31,3 +32,19 @@ class TestIsSubTopic:
     )
     def test_topic_own_subtopic(self, topic):
         assert utils.is_subtopic(topic, topic)
+
+
+class TestConvertFloat:
+    @pytest.mark.parametrize(
+        "v", [0.1, 0, 1, -1, 1.1e18, -6.123e25, 5.7e-14, -8.834e-18, 6, 6.0, 6, 900]
+    )
+    def test_conversion_expected(self, v):
+        v_str = str(v)
+
+        assert v == utils.convert_float(v_str)
+
+    def test_empty_string(self):
+        assert np.isnan(utils.convert_float(""))
+
+    def test_nonnumeric_string(self):
+        assert np.isnan(utils.convert_float("one"))
