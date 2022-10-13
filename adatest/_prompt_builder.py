@@ -4,7 +4,7 @@ import re
 import urllib.parse
 import adatest
 from .embedders import cos_sim
-from .utils import is_subtopic
+from .utils import is_subtopic, convert_float
 log = logging.getLogger(__name__)
 
 
@@ -243,10 +243,3 @@ def score_max(s, label):
         return 1 if label == "fail" else 0
     else:
         return np.max(s)
-
-def convert_float(s):
-    try:
-        f = float(s)
-    except ValueError:
-        f = np.nan
-    return f
