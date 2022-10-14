@@ -1,10 +1,12 @@
-import uuid
+import os
 
 import adatest
 
 
 def test_test_suggestions_smoke():
-    test_tree = adatest.TestTree("imdb_hotel_conversion.csv")
+    test_tree_file = 'tests/imdb_hotel_conversion.csv'
+    assert os.path.exists(test_tree_file)
+    test_tree = adatest.TestTree(test_tree_file)
 
     prompt_size = 5
     target = adatest._prompt_builder.PromptBuilder(prompt_size=prompt_size)
