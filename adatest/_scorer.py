@@ -156,8 +156,8 @@ class ClassifierScorer(Scorer):
  
     def _score_test(self, tests, id, probs, top_probs):
         test = tests.loc[id]
-        fail_prob = 0
-        pass_prob = 0
+        total_fail_prob = 0
+        total_pass_prob = 0
 
         # if this is not a templated test
         if probs.shape[1] == 1:
@@ -170,16 +170,14 @@ class ClassifierScorer(Scorer):
                 #     label = test["label"]
                 
                 # we use the local topic model to predict the label
-                label = tests.topic_labeling_model(test.topic)(test.input, self.model.output_names[ind])
-                if label == "fail":
-                    fail_prob += probs[ind, 0]
-                elif label == "pass":
-                    pass_prob += probs[ind, 0]
+                fail_prob = tests.topic_labeling_model(test.topic)(test.input, self.model.output_names[ind])
+                total_fail_prob += probs[ind, 0] * fail_prob
+                total_pass_prob += probs[ind, 0] * (1 - fail_prob)
 
-            if not (fail_prob + pass_prob > 0):
+            if not (total_fail_prob + total_pass_prob > 0):
                 return np.nan
             else:
-                return fail_prob / (pass_prob + fail_prob)
+                return total_fail_prob / (total_pass_prob + total_fail_prob)
         else:
             raise NotImplementedError("TODO: implement classifer scoring for templated tests")
 
@@ -251,12 +249,9 @@ class GeneratorScorer(Scorer):
     def _score_test(self, tests, id, output):
         test = tests.loc[id]
 
-        label = tests.topic_labeling_model(test.topic)(test.input, output)
+        fail_prob = tests.topic_labeling_model(test.topic)(test.input, output)
 
-        if label == "pass":
-            return 0.0
-        else:
-            return 1.0
+        return fail_prob
 
 class RawScorer(Scorer):
     """ Wraps a model that directly outputs a score each input as a callable scorer.
