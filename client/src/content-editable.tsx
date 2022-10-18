@@ -6,14 +6,14 @@ import sanitizeHtml from 'sanitize-html';
 import { defer } from 'lodash';
 
 interface ContentEditableProps {
-  id: string;
+  id?: string;
   text: string; // current text value
   defaultText: string; // text to show when empty
   editable: boolean; // if true, allow editing
   finishOnReturn: boolean; // if true, call onFinish when return is pressed
-  onInput: Function; // called when text is changed
-  onFinish: Function; // called when editing is finished
-  onClick: Function; // called when the element is clicked
+  onInput?: Function; // called when text is changed
+  onFinish?: Function; // called when editing is finished
+  onClick?: Function; // called when the element is clicked
 }
 
 export default class ContentEditable extends React.Component<ContentEditableProps> {

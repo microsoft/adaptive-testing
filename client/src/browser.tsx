@@ -11,7 +11,64 @@ import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
 
-export default class Browser extends React.Component {
+
+interface BrowserProps {
+  location: any;
+  interfaceId: any;
+  environment: string;
+  websocket_server: string;
+  history: any;
+  prefix: string;
+  startingTopic: string;
+  checklistMode: boolean;
+}
+
+interface BrowserState {
+  topic: string;
+  suggestions: any[];
+  tests: any[];
+  selections: any;
+  user: string;
+  loading_suggestions: boolean;
+  max_suggestions: number;
+  suggestions_pos: number;
+  suggestionsDropHighlighted: number;
+  score_filter: number;
+  do_score_filter: boolean;
+  filter_text: string;
+  experiment_pos: number;
+  timerExpired: boolean;
+  experiment_locations: any[];
+  experiment: boolean;
+  value2Filter: string;
+  test_types?: any[];
+  test_type_parts?: any[];
+  score_columns?: any[];
+  test_tree_name?: any;
+  topic_description?: string;
+  read_only?: boolean;
+  topicFilter?: string;
+  value1Filter?: string;
+  comparatorFilter?: string;
+  disable_suggestions?: boolean;
+  mode_options?: any[];
+  generator_options?: any[];
+  active_generator?: string;
+  mode?: string;
+  suggestions_error?: string;
+  topic_marker_id?: string;
+}
+
+
+export default class Browser extends React.Component<BrowserProps, BrowserState> {
+  id: string;
+  rows: any;
+  comm: JupyterComm | WebSocketComm;
+  totalPassesObjects: any;
+  totalFailuresObjects: any;
+  divRef: HTMLDivElement;
+  suggestionsScrollWrapRef: HTMLDivElement;
+
   constructor(props) {
     super(props);
     autoBind(this);
@@ -56,7 +113,7 @@ export default class Browser extends React.Component {
 
     this.debouncedForceUpdate = debounce(this.debouncedForceUpdate, 100);
 
-    window.pair_chart = this;
+    // window.pair_chart = this;
   }
 
   debouncedForceUpdate() {
@@ -154,7 +211,7 @@ export default class Browser extends React.Component {
     // let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
     // let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
-    return (<div onKeyDown={this.keyDownHandler} tabIndex="0" style={{outline: "none"}} ref={(el) => this.divRef = el}>
+    return (<div onKeyDown={this.keyDownHandler} tabIndex={0} style={{outline: "none"}} ref={(el) => this.divRef = el}>
       <div title="Add a new test" onClick={this.addNewTest} style={{float: "right", padding: "9px 10px 7px 14px", border: "1px solid rgb(208, 215, 222)", cursor: "pointer", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
         <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block"}}><FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
         {/* <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "bold"}}>&nbsp;New Test</span> */}
@@ -172,7 +229,7 @@ export default class Browser extends React.Component {
       
 
       <div style={{paddingTop: '20px', width: '100%', verticalAlign: 'top', textAlign: "center"}}>
-        <div style={{textAlign: "left", marginBottom: "0px", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
+        <div style={{textAlign: "left", paddingLeft: "5px", paddingRight: "5px", marginTop: "-6px", marginBottom: "-14px"}}>
           {/* {this.state.score_columns && this.state.score_columns.slice().reverse().map(k => {
             return <div key={k} style={{float: "right", width: "110px", textAlign: "center"}}>
               {k != "model score" && <div style={{marginTop: "-20px", marginBottom: "20px", height: "0px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>{k.replace(" score", "")}</div>}
@@ -197,7 +254,7 @@ export default class Browser extends React.Component {
         <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
           <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
         </div>
-        <div clear="all"></div>
+        <div style={{clear: 'both'}}></div>
 
         {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
@@ -301,7 +358,7 @@ export default class Browser extends React.Component {
             Output
           </div>
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
-            <nobr>Off-topic</nobr>
+            <span style={{whiteSpace: "nowrap"}}>Off-topic</span>
           </div>
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Pass
@@ -380,12 +437,12 @@ export default class Browser extends React.Component {
       <div style={{textAlign: "right", paddingRight: "11px"}}>
         {this.state.score_columns && this.state.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
-            <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
+            <div className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
               <FontAwesomeIcon icon={faCheck} style={{fontSize: "17px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalPasses[k]}</span>
               {/* <span style={{lineHeight: "20px"}}>{this.state.tests.reduce((total, value) => total + this.rows[value].totalPasses["score"], 0)}</span> */}
             </div>
-            <div onClick={this.onOpen} className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
+            <div className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(207, 34, 46)", width: "50px", lineHeight: "14px", textAlign: "center", paddingRight: "0px", display: "inline-block"}}>
               <FontAwesomeIcon icon={faTimes} style={{fontSize: "17px", color: "rgb(207, 34, 46)", display: "inline-block"}} /><br />
               <span style={{lineHeight: "20px"}}>{totalFailures[k]}</span>
             </div>
@@ -412,7 +469,7 @@ export default class Browser extends React.Component {
 
   clickModel(modelName, e) {
     if (modelName !== this.state.score_columns[0]) {
-      this.sendEvent(setFirstModel(modelName));
+      this.comm.sendEvent(setFirstModel(modelName));
     }
   }
 
