@@ -9,13 +9,25 @@ import adatest
 import re
 
 class ConstantModel():
-    def __init__(self, label):
-        self.label = label
-    def predict(self, embeddings):
+    def __init__(self, probability):
+        self.probability = probability
+    def predict_prob(self, embeddings):
         if not hasattr(embeddings[0], "__len__"):
-            return self.label
+            return self.probability
         else:
-            return [self.label] * len(embeddings)
+            return [self.probability] * len(embeddings)
+
+class CVModel():
+    def __init__(self, embeddings, labels):
+        self.inner_model = RidgeClassifierCV(class_weight={"pass": 1, "fail": 1})
+        self.inner_model.fit(embeddings, labels)
+
+    def predict_prob(self, embeddings):
+        assert len(self.inner_model.classes_) == 2
+        d = self.inner_model.decision_function(embeddings)
+        probs = np.exp(d) / (np.exp(d) + np.exp(-d))
+
+        return probs
 
 class OutputNearestNeighborLabelModel():
     def __init__(self, embeddings, labels):
@@ -58,11 +70,11 @@ class TopicLabelingModel:
 
         # empty test tree
         if len(labels) == 0:
-            self.model = ConstantModel("pass")
+            self.model = ConstantModel(0.0)
 
         # constant label topic
         elif len(set(labels)) == 1:
-            self.model = ConstantModel(labels[0])
+            self.model = ConstantModel(0.0 if labels[0] == "pass" else 1.0)
         
         # enough samples to fit a model
         else:
@@ -73,15 +85,32 @@ class TopicLabelingModel:
             # ensembling several SVCs together each trained on a different bootstrap sample? This might add the roubustness (against label mismatches)
             # that is lacking with hard-margin SVC fitting (it is also motivated a bit by the connections between SGD and hard-margin SVC fitting, and that
             # in practice SGD works on subsamples of the data so it should be less sensitive to label misspecification).
-            self.model = LinearSVC()
+            # self.model = LinearSVC()
+
             # self.model = LogisticRegression(penalty='l2', random_state=0, C=1.0, solver='lbfgs', max_iter=1000)
-            self.model.fit(embeddings, labels)
+
+            # This seemed to be reasonably well calibrated on simple tests, so we use it instead of SVC
+            self.model = CVModel(embeddings, labels)
+
+            # # add the missing predict_proba method to the base model
+            # def predict_proba(self, X):
+            #     if len(self.classes_) == 1:
+            #         return np.ones((len(X), 1))
+            #     d = self.decision_function(X)
+            #     if len(self.classes_) == 2:
+            #         probs = np.exp(d) / (np.exp(d) + np.exp(-d))
+            #         return np.array([1 - probs, probs]).T
+            #     probs = np.exp(d).T / np.sum(np.exp(d), axis=1)
+            #     return probs.T
+            # self.model.predict_proba = predict_proba.__get__(self.model, self.model.__class__)
+            
+            # self.model.fit(embeddings, labels)
 
     def __call__(self, input, output):
         embeddings = np.hstack(adatest.embed([input, output]))
         if not hasattr(embeddings[0], "__len__"):
-            return self.model.predict([embeddings])[0]
-        return self.model.predict(embeddings)
+            return self.model.predict_prob([embeddings])[0]
+        return self.model.predict_prob(embeddings)
 
 class TopicMembershipModel:
     """ A model that predicts if a given test fits in a given topic.
@@ -116,26 +145,26 @@ class TopicMembershipModel:
         labels = [l if l == "off_topic" else "on_topic" for l in test_tree["label"][topic_mask]]
         embeddings = np.array(adatest.embed(strings))
 
-        # empty test tree
+        # empty test tree (default to on-topic)
         if len(labels) == 0:
-            self.model = ConstantModel("Unknown")
+            self.model = ConstantModel(1.0)
 
         # constant label topic
         elif len(set(labels)) == 1:
-            self.model = ConstantModel(labels[0])
+            self.model = ConstantModel(0.0 if labels[0] == "off_topic" else 1.0)
         
         # enough samples to fit a model
         else:
             
             # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
-            self.model = LinearSVC()
+            self.model = CVModel()
             self.model.fit(embeddings, labels)
 
     def __call__(self, input):
         embeddings = adatest.embed([input])[0]
         if not hasattr(embeddings[0], "__len__"):
-            return self.model.predict([embeddings])[0]
-        return self.model.predict(embeddings)
+            return "on_topic" if self.model.predict_prob([embeddings])[0] > 0.5 else "off_topic"
+        return ["on_topic" if v > 0.5 else "off_topic" for v in self.model.predict_prob(embeddings)]
 
 class ChainTopicModel:
     def __init__(self, model=None):
