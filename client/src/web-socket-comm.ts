@@ -3,15 +3,30 @@ import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
 
 export default class WebSocketComm {
-  constructor(interfaceId, websocketServer, onopen) {
+  interfaceId: string;
+  websocketServer: string;
+  callbackMap: { [key: string]: (data: any) => void };
+  // local data cache
+  data: {};
+  // data to send to the server
+  pendingData: {};
+  pendingResponses: {};
+  wcomm: WebSocket;
+  onOpen: typeof WebSocket.prototype.onopen;
+  reconnectDelay: number;
+  seqNumber: number;
+  debouncedSendPendingData500: () => void;
+  debouncedSendPendingData1000: () => void;
+
+  constructor(interfaceId, websocketServer, onOpen) {
     autoBind(this);
     this.interfaceId = interfaceId;
     this.websocketServer = websocketServer;
     this.callbackMap = {};
-    // this.data = {};
+    this.data = {};
     this.pendingData = {};
     this.pendingResponses = {};
-    this.onopen = onopen;
+    this.onOpen = onOpen;
     this.reconnectDelay = 100;
     this.seqNumber = 0;
 
@@ -51,19 +66,19 @@ export default class WebSocketComm {
   }
 
   addPendingData(keys, data) {
-    // console.log("addPendingData", keys, data);
+    console.log("addPendingData", keys, data);
     if (!Array.isArray(keys)) keys = [keys];
     for (const i in keys) {
       const k = keys[i];
       this.pendingData[k] = data;
-      // this.data[k] = Object.assign(this.data[k] || {}, data); // pretend it has already changed in our data cache
+      this.data[k] = Object.assign(this.data[k] || {}, data); // pretend it has already changed in our data cache
     }
   }
 
   connect() {
     let wsUri = (window.location.protocol=='https:' ? 'wss://' : 'ws://') + (this.websocketServer.startsWith("/") ? window.location.host : "") + this.websocketServer;
     this.wcomm = new WebSocket(wsUri);
-    this.wcomm.onopen = this.onopen;
+    this.wcomm.onopen = this.onOpen;
     this.wcomm.onmessage = this.handleResponse;
     this.wcomm.onerror = this.onError;
     this.wcomm.onclose = this.onClose;
@@ -74,19 +89,20 @@ export default class WebSocketComm {
     const keys = Object.keys(data);
     if (keys.includes("sequence_number")) {
       console.log(`received message#${data.sequence_number}`, data);
+      this.pendingResponses[data.sequence_number] = data;
     }
   }
 
-  // updateData(e) {
-  //   console.log("WEBSOCKET UPDATEDATA, received unexpected data", data)
-    // for (const k in data) {
-    //   // console.log("data[k]", data[k])
-    //   this.data[k] = Object.assign(this.data[k] || {}, data[k]);
-    //   if (k in this.callbackMap) {
-    //     this.callbackMap[k](data[k]);
-    //   }
-    // }
-  // }
+  updateData(e) {
+    console.log("WEBSOCKET UPDATEDATA, received unexpected data", this.data)
+    for (const k in this.data) {
+      // console.log("data[k]", data[k])
+      this.data[k] = Object.assign(this.data[k] || {}, this.data[k]);
+      if (k in this.callbackMap) {
+        this.callbackMap[k](this.data[k]);
+      }
+    }
+  }
 
   onError(e) {
     console.log("Websocket error", e);
@@ -100,8 +116,8 @@ export default class WebSocketComm {
 
   subscribe(key, callback) {
     console.log("WEBSOCKET SUBSCRIBE", key, callback);
-    // this.callbackMap[key] = callback;
-    // defer(_ => this.callbackMap[key](this.data[key]));
+    this.callbackMap[key] = callback;
+    defer(_ => this.callbackMap[key](this.data[key]));
   }
 
   getSeqNumber() {
@@ -130,7 +146,7 @@ export default class WebSocketComm {
           clearInterval(interval);
           resolve(this.pendingResponses[seqNumber]);
         }
-      }, 10);
+      }, 100);
     });
   }
 

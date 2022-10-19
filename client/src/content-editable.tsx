@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import React from 'react';
 import autoBind from 'auto-bind';
 import sanitizeHtml from 'sanitize-html';
@@ -14,6 +12,7 @@ interface ContentEditableProps {
   onInput?: Function; // called when text is changed
   onFinish?: Function; // called when editing is finished
   onClick?: Function; // called when the element is clicked
+  onTemplateExpand?: () => void;
 }
 
 export default class ContentEditable extends React.Component<ContentEditableProps> {
@@ -47,6 +46,7 @@ export default class ContentEditable extends React.Component<ContentEditableProp
       id={this.props.id}
       style={{opacity: emptyContent ? "0.3" : "1", display: "inline", overflowWrap: "anywhere", whiteSpace: "pre-wrap"}}
       onFocus={this.onFocus}
+      // @ts-ignore
       onInput={this.handleInput}
       onKeyPress={this.handleKeyPress}
       onKeyDown={this.handleKeyDown}
@@ -57,7 +57,7 @@ export default class ContentEditable extends React.Component<ContentEditableProp
       contentEditable={this.props.editable}
       className="adatest-editable"
       dangerouslySetInnerHTML={{__html: sanitizeHtml(emptyContent ? this.props.defaultText : this.props.text)}}
-      tabIndex="0"
+      tabIndex={0}
     ></div>
   }
 
@@ -198,7 +198,9 @@ export default class ContentEditable extends React.Component<ContentEditableProp
 function selectElement(element){
   var doc = document;
   console.log(this, element);
+  // @ts-ignore - deprecated IE method? https://stackoverflow.com/questions/21572682/createtextrange-is-not-working-in-chrome
   if (doc.body.createTextRange) {
+      // @ts-ignore
       var range = document.body.createTextRange();
       range.moveToElementText(element);
       range.select();
@@ -221,6 +223,8 @@ function setCaret(el, pos) {
   sel.removeAllRanges()
   sel.addRange(range)
 }
+
+// @ts-ignore
 document.setCaret = setCaret;
 
 function findParentWithClass(el, className) {
@@ -235,7 +239,9 @@ function getMouseEventCaretRange(evt) {
   var range, x = evt.clientX, y = evt.clientY;
 
   // Try the simple IE way first
+  // @ts-ignore
   if (document.body.createTextRange) {
+      // @ts-ignore
       range = document.body.createTextRange();
       range.moveToPoint(x, y);
   }
@@ -250,7 +256,9 @@ function getMouseEventCaretRange(evt) {
       }
 
       // Try the standards-based way next
+      // @ts-ignore
       else if (document.caretPositionFromPoint) {
+          // @ts-ignore
           var pos = document.caretPositionFromPoint(x, y);
           range = document.createRange();
           range.setStart(pos.offsetNode, pos.offset);

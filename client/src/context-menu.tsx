@@ -1,7 +1,18 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 
-export default class ContextMenu extends React.Component {
+
+interface ContextMenuProps {
+  top: number;
+  left: number;
+  open: boolean;
+  rows: any[];
+  onClick: (row: any) => void;
+  onClose: () => void;
+}
+
+
+export default class ContextMenu extends React.Component<ContextMenuProps> {
   static defaultProps = {
     top: 0,
     left: 0,

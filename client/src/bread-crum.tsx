@@ -1,7 +1,21 @@
 import React from 'react';
 import autoBind from 'auto-bind';
 
-export default class BreadCrum extends React.Component {
+
+interface BreadCrumProps {
+  name: string;
+  defaultName: string;
+  onClick: (topic: string) => void;
+  topic: string;
+  onDrop: (testId: string, topic: string) => void;
+}
+
+interface BreadCrumState {
+  dropHighlighted: number;
+}
+
+
+export default class BreadCrum extends React.Component<BreadCrumProps, BreadCrumState> {
   constructor(props) {
     super(props);
     autoBind(this);

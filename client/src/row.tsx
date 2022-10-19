@@ -6,8 +6,77 @@ import { defer } from 'lodash';
 import { changeInput, changeLabel, changeOutput, deleteTest, moveTest } from './CommEvent';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
+import JupyterComm from './jupyter-comm';
+import WebSocketComm from './web-socket-comm'
 
-export default class Row extends React.Component {
+
+interface RowProps {
+  id: string;
+  soleSelected: boolean;
+  forceRelayout: () => void;
+  scoreColumns: any[];
+  updateTotals?: (id: string, passes: number, failures: number) => void;
+  scrollParent: HTMLElement;
+  value1Filter: string;
+  value2Filter: string;
+  comparatorFilter: string;
+  scoreFilter?: number;
+  selected: boolean;
+  isSuggestion?: boolean;
+  comm: JupyterComm | WebSocketComm;
+  hideBorder?: boolean;
+  outputColumnWidth: string;
+  inputDefault?: string;
+  outputDefault?: string;
+  giveUpSelection?: (id: string) => void;
+  user: string;
+  topic: string;
+  onOpen?: (topic: string) => void;
+  onSelectToggle: (id: string, shiftKey: any, metaKey: any) => void;
+  onDrop?: (id: string, topic: string) => void;
+}
+
+interface RowState {
+  type?: any;
+  scores: any[];
+  label: string;
+  topic_name: string;
+  value1?: string;
+  comparator?: string;
+  value2?: string;
+  dropHighlighted: number; // used as a boolean
+  dragging: boolean; // used anywhere?
+  hovering: boolean;
+  plusHovering: boolean;
+  hidden?: boolean;
+  editing: boolean;
+  labeler: string;
+  display_parts: {};
+  max_score_ind?: number;
+  contextTop?: number;
+  contextLeft?: number;
+  contextOpen?: boolean;
+  contextRows?: any[];
+  description?: string;
+  previewValue1?: boolean;
+  previewValue2?: boolean;
+  prefix?: string;
+  input: string;
+  output: string;
+  maxImageHeight: number;
+  contextFocus?: string;
+}
+
+
+export default class Row extends React.Component<RowProps, RowState> {
+  dataLoadActions: any[];
+  scrollToView: boolean;
+  divRef: HTMLDivElement;
+  topicNameEditable: ContentEditable;
+  inputEditable: ContentEditable;
+  outputEditable: ContentEditable;
+  mouseDownTarget: HTMLElement;
+
   constructor(props) {
     super(props);
     autoBind(this);
@@ -17,14 +86,15 @@ export default class Row extends React.Component {
       input: null,
       output: null,
       label: null,
-      labler: null,
+      labeler: null,
       topic_name: null,
       scores: null,
       dragging: false,
       dropHighlighted: 0,
       hovering: false,
       plusHovering: false,
-      maxImageHeight: 100
+      maxImageHeight: 100,
+      display_parts: {},
     };
 
     this.dataLoadActions = [];
@@ -63,7 +133,9 @@ export default class Row extends React.Component {
 
     // we need to force a relayout if the type changed since that impacts global alignments
     if (this.state.type !== nextState.type) {
-      if (this.props.forceRelayout) this.props.forceRelayout();
+      if (this.props.forceRelayout) {
+        this.props.forceRelayout();
+      } 
     }
   }
 
@@ -217,7 +289,7 @@ export default class Row extends React.Component {
     const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
 
     // console.log("overall_score[main_score]", overall_score[main_score], this.props.score_filter)
-    if (this.props.scoreFilter && overall_score[main_score] < this.props.scoreFilter && this.props.scoreFiler > -1000) {
+    if (this.props.scoreFilter && overall_score[main_score] < this.props.scoreFilter && this.props.scoreFilter > -1000) {
       //console.log("score filter ", this.state.value1, score, this.props.scoreFilter)
       return null;
     }
@@ -232,7 +304,7 @@ export default class Row extends React.Component {
     return <div className={outerClasses} draggable onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut} onMouseDown={this.onMouseDown}
                 onDragStart={this.onDragStart} onDragEnd={this.onDragEnd} onDragOver={this.onDragOver}
                 onDragEnter={this.onDragEnter} onDragLeave={this.onDragLeave} onDrop={this.onDrop} ref={(el) => this.divRef = el}
-                style={this.props.hideBorder ? {} : {borderTop: "1px solid rgb(216, 222, 228)"}} tabIndex="0" onKeyDown={this.keyDownHandler}>
+                style={this.props.hideBorder ? {} : {borderTop: "1px solid rgb(216, 222, 228)"}} tabIndex={0} onKeyDown={this.keyDownHandler}>
       <ContextMenu top={this.state.contextTop} left={this.state.contextLeft} open={this.state.contextOpen}
                     onClose={this.closeContextMenu} rows={this.state.contextRows} onClick={this.handleContextMenuClick} />
       {this.state.topic_name !== null && !this.props.isSuggestion &&
@@ -292,7 +364,7 @@ export default class Row extends React.Component {
                 <span style={{width: "0px"}}></span>
               </div>
             </div>
-            <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden", display: "flex"}}>
+            <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden"}}>
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
             <div onClick={this.clickOutput} style={{textDecoration: this.state.label === "off_topic" ? "line-through" : "none", maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", alignItems: "center", display: "flex"}}>
@@ -676,7 +748,6 @@ export default class Row extends React.Component {
   }
 
   onDragStart(e) {
-
     // don't initiate a drag from inside an editiable object
     if (this.mouseDownTarget.getAttribute("contenteditable") === "true") {
       e.preventDefault();
@@ -686,16 +757,16 @@ export default class Row extends React.Component {
     this.setState({dragging: true});
     e.dataTransfer.setData("id", this.props.id);
     e.dataTransfer.setData("topic_name", this.state.topic_name);
-    if (this.props.onDragStart) {
-      this.props.onDragStart(e, this);
-    }
+    // if (this.props.onDragStart) {
+    //   this.props.onDragStart(e, this);
+    // }
   }
 
   onDragEnd(e) {
     this.setState({dragging: false});
-    if (this.props.onDragEnd) {
-      this.props.onDragEnd(e, this);
-    }
+    // if (this.props.onDragEnd) {
+    //   this.props.onDragEnd(e, this);
+    // }
   }
 
   onDragOver(e) {
@@ -779,10 +850,10 @@ function scrollParentToChild(parent, child) {
   if (!isViewable) {
         // Should we scroll using top or bottom? Find the smaller ABS adjustment
         if (parentScrolls) {
-          var scrollTop = childRect.top - parentRect.top;
+          var scrollTop: number = childRect.top - parentRect.top;
           var scrollBot = childRect.bottom - parentViewableArea.height - parentRect.top;
         } else {
-          var scrollTop = childRect.top;
+          var scrollTop: number = childRect.top;
           var scrollBot = childRect.bottom - parentViewableArea.height;
         }
         if (Math.abs(scrollTop) < Math.abs(scrollBot)) {

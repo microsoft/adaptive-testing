@@ -3,7 +3,7 @@ const path = require('path');
 const isDevelopment = process.env.NODE_ENV === 'dev';
 
 module.exports = {
-  entry: path.resolve(__dirname, './src/adatest.jsx'),
+  entry: path.resolve(__dirname, './src/adatest.tsx'),
   devtool: isDevelopment ? 'eval-source-map' : false,
   module: {
     rules: [

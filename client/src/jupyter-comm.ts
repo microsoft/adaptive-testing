@@ -3,6 +3,14 @@ import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
 
 export default class JupyterComm {
+  interfaceId: string;
+  callbackMap: { [key: string]: (data: any) => void };
+  data: any;
+  pendingData: any;
+  jcomm: InnerJupyterComm;
+  debouncedSendPendingData500: () => void;
+  debouncedSendPendingData1000: () => void;
+
   constructor(interfaceId, onopen) {
     autoBind(this);
     this.interfaceId = interfaceId;
@@ -84,6 +92,9 @@ export default class JupyterComm {
 }
 
 class InnerJupyterComm {
+  jcomm: any;
+  callback: any;
+
   constructor(target_name, callback, mode="open") {
     this._fire_callback = this._fire_callback.bind(this);
     this._register = this._register.bind(this)
@@ -93,8 +104,10 @@ class InnerJupyterComm {
 
     // https://jupyter-notebook.readthedocs.io/en/stable/comms.html
     if (mode === "register") {
+      // @ts-ignore
       Jupyter.notebook.kernel.comm_manager.register_target(target_name, this._register);
     } else {
+      // @ts-ignore
       this.jcomm = Jupyter.notebook.kernel.comm_manager.new_comm(target_name);
       this.jcomm.on_msg(this._fire_callback);
     }

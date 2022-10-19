@@ -4,6 +4,12 @@ import AdaTest from './adatest'
 
  
 ReactDOM.render(
-  <AdaTest />,
+  <AdaTest 
+    interfaceId=''
+    environment=''
+    websocket_server=''
+    startingTopic=''
+    prefix=''
+  />,
   document.getElementById('adatest_container_1')
 );

@@ -64,8 +64,8 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
   id: string;
   rows: any;
   comm: JupyterComm | WebSocketComm;
-  totalPassesObjects: any;
-  totalFailuresObjects: any;
+  totalPassesObjects: {};
+  totalFailuresObjects: {};
   divRef: HTMLDivElement;
   suggestionsScrollWrapRef: HTMLDivElement;
 
@@ -113,7 +113,8 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
 
     this.debouncedForceUpdate = debounce(this.debouncedForceUpdate, 100);
 
-    // window.pair_chart = this;
+    // @ts-ignore: Property does not exist on type 'Window'
+    window.pair_chart = this;
   }
 
   debouncedForceUpdate() {
@@ -272,26 +273,26 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                   ref={(el) => this.rows[id] = el}
                   topic={this.state.topic}
                   isSuggestion={true}
-                  topicFilter={this.state.topicFilter}
+                  // topicFilter={this.state.topicFilter}
                   value1Filter={this.state.value1Filter}
                   comparatorFilter={this.state.comparatorFilter}
                   value2Filter={this.state.value2Filter}
-                  value1Default="New value"
-                  value2Default="New value"
-                  value2Edited={this.value2Edited}
+                  // value1Default="New value"
+                  // value2Default="New value"
+                  // value2Edited={this.value2Edited}
                   selected={this.state.selections[id]}
                   soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
                   onSelectToggle={this.toggleSelection}
                   comm={this.comm}
                   scoreFilter={this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 && this.state.score_filter}
-                  selectWidth={maxSelectWidth}
+                  // selectWidth={maxSelectWidth}
                   forceRelayout={this.debouncedForceUpdate}
-                  inFillin={inFillin}
+                  // inFillin={inFillin}
                   scrollParent={this.suggestionsScrollWrapRef}
                   giveUpSelection={this.removeSelection}
                   scoreColumns={this.state.score_columns}
-                  test_types={this.state.test_types}
-                  test_type_parts={this.state.test_type_parts}
+                  // test_types={this.state.test_types}
+                  // test_type_parts={this.state.test_type_parts}
                   user={this.state.user}
                   outputColumnWidth={outputColumnWidth}
                 />
@@ -379,11 +380,11 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                 ref={(el) => this.rows[id] = el}
                 topic={this.state.topic}
                 hideBorder={index == 0}
-                topicFilter={this.state.topicFilter}
+                // topicFilter={this.state.topicFilter}
                 value1Filter={this.state.value1Filter}
                 comparatorFilter={this.state.comparatorFilter}
                 value2Filter={this.state.value2Filter}
-                value2Edited={this.value2Edited}
+                // value2Edited={this.value2Edited}
                 selected={this.state.selections[id]}
                 soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
                 onOpen={this.setLocation}
@@ -396,15 +397,15 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                   }
                 }}
                 comm={this.comm}
-                selectWidth={maxSelectWidth}
+                // selectWidth={maxSelectWidth}
                 forceRelayout={this.debouncedForceUpdate}
-                inFillin={inFillin}
+                // inFillin={inFillin}
                 scrollParent={document.body}
-                generateTopicName={this.generateTopicName}
-                setSelected={this.setSelected}
+                // generateTopicName={this.generateTopicName}
+                // setSelected={this.setSelected}
                 scoreColumns={this.state.score_columns}
-                test_types={this.state.test_types}
-                test_type_parts={this.state.test_type_parts}
+                // test_types={this.state.test_types}
+                // test_type_parts={this.state.test_type_parts}
                 user={this.state.user}
                 outputColumnWidth={outputColumnWidth}
               />
