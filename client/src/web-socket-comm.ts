@@ -38,14 +38,14 @@ export default class WebSocketComm {
 
   send(keys, data) {
     this.addPendingData(keys, data);
-    this.sendPendingData();
+    return this.sendPendingData();
   }
 
   sendEvent(commEvent) {
     for (const k of Object.keys(commEvent)) {
       this.addPendingData(k, commEvent[k]);
     }
-    this.sendPendingData();
+    return this.sendPendingData();
   }
 
   debouncedSendEvent500(commEvent) {
@@ -133,8 +133,8 @@ export default class WebSocketComm {
     return this.waitForResponse(seqNumber);
   }
 
-  waitForResponse(seqNumber) {
-    const timeout_ms = 30000;
+  waitForResponse(seqNumber): Promise<any> {
+    const timeout_ms = 60000;
     this.pendingResponses[seqNumber] = "pending";
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {

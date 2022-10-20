@@ -295,9 +295,6 @@ class TestTreeBrowser():
         if event_id == "redraw":
             self._refresh_interface(sequence_number)
         
-        elif event_id == "refresh_tests":
-            self._refresh_tests(msg["test_ids"], sequence_number)
-
         # generate a new set of suggested tests/topics
         elif event_id == "generate_suggestions":
             self._clear_suggestions()
@@ -326,7 +323,7 @@ class TestTreeBrowser():
             #     log.debug(e)
             #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
             #     self._suggestions_error = True
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
             
         # change the current topic
         elif event_id == "change_topic":
@@ -341,13 +338,13 @@ class TestTreeBrowser():
             else:
                 self.mode = "tests"
 
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
             
         # clear the current set of suggestions
         elif event_id == "clear_suggestions":
             self._clear_suggestions()
-            # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-            # self._refresh_interface()
+            self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+            self._refresh_interface(sequence_number)
 
         # add a new empty subtopic to the current topic
         elif event_id == "add_new_topic":
@@ -361,7 +358,7 @@ class TestTreeBrowser():
             }
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
             
         # add a new empty test to the current topic
         elif event_id == "add_new_test":
@@ -381,7 +378,7 @@ class TestTreeBrowser():
             self.test_tree.loc[uuid.uuid4().hex] = row
 
             self._auto_save()
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
 
         # change which scorer/model is used for sorting tests
         elif event_id == "set_first_model":
@@ -398,14 +395,16 @@ class TestTreeBrowser():
             self.score_columns.insert(0, name)
 
             self._auto_save()
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
 
         elif event_id == "change_generator":
             self.active_generator = msg["generator"]
             self._active_generator_obj = self.generators[self.active_generator]
+            self.send_response(sequence_number)
 
         elif event_id == "change_mode":
             self.mode = msg["mode"]
+            self.send_response(sequence_number)
 
         elif event_id == 'change_description':
             id = msg['topic_marker_id']
@@ -416,12 +415,12 @@ class TestTreeBrowser():
                 self.test_tree.loc[id, 'label'] = "topic_marker"
             self.test_tree.loc[msg['topic_marker_id'], 'description'] = msg['description']
             self._auto_save()
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
 
         elif event_id == 'change_filter':
             print("change_filter")
             self.filter_text = msg['filter_text']
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
 
         # Move a test/topic to a new topic
         # Also used to rename
@@ -440,7 +439,7 @@ class TestTreeBrowser():
             # Recompute any missing embeddings to handle any changes
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
 
         elif event_id == "delete_test":
             log.debug("delete_test")
@@ -456,18 +455,18 @@ class TestTreeBrowser():
                             self.test_tree.drop(id, inplace=True)
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            # self._refresh_interface()
+            self._refresh_interface(sequence_number)
         
         # if we are just updating a single row in tests then we only recompute the scores
         elif event_id == "change_label" or event_id == "change_input" or event_id == "change_output":
-            # sendback_data = {}
+            sendback_data = {}
             test_id = msg["test_ids"][0]
             
             # convert template expansions into a standard value update
-            # if msg.get("action", "") == "template_expand":
-            #     template_value = self.templatize(self.test_tree.loc[test_id, msg["value"]])
-            #     msg = {msg["value"]: template_value}
-            #     sendback_data[msg["value"]] = template_value
+            if msg.get("action", "") == "template_expand":
+                template_value = self.templatize(self.test_tree.loc[test_id, msg["value"]])
+                msg = {msg["value"]: template_value}
+                sendback_data[msg["value"]] = template_value
 
             # update the row and recompute scores
             metadata_fields = ["event_id", "test_ids"]
@@ -484,38 +483,20 @@ class TestTreeBrowser():
                 # self._compute_embeddings_and_scores(self.test_tree, overwrite_outputs=False)
 
             # send just the data that changed back to the frontend
-            # sendback_data["scores"] = {c: [[test_id, v] for v in ui_score_parts(self.test_tree.loc[test_id, c], self.test_tree.loc[test_id, "label"])] for c in self.score_columns}
-            # outputs = {c: [[test_id, json.loads(self.test_tree.loc[test_id].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
-            # sendback_data["raw_outputs"] = outputs
-            # if "output" not in msg: # if the output was given to us the client is managing its current state so we shouldn't send it back
-            #     sendback_data["output"] = self.test_tree.loc[test_id, "output"]
-            # sendback_data["label"] = self.test_tree.loc[test_id, "label"]
-            # sendback_data["labeler"] = self.test_tree.loc[test_id, "labeler"]
-            # sendback_data.update(self.test_display_parts(self.test_tree.loc[test_id]))
-            # self.comm.send({test_id: sendback_data})
-            # refresh_data = self._refresh_tests(test_id)[0]
-            # sendback_data.update(refresh_data)
-            # comm.send()
+            sendback_data["scores"] = {c: [[test_id, v] for v in ui_score_parts(self.test_tree.loc[test_id, c], self.test_tree.loc[test_id, "label"])] for c in self.score_columns}
+            outputs = {c: [[test_id, json.loads(self.test_tree.loc[test_id].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
+            sendback_data["raw_outputs"] = outputs
+            if "output" not in msg: # if the output was given to us the client is managing its current state so we shouldn't send it back
+                sendback_data["output"] = self.test_tree.loc[test_id, "output"]
+            sendback_data["label"] = self.test_tree.loc[test_id, "label"]
+            sendback_data["labeler"] = self.test_tree.loc[test_id, "labeler"]
+            sendback_data.update(self.test_display_parts(self.test_tree.loc[test_id]))
+            self.send_response(sequence_number, {test_id: sendback_data})
             
             self._auto_save()
         
         else:
             log.error(f"Unable to parse the interface message: {msg}")
-
-    def _refresh_tests(self, test_ids, sequence_number):
-        test_data_list = []
-        for test_id in test_ids:
-            sendback_data = {}
-            sendback_data["scores"] = {c: [[test_id, v] for v in ui_score_parts(self.test_tree.loc[test_id, c], self.test_tree.loc[test_id, "label"])] for c in self.score_columns}
-            outputs = {c: [[test_id, json.loads(self.test_tree.loc[test_id].get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
-            sendback_data["raw_outputs"] = outputs
-            # if "output" not in msg: # if the output was given to us the client is managing its current state so we shouldn't send it back
-            #     sendback_data["output"] = self.test_tree.loc[test_id, "output"]
-            sendback_data["label"] = self.test_tree.loc[test_id, "label"]
-            sendback_data["labeler"] = self.test_tree.loc[test_id, "labeler"]
-            sendback_data.update(self.test_display_parts(self.test_tree.loc[test_id]))
-            test_data_list.append({test_id: sendback_data})
-        self.send_response(test_data_list, sequence_number)
 
     def _refresh_interface(self, sequence_number):
         """ Send our entire current state to the frontend interface.
@@ -649,10 +630,10 @@ class TestTreeBrowser():
             # "test_type_parts": test_type_parts,
         }
 
-        self.send_response(data, sequence_number)
+        self.send_response(sequence_number, data)
 
-    def send_response(self, data, sequence_number):
-        self.comm.send({"sequence_number": sequence_number, "data": data, "status": "ok"})
+    def send_response(self, sequence_number: int, data: object = {}, status="ok"):
+        self.comm.send({"sequence_number": sequence_number, "data": data, "status": status})
 
     def _clear_suggestions(self):
         """ Clear the suggestions for the current topic.
