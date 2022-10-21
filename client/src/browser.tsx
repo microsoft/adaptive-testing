@@ -11,8 +11,16 @@ import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
 
+import { TestTreeState, refresh, updateGenerator, updateTopicDescription, updateFilterText, updateSuggestions } from './TestTreeSlice';
+import { useSelector, useDispatch } from 'react-redux'
+import { AppDispatch } from './store';
+import { Comm } from './types';
+
 
 interface BrowserProps {
+  testTree: TestTreeState;
+  comm: JupyterComm | WebSocketComm;
+  dispatch: AppDispatch;
   location: any;
   interfaceId: any;
   environment: string;
@@ -24,18 +32,18 @@ interface BrowserProps {
 }
 
 interface BrowserState {
-  topic: string;
-  suggestions: any[];
-  tests: any[];
+  // topic: string;
+  // suggestions: any[];
+  // tests: any[];
   selections: any;
-  user: string;
+  // user: string;
   loading_suggestions: boolean;
   max_suggestions: number;
   suggestions_pos: number;
   suggestionsDropHighlighted: number;
-  score_filter: number;
+  // score_filter: number;
   do_score_filter: boolean;
-  filter_text: string;
+  // filter_text: string;
   experiment_pos: number;
   timerExpired: boolean;
   experiment_locations: any[];
@@ -43,27 +51,79 @@ interface BrowserState {
   value2Filter: string;
   test_types?: any[];
   test_type_parts?: any[];
-  score_columns?: any[];
-  test_tree_name?: any;
-  topic_description?: string;
-  read_only?: boolean;
+  // score_columns?: any[];
+  // test_tree_name?: any;
+  // topic_description?: string;
+  // read_only?: boolean;
   topicFilter?: string;
   value1Filter?: string;
   comparatorFilter?: string;
-  disable_suggestions?: boolean;
-  mode_options?: any[];
-  generator_options?: any[];
-  active_generator?: string;
-  mode?: string;
-  suggestions_error?: string;
-  topic_marker_id?: string;
+  // disable_suggestions?: boolean;
+  // mode_options?: any[];
+  // generator_options?: any[];
+  // active_generator?: string;
+  // mode?: string;
+  // suggestions_error?: string;
+  // topic_marker_id?: string;
+}
+
+function useComm(env: string, interfaceId: any, websocket_server: string=null) {
+  console.log("pairs interfaceId", interfaceId)
+  if (env === "jupyter") {
+    return new JupyterComm(interfaceId);
+  } else if (env === "web") {
+    if (websocket_server != null) {
+      return new WebSocketComm(interfaceId, websocket_server);
+    } else {
+      console.error("websocket_server is null");
+      throw new Error("websocket_server is null");
+    }
+  } else {
+    console.error("Unknown environment:", env);
+    throw new Error(`Unknown environment: ${env}`);
+  }
+}
+
+function refreshBrowser(comm: Comm, dispatch: AppDispatch) {
+  return comm.sendEvent(redraw()).then((data) => {
+    if (data["status"] === "ok") {
+      dispatch(refresh(data["data"]));
+    } else {
+      // TODO: handle error
+    }
+  });
+}
+
+// TestTreeBrowser function component wraps the legacy Browser
+// class component so we can use hooks. It is responsible for setting
+// up all the props for the Browser component.
+export default function TestTreeBrowser(props: BrowserProps) {
+  const testTree = useSelector((state: TestTreeState) => state);
+  const dispatch = useDispatch();
+  const comm = useComm(props.environment, props.interfaceId, props.websocket_server);
+  if (comm instanceof WebSocketComm) {
+    comm.connect(() => {
+      refreshBrowser(comm, dispatch);
+      // if we are in Jupyter we need to sync the URL in the MemoryRouter
+      // if (props.environment == "jupyter") {
+      //   this.props.history.push(this.props.prefix + this.props.startingTopic);
+      // // if we don't have a starting topic then we are stand-alone and need to sync our state with the address bar
+      // } else if (props.location.pathname !== (props.prefix == "" ? "/" : props.prefix)) {
+      //   defer(() => this.goToTopic(this.stripPrefix(this.props.location.pathname)));
+      // }
+      // props.history.listen(this.locationChanged);
+    });
+  }
+
+  return (
+    <Browser testTree={testTree} comm={comm} dispatch={dispatch} {...props} />
+  )
 }
 
 
-export default class Browser extends React.Component<BrowserProps, BrowserState> {
+export class Browser extends React.Component<BrowserProps, BrowserState> {
   id: string;
   rows: any;
-  comm: JupyterComm | WebSocketComm;
   totalPassesObjects: {};
   totalFailuresObjects: {};
   divRef: HTMLDivElement;
@@ -75,18 +135,12 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
 
     // our starting state 
     this.state = {
-      topic: "/",
-      suggestions: [],
-      tests: [],
       selections: {},
-      user: "anonymous",
       loading_suggestions: false,
       max_suggestions: 10,
       suggestions_pos: 0,
       suggestionsDropHighlighted: 0,
-      score_filter: 0.3,
       do_score_filter: true,
-      filter_text: "",
       experiment_pos: 0,
       timerExpired: false,
       experiment_locations: [],
@@ -101,15 +155,6 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     this.rows = {};
 
     // connect to the jupyter backend
-    console.log("pairs this.props.interfaceId", this.props.interfaceId)
-    if (this.props.environment === "jupyter") {
-      this.comm = new JupyterComm(this.props.interfaceId, this.connectionOpen);
-    } else if (this.props.environment === "web") {
-      this.comm = new WebSocketComm(this.props.interfaceId, this.props.websocket_server, this.connectionOpen);
-    } else {
-      console.error("Unknown environment:", this.props.environment);
-    }
-    this.comm.subscribe(this.id, this.newData);
 
     this.debouncedForceUpdate = debounce(this.debouncedForceUpdate, 100);
 
@@ -120,21 +165,6 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
   debouncedForceUpdate() {
     // console.log("debouncedForceUpdate");
     this.forceUpdate();
-  }
-
-  // gets called once we have a working websocket connection ready to go
-  connectionOpen() {
-    // if we are in Jupyter we need to sync the URL in the MemoryRouter
-    if (this.props.environment == "jupyter") {
-      this.props.history.push(this.props.prefix + this.props.startingTopic);
-
-    // if we don't have a starting topic then we are stand-alone and need to sync our state with the address bar
-    } else if (this.props.location.pathname !== (this.props.prefix == "" ? "/" : this.props.prefix)) {
-      defer(() => this.goToTopic(this.stripPrefix(this.props.location.pathname)));
-    }
-    this.props.history.listen(this.locationChanged);
-
-    defer(() => this.comm.sendEvent(redraw()));
   }
 
   stripPrefix(path) {
@@ -177,8 +207,8 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     //   ...this.state.tests.map(id => this.comm.data[id] ? this.comm.data[id].input.length : 1)
     // );
     let maxOutputLength = Math.max(
-      ...this.state.suggestions.map(id => this.comm.data[id] && this.comm.data[id].output ? this.comm.data[id].output.length : 1),
-      ...this.state.tests.map(id => this.comm.data[id] && this.comm.data[id].output ? this.comm.data[id].output.length : 1)
+      ...this.props.testTree.suggestions.map(id => this.props.testTree.tests[id] && this.props.testTree.tests[id].output ? this.props.testTree.tests[id].output.length : 1),
+      ...this.props.testTree.tests.map(id => this.props.testTree.tests[id] && this.props.testTree.tests[id].output ? this.props.testTree.tests[id].output.length : 1)
     );
     let outputColumnWidth = "45%";
     if (maxOutputLength < 25) {
@@ -189,7 +219,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
 
     let maxSelectWidth = 40;
 
-    const inFillin = this.state.topic.startsWith("/Fill-ins");
+    const inFillin = this.props.testTree.topic.startsWith("/Fill-ins");
 
     // console.log("location.pathname", location.pathname);
 
@@ -197,18 +227,18 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     let totalFailures = {};
     this.totalPassesObjects = {};
     this.totalFailuresObjects = {};
-    if (this.state.score_columns) {
-      for (const k of this.state.score_columns) {
+    if (this.props.testTree.score_columns) {
+      for (const k of this.props.testTree.score_columns) {
         // console.log("k", k)
-        totalPasses[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {this.totalPassesObjects[k] = el}} />;
-        totalFailures[k] = <TotalValue activeIds={this.state.tests} ref={(el) => {this.totalFailuresObjects[k] = el}} />;
+        totalPasses[k] = <TotalValue activeIds={this.props.testTree.tests} ref={(el) => {this.totalPassesObjects[k] = el}} />;
+        totalFailures[k] = <TotalValue activeIds={this.props.testTree.tests} ref={(el) => {this.totalFailuresObjects[k] = el}} />;
         // console.log("totalPasses", totalPasses)
       }
     }
     let topicPath = "";
     // console.log("tests.render4", this.state.tests, stripSlash(this.stripPrefix(this.props.location.pathname)), this.state.topic);
 
-    let breadCrumbParts = stripSlash(this.stripPrefix(this.state.topic)).split("/");
+    let breadCrumbParts = stripSlash(this.stripPrefix(this.props.testTree.topic)).split("/");
     // let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
     // let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
@@ -224,7 +254,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
       <div style={{float: "right", marginRight: "10px", padding: "8px 10px 7px 14px", width: "250px", border: "1px solid rgb(208, 215, 222)", display: "inline-block", borderRadius: "7px", marginTop: "16px", background: "rgb(246, 248, 250)"}}>
         <div style={{opacity: "0.6", width: "15px", height: "15px", display: "inline-block", paddingLeft: "1px", marginRight: "10px"}}><FontAwesomeIcon icon={faFilter} style={{fontSize: "13px", color: "#000000", display: "inline-block"}} /></div>
         <span style={{opacity: "0.6", fontSize: "13px", fontWeight: "normal"}}>
-          <ContentEditable defaultText="filter tests" text={this.state.filter_text} onFinish={this.inputFilterText} />
+          <ContentEditable defaultText="filter tests" text={this.props.testTree.filter_text} onFinish={this.inputFilterText} />
         </span>
       </div>
       
@@ -242,7 +272,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
             // name = decodeURIComponent(name);
             const out = <span key={index} style={{color: index === breadCrumbParts.length - 1 ? "black" : "rgb(9, 105, 218)" }}>
               {index > 0 && <span style={{color: "black"}}> / </span>}
-              <BreadCrum topic={topicPath} name={name} defaultName={this.state.test_tree_name} onDrop={this.onDrop} onClick={this.setLocation} />
+              <BreadCrum topic={topicPath} name={name} defaultName={this.props.testTree.test_tree_name} onDrop={this.onDrop} onClick={this.setLocation} />
             </span>
             if (index !== 0) topicPath += "/";
             topicPath += name;
@@ -253,14 +283,14 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
           <div></div>
         </div>
         <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
-          <ContentEditable defaultText="No topic description" text={this.state.topic_description} onFinish={this.finishTopicDescription} />
+          <ContentEditable defaultText="No topic description" text={this.props.testTree.topic_description} onFinish={this.finishTopicDescription} />
         </div>
         <div style={{clear: 'both'}}></div>
 
-        {!this.state.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
+        {!this.props.testTree.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
           <div className="adatest-scroll-wrap" style={{maxHeight: 31*this.state.max_suggestions, overflowY: "auto"}} ref={(el) => this.suggestionsScrollWrapRef = el}>
-            {this.state.suggestions
+            {this.props.testTree.suggestions
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
                 // .filter(id => {
                 //   //console.log("Math.max(...this.comm.data[id].scores.map(x => x[1]))", Math.max(...this.comm.data[id].scores.map(x => x[1])))
@@ -271,7 +301,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                 <Row
                   id={id}
                   ref={(el) => this.rows[id] = el}
-                  topic={this.state.topic}
+                  topic={this.props.testTree.topic}
                   isSuggestion={true}
                   // topicFilter={this.state.topicFilter}
                   value1Filter={this.state.value1Filter}
@@ -283,17 +313,17 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                   selected={this.state.selections[id]}
                   soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
                   onSelectToggle={this.toggleSelection}
-                  comm={this.comm}
-                  scoreFilter={this.state.do_score_filter && this.state.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 && this.state.score_filter}
+                  comm={this.props.comm}
+                  scoreFilter={this.state.do_score_filter && this.props.testTree.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 && this.props.testTree.score_filter}
                   // selectWidth={maxSelectWidth}
                   forceRelayout={this.debouncedForceUpdate}
                   // inFillin={inFillin}
                   scrollParent={this.suggestionsScrollWrapRef}
                   giveUpSelection={this.removeSelection}
-                  scoreColumns={this.state.score_columns}
+                  scoreColumns={this.props.testTree.score_columns}
                   // test_types={this.state.test_types}
                   // test_type_parts={this.state.test_type_parts}
-                  user={this.state.user}
+                  user={this.props.testTree.user}
                   outputColumnWidth={outputColumnWidth}
                 />
               </React.Fragment>
@@ -308,22 +338,22 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
           
           <div className="adatest-suggestions-box-after"></div>
           <div style={{position: "absolute", top: "10px", width: "100%"}}>
-            {this.state.suggestions.length > 1 &&
+            {this.props.testTree.suggestions.length > 1 &&
               <div onClick={this.clearSuggestions} className="adatest-row-add-button adatest-hover-opacity" style={{marginTop: "0px", left: "6px", top: "4px", width: "11px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
                 <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
             }
-            {!this.state.disable_suggestions && 
+            {!this.props.testTree.disable_suggestions && 
               <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
                 <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
-                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
-                  {(this.state.mode_options || []).map((mode_option) => {
+                <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.props.testTree.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
+                  {(this.props.testTree.mode_options || []).map((mode_option) => {
                     return <option key={mode_option}>{mode_option}</option>
                   })}
                 </select></span>
-                {this.state.generator_options && this.state.generator_options.length > 1 &&
-                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.state.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
-                  {this.state.generator_options.map((generator_option) => {
+                {this.props.testTree.generator_options && this.props.testTree.generator_options.length > 1 &&
+                <select dir="rtl" title="Current suggestion engine" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.props.testTree.active_generator} onChange={this.changeGenerator} style={{position: "absolute", color: "rgb(170, 170, 170)", marginTop: "1px", right: "13px"}}>
+                  {this.props.testTree.generator_options.map((generator_option) => {
                     return <option key={generator_option}>{generator_option}</option>
                   })}
                 </select>
@@ -335,9 +365,9 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                 </select> */}
               </div>
             }
-            {this.state.suggestions_error && 
+            {this.props.testTree.suggestions_error && 
               <div style={{cursor: "pointer", color: "#990000", display: "block", fontWeight: "bold", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginTop: "-5px"}}>
-                {this.state.suggestions_error}
+                {this.props.testTree.suggestions_error}
               </div>
             }
             {/* {this.state.loading_suggestions && this.state.tests.length < 5 &&
@@ -370,15 +400,15 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
         </div>
         
         <div className="adatest-children-frame">
-          {this.state.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
+          {this.props.testTree.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
             This topic is empty. Click the plus (+) button to add a test.
           </div>}
-          {this.state.tests.map((id, index) => {
+          {this.props.testTree.tests.map((id, index) => {
             return <React.Fragment key={id}>
               <Row
                 id={id}
                 ref={(el) => this.rows[id] = el}
-                topic={this.state.topic}
+                topic={this.props.testTree.topic}
                 hideBorder={index == 0}
                 // topicFilter={this.state.topicFilter}
                 value1Filter={this.state.value1Filter}
@@ -396,23 +426,23 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
                     this.totalFailuresObjects[k].setSubtotal(id, failures);
                   }
                 }}
-                comm={this.comm}
+                comm={this.props.comm}
                 // selectWidth={maxSelectWidth}
                 forceRelayout={this.debouncedForceUpdate}
                 // inFillin={inFillin}
                 scrollParent={document.body}
                 // generateTopicName={this.generateTopicName}
                 // setSelected={this.setSelected}
-                scoreColumns={this.state.score_columns}
+                scoreColumns={this.props.testTree.score_columns}
                 // test_types={this.state.test_types}
                 // test_type_parts={this.state.test_type_parts}
-                user={this.state.user}
+                user={this.props.testTree.user}
                 outputColumnWidth={outputColumnWidth}
               />
             </React.Fragment>
           })}
         </div>
-        {this.state.score_columns && this.state.score_columns.length > 1 &&
+        {this.props.testTree.score_columns && this.props.testTree.score_columns.length > 1 &&
           <div style={{textAlign: "right", paddingRight: "12px", marginTop: "5px", marginBottom: "-5px", color: "#666666"}}>
             <div style={{width: "200px", textAlign: "right", display: "inline-block"}}>
               Input
@@ -426,7 +456,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
             <div style={{width: "50px", textAlign: "left", display: "inline-block", marginRight: "8px"}}>
               Label
             </div>
-            {this.state.score_columns.map(k => {
+            {this.props.testTree.score_columns.map(k => {
               return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px", width: "100px", cursor: "pointer"}} onClick={e => this.clickModel(k, e)}>
                 {k.replace(" score", "")}
               </span>
@@ -436,7 +466,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
       </div>
 
       <div style={{textAlign: "right", paddingRight: "11px"}}>
-        {this.state.score_columns && this.state.score_columns.map(k => {
+        {this.props.testTree.score_columns && this.props.testTree.score_columns.map(k => {
           return  <span key={k} style={{display: "inline-block", textAlign: "center", marginLeft: "8px"}}>
             <div className="adatest-top-add-button" style={{marginRight: "0px", marginLeft: "0px", color: "rgb(26, 127, 55)", width: "50px", lineHeight: "14px", textAlign: "center", paddingLeft: "0px", paddingRight: "0px", display: "inline-block"}}>
               <FontAwesomeIcon icon={faCheck} style={{fontSize: "17px", color: "rgb(26, 127, 55)", display: "inline-block"}} /><br />
@@ -469,8 +499,8 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
   }
 
   clickModel(modelName, e) {
-    if (modelName !== this.state.score_columns[0]) {
-      this.comm.sendEvent(setFirstModel(modelName));
+    if (modelName !== this.props.testTree.score_columns[0]) {
+      this.props.comm.sendEvent(setFirstModel(modelName));
     }
   }
 
@@ -491,7 +521,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     console.log("value2Editedcccccc", id, old_value, new_value, keys)
     if (keys.length > 1 && this.state.selections[id]) {
       for (const k in this.state.selections) {
-        console.log("K", k, this.comm.data[k].value2, id)
+        console.log("K", k, this.props.testTree.tests[k].value2, id)
         if (k !== id && this.rows[k].state.value2 === old_value) {
           // console.log("setting new value", new_value)
           this.rows[k].setValue2(new_value);
@@ -510,7 +540,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
   removeSelection(id) {
     console.log("removeSelection", id)
     let newId = undefined;
-    const ids = this.state.suggestions.concat(this.state.tests);
+    const ids = this.props.testTree.suggestions.concat(this.props.testTree.tests);
     for (let i = 0; i < ids.length; i++) {
       console.log(i, ids[i], id);
       if (ids[i] === id) {
@@ -536,13 +566,22 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
   }
 
   changeGenerator(e) {
-    this.comm.sendEvent(changeGenerator(e.target.value));
-    this.setState({active_generator: e.target.value})
+    this.props.comm.sendEvent(changeGenerator(e.target.value)).then((data) => {
+      if (data["status"] === "ok") {
+        this.props.dispatch(updateGenerator(e.target.value));
+      } else {
+        // TODO: error handling
+      }
+    });
+    // this.setState({active_generator: e.target.value})
   }
 
   changeMode(e) {
-    this.comm.sendEvent(changeMode(e.target.value));
-    this.setState({mode: e.target.value});
+    this.props.comm.sendEvent(changeMode(e.target.value)).then(() => {
+
+    })
+    refreshBrowser(this.props.comm, this.props.dispatch);
+    // this.setState({mode: e.target.value});
   }
 
   setLocation(pathname) {
@@ -635,12 +674,12 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     console.log("keyCodeXX", e.keyCode);
     if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
-      const ids = this.state.suggestions.concat(this.state.tests);
+      const ids = this.props.testTree.suggestions.concat(this.props.testTree.tests);
       if (keys.length > 0) {
 
         let in_suggestions = true;
         for (const i in keys) {
-          if (!this.state.suggestions.includes(keys[i])) {
+          if (!this.props.testTree.suggestions.includes(keys[i])) {
             in_suggestions = false;
           }
         }
@@ -671,7 +710,12 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
             }
           }
         } else {
-          this.comm.sendEvent(deleteTest(keys));
+          this.props.comm.sendEvent(deleteTest(keys)).then((data) => {
+            refreshBrowser(this.props.comm, this.props.dispatch);
+            if (data["status"] !== "ok") {
+              // TODO: Error handling
+            }
+          });
         }
 
         // select the next test after the selected one when appropriate
@@ -691,7 +735,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
       }
     } else if (e.keyCode == 38 || e.keyCode == 40) {
       const keys = Object.keys(this.state.selections);
-      const ids = this.state.suggestions.concat(this.state.tests);
+      const ids = this.props.testTree.suggestions.concat(this.props.testTree.tests);
       if (keys.length == 1) {
         const currId = keys[0];
         let lastId = undefined;
@@ -708,10 +752,10 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
         }
         console.log(" arrow!", lastId, currId);
       } else if (keys.length === 0) {
-        if (this.state.suggestions.length > 1) {
-          newId = this.state.suggestions[0];
+        if (this.props.testTree.suggestions.length > 1) {
+          newId = this.props.testTree.suggestions[0];
         } else {
-          newId = this.state.tests[0];
+          newId = this.props.testTree.tests[0];
         }
       }
       console.log(" arrow!", keys, newId);
@@ -744,7 +788,7 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     let new_topic_name = "New topic";
     let suffix = "";
     let count = 0;
-    while (this.state.tests.includes(this.state.topic + "/" + new_topic_name + suffix)) {
+    while (this.props.testTree.tests.includes(this.props.testTree.topic + "/" + new_topic_name + suffix)) {
       count += 1;
       suffix = " " + count;
     }
@@ -756,13 +800,17 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
   addNewTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.comm.sendEvent(addTopic())
+    this.props.comm.sendEvent(addTopic()).then(() => {
+      refreshBrowser(this.props.comm, this.props.dispatch);
+    });
   }
 
   addNewTest(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.comm.sendEvent(addTest())
+    this.props.comm.sendEvent(addTest()).then(() => {
+      refreshBrowser(this.props.comm, this.props.dispatch);
+    });
   }
 
   // inputTopicDescription(text) {
@@ -771,15 +819,24 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
 
   finishTopicDescription(text) {
     console.log("finishTopicDescription", text)
-    
-    this.setState({topic_description: text});
-    this.comm.sendEvent(finishTopicDescription(this.state.topic_marker_id, text));
+    this.props.comm.sendEvent(finishTopicDescription(this.props.testTree.topic_marker_id, text)).then((data) => {
+      if (data["status"] === "ok") {
+        this.props.dispatch(updateTopicDescription(text));
+      } else {
+        // TODO: Error handling
+      }
+    });
   }
 
   inputFilterText(text) {
     console.log("inputFilterText", text)
-    this.setState({filter_text: text});
-    this.comm.sendEvent(changeFilter(text));
+    this.props.comm.sendEvent(changeFilter(text)).then((data) => {
+      if (data["status"] === "ok") {
+        this.props.dispatch(updateFilterText(text));
+      } else {
+        // TODO: Error handling
+      }
+    });
   }
 
   // inputSuggestionsTemplate(text) {
@@ -805,27 +862,36 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     console.log("refreshSuggestions");
     if (this.state.loading_suggestions) return;
     for (let k in Object.keys(this.state.selections)) {
-      if (this.state.suggestions.includes(k)) {
+      if (this.props.testTree.suggestions.includes(k)) {
         delete this.state.selections[k];
       }
     }
-    this.setState({suggestions: [], loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
-    this.comm.sendEvent(generateSuggestions({
+    this.props.dispatch(updateSuggestions([]));
+    this.setState({loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.props.comm.sendEvent(generateSuggestions({
       value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
       // suggestions_template_value1: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value1,
       // suggestions_template_comparator: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.comparator,
       // suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: false //!!this.suggestionsTemplateRow
-    }))
+    })).then((data) => {
+      if (data["status"] === "ok") {
+        refreshBrowser(this.props.comm, this.props.dispatch);
+      } else {
+        // TODO: Error handling
+      }
+    })
   }
 
   clearSuggestions(e) {
     e.preventDefault();
     e.stopPropagation();
     console.log("clearSuggestions");
-    this.setState({suggestions_pos: 0, suggestions: []});
-    this.comm.sendEvent(clearSuggestions());
+    this.props.comm.sendEvent(clearSuggestions()).then((data) => {
+      this.props.dispatch(updateSuggestions([]));
+      this.setState({suggestions_pos: 0});
+    });
   }
 
   pageSuggestions(e, direction) {
@@ -856,8 +922,8 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
       let selections = {};
       let selecting = false;
       console.log("first_selection_id", first_selection_id)
-      for (let i = 0; i < this.state.suggestions.length; ++i) {
-        const curr_id = this.state.suggestions[i];
+      for (let i = 0; i < this.props.testTree.suggestions.length; ++i) {
+        const curr_id = this.props.testTree.suggestions[i];
         if (curr_id === id) {
           if (selecting) {
             selections[curr_id] = true;
@@ -878,8 +944,8 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
           selections[curr_id] = true;
         }
       }
-      for (let i = 0; i < this.state.tests.length; ++i) {
-        const curr_id = this.state.tests[i];
+      for (let i = 0; i < this.props.testTree.tests.length; ++i) {
+        const curr_id = this.props.testTree.tests[i];
         if (curr_id === id) {
           if (selecting) {
             selections[curr_id] = true;
@@ -938,12 +1004,12 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     const id = e.dataTransfer.getData("id");
     const topic_name = e.dataTransfer.getData("topic_name");
     console.log("onSuggestionsDrop", e, id);
-    if (this.state.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
+    if (this.props.testTree.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
     this.setState({suggestionsDropHighlighted: 0});
     if (topic_name !== null && topic_name !== "null") {
-      this.onDrop(id, this.state.topic + "/__suggestions__" + "/" + topic_name);
+      this.onDrop(id, this.props.testTree.topic + "/__suggestions__" + "/" + topic_name);
     } else {
-      this.onDrop(id, this.state.topic + "/__suggestions__");
+      this.onDrop(id, this.props.testTree.topic + "/__suggestions__");
     }
   }
 
@@ -962,7 +1028,9 @@ export default class Browser extends React.Component<BrowserProps, BrowserState>
     // if (this.suggestionsTemplateRow) {
     //   this.suggestionsTemplateRow.setState({value2: null});
     // }
-    this.comm.sendEvent(changeTopic(stripSlash(topic).replaceAll(" ", "%20")))
+    this.props.comm.sendEvent(changeTopic(stripSlash(topic).replaceAll(" ", "%20"))).then(() => {
+      refreshBrowser(this.props.comm, this.props.dispatch);
+    });
   }
 
 }

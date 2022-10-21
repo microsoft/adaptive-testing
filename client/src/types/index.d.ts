@@ -1,3 +1,6 @@
+import JupyterComm from "src/jupyter-comm";
+import WebSocketComm from "src/web-socket-comm";
+
 export {};
 
 declare global {
@@ -11,3 +14,5 @@ declare global {
     faTimes: any;
   }
 }
+
+export type Comm = JupyterComm | WebSocketComm;

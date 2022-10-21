@@ -1,7 +1,9 @@
 import JSON5 from 'json5';
 import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
-import { CommEvent } from './CommEvent';
+import { CommEvent, redraw } from './CommEvent';
+import { AppDispatch } from './store';
+import { refresh } from './TestTreeSlice';
 
 export default class WebSocketComm {
   interfaceId: string;
@@ -13,13 +15,12 @@ export default class WebSocketComm {
   pendingData: {};
   pendingResponses: {};
   wcomm: WebSocket;
-  onOpen: typeof WebSocket.prototype.onopen;
   reconnectDelay: number;
   seqNumber: number;
   debouncedSendPendingData500: () => void;
   debouncedSendPendingData1000: () => void;
 
-  constructor(interfaceId, websocketServer, onOpen) {
+  constructor(interfaceId, websocketServer) {
     autoBind(this);
     this.interfaceId = interfaceId;
     this.websocketServer = websocketServer;
@@ -27,14 +28,11 @@ export default class WebSocketComm {
     this.data = {};
     this.pendingData = {};
     this.pendingResponses = {};
-    this.onOpen = onOpen;
     this.reconnectDelay = 100;
     this.seqNumber = 0;
 
     this.debouncedSendPendingData500 = debounce(this.sendPendingData, 500);
     this.debouncedSendPendingData1000 = debounce(this.sendPendingData, 1000);
-
-    this.connect();
   }
 
   send(keys, data) {
@@ -76,10 +74,10 @@ export default class WebSocketComm {
     }
   }
 
-  connect() {
+  connect(onOpen: any) {
     let wsUri = (window.location.protocol=='https:' ? 'wss://' : 'ws://') + (this.websocketServer.startsWith("/") ? window.location.host : "") + this.websocketServer;
     this.wcomm = new WebSocket(wsUri);
-    this.wcomm.onopen = this.onOpen;
+    this.wcomm.onopen = onOpen;
     this.wcomm.onmessage = this.handleResponse;
     this.wcomm.onerror = this.onError;
     this.wcomm.onclose = this.onClose;

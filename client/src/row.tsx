@@ -9,14 +9,6 @@ import ContextMenu from './context-menu';
 import JupyterComm from './jupyter-comm';
 import WebSocketComm from './web-socket-comm'
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
-
 
 interface RowProps {
   id: string;
@@ -832,9 +824,7 @@ export default class Row extends React.Component<RowProps, RowState> {
 // const queryClient = new QueryClient();
 
 export function RowFunctional(props: RowProps) {
-  const queryClient = useQueryClient();
   const comm = props.comm;
-  const { isLoading, error, data, isFetching } = useQuery(['row'], () => comm.sendEvent(redraw()).then(data => data));
   return <Row {...props} />;
 }
 

@@ -39,13 +39,14 @@
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
-    "@tanstack/react-query": "^4.12.0",
+    "@reduxjs/toolkit": "^1.8.6",
     "auto-bind": "^4.0.0",
     "json5": "^2.2.0",
     "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-beautiful-dnd": "^13.1.0",
     "react-dom": "^17.0.2",
+    "react-redux": "^8.0.4",
     "react-router-dom": "^5.2.0",
     "sanitize-html": "^2.3.3"
   }

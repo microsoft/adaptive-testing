@@ -1,6 +1,7 @@
 import JSON5 from 'json5';
 import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
+import { AppDispatch } from './store';
 
 export default class JupyterComm {
   interfaceId: string;
@@ -11,7 +12,7 @@ export default class JupyterComm {
   debouncedSendPendingData500: () => void;
   debouncedSendPendingData1000: () => void;
 
-  constructor(interfaceId, onopen) {
+  constructor(interfaceId) {
     autoBind(this);
     this.interfaceId = interfaceId;
     this.callbackMap = {};
@@ -21,9 +22,6 @@ export default class JupyterComm {
 
     this.debouncedSendPendingData500 = debounce(this.sendPendingData, 500);
     this.debouncedSendPendingData1000 = debounce(this.sendPendingData, 1000);
-    if (onopen) {
-      defer(onopen);
-    }
   }
 
   send(keys, data) {
