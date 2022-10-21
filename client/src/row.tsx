@@ -3,11 +3,19 @@ import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faCheck, faBan, faFolderMinus, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
 import { defer } from 'lodash';
-import { changeInput, changeLabel, changeOutput, deleteTest, moveTest } from './CommEvent';
+import { changeInput, changeLabel, changeOutput, deleteTest, moveTest, redraw } from './CommEvent';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
 import JupyterComm from './jupyter-comm';
 import WebSocketComm from './web-socket-comm'
+
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
 
 interface RowProps {
@@ -818,6 +826,16 @@ export default class Row extends React.Component<RowProps, RowState> {
       this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
     }
   }
+}
+
+
+// const queryClient = new QueryClient();
+
+export function RowFunctional(props: RowProps) {
+  const queryClient = useQueryClient();
+  const comm = props.comm;
+  const { isLoading, error, data, isFetching } = useQuery(['row'], () => comm.sendEvent(redraw()).then(data => data));
+  return <Row {...props} />;
 }
 
 

@@ -1,6 +1,7 @@
 import JSON5 from 'json5';
 import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
+import { CommEvent } from './CommEvent';
 
 export default class WebSocketComm {
   interfaceId: string;
@@ -41,7 +42,7 @@ export default class WebSocketComm {
     return this.sendPendingData();
   }
 
-  sendEvent(commEvent) {
+  sendEvent(commEvent: CommEvent) {
     for (const k of Object.keys(commEvent)) {
       this.addPendingData(k, commEvent[k]);
     }

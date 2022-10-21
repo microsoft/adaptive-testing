@@ -301,6 +301,7 @@ class TestTreeBrowser():
             self.test_tree.retrain_topic_labeling_model(self.current_topic)
             self.test_tree.retrain_topic_membership_model(self.current_topic)
             self._generate_suggestions(filter=msg.get("filter", ""))
+            self.send_response(sequence_number)
             # if self._active_generator_obj is None:
             #     self._suggestions_error = "No AdaTest generator has been set!"
             # else:
@@ -323,7 +324,7 @@ class TestTreeBrowser():
             #     log.debug(e)
             #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
             #     self._suggestions_error = True
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
             
         # change the current topic
         elif event_id == "change_topic":
@@ -337,14 +338,16 @@ class TestTreeBrowser():
                 self.mode = "topics"
             else:
                 self.mode = "tests"
+            self.send_response(sequence_number)
 
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
             
         # clear the current set of suggestions
         elif event_id == "clear_suggestions":
             self._clear_suggestions()
             self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
 
         # add a new empty subtopic to the current topic
         elif event_id == "add_new_topic":
@@ -358,7 +361,8 @@ class TestTreeBrowser():
             }
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
             
         # add a new empty test to the current topic
         elif event_id == "add_new_test":
@@ -378,7 +382,8 @@ class TestTreeBrowser():
             self.test_tree.loc[uuid.uuid4().hex] = row
 
             self._auto_save()
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
 
         # change which scorer/model is used for sorting tests
         elif event_id == "set_first_model":
@@ -395,7 +400,8 @@ class TestTreeBrowser():
             self.score_columns.insert(0, name)
 
             self._auto_save()
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
 
         elif event_id == "change_generator":
             self.active_generator = msg["generator"]
@@ -415,12 +421,14 @@ class TestTreeBrowser():
                 self.test_tree.loc[id, 'label'] = "topic_marker"
             self.test_tree.loc[msg['topic_marker_id'], 'description'] = msg['description']
             self._auto_save()
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
 
         elif event_id == 'change_filter':
             print("change_filter")
             self.filter_text = msg['filter_text']
-            self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
+            # self._refresh_interface(sequence_number)
 
         # Move a test/topic to a new topic
         # Also used to rename
@@ -439,7 +447,8 @@ class TestTreeBrowser():
             # Recompute any missing embeddings to handle any changes
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
 
         elif event_id == "delete_test":
             log.debug("delete_test")
@@ -455,7 +464,8 @@ class TestTreeBrowser():
                             self.test_tree.drop(id, inplace=True)
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            self._refresh_interface(sequence_number)
+            # self._refresh_interface(sequence_number)
+            self.send_response(sequence_number)
         
         # if we are just updating a single row in tests then we only recompute the scores
         elif event_id == "change_label" or event_id == "change_input" or event_id == "change_output":

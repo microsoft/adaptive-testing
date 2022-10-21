@@ -36,6 +36,8 @@ export default class JupyterComm {
       this.addPendingData(k, commEvent[k]);
     }
     this.sendPendingData();
+    // TODO: Make promises work here too
+    return Promise.resolve();
   }
 
   debouncedSendEvent500(commEvent) {
