@@ -635,7 +635,8 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
-            "test_tree_name": self.test_tree.name
+            "test_tree_name": self.test_tree.name,
+            "filter_text": self.filter_text
             # "test_types": test_types,
             # "test_type_parts": test_type_parts,
         }

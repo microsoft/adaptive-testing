@@ -8,5 +8,6 @@
         "target": "es6",
         "jsx": "react",
         "baseUrl": ".",
+        "strictNullChecks": true
     }
 }

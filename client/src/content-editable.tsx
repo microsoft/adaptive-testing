@@ -208,8 +208,8 @@ function selectElement(element){
       var selection = window.getSelection();        
       var range = document.createRange();
       range.selectNodeContents(element);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
   }
 }
 
@@ -220,8 +220,8 @@ function setCaret(el, pos) {
   range.setStart(el, pos)
   range.collapse(true)
   
-  sel.removeAllRanges()
-  sel.addRange(range)
+  sel?.removeAllRanges()
+  sel?.addRange(range)
 }
 
 // @ts-ignore

@@ -29,8 +29,10 @@ export default class AdaTest extends React.Component<AdaTestProps, AdaTestState>
   constructor(props) {
     super(props);
     console.log("interfaceId", this.props.interfaceId)
-    this.state = { enabled: true };
     window.adatest_root = this;
+    this.state = {
+      enabled: true
+    };
   }
 
   render() {
@@ -39,13 +41,16 @@ export default class AdaTest extends React.Component<AdaTestProps, AdaTestState>
     return (
       <Provider store={store}>
         <div style={{maxWidth: "1000px", marginLeft: "auto", marginRight: "auto"}}>
-          <div style={{paddingLeft: "0px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px", opacity: this.state.enabled ? 1 : 0.4}}>
+          <div style={{paddingLeft: "0px", width: "100%", fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif", boxSizing: "border-box", fontSize: "13px",}}>
             { /* @ts-ignore: JSX element type 'Router' does not have any construct or call signatures */ }
             <Router>
               <BrowserWithRouter
-                interfaceId={this.props.interfaceId} environment={this.props.environment}
-                websocket_server={this.props.websocket_server} enabled={this.state.enabled}
-                startingTopic={this.props.startingTopic} prefix={this.props.prefix}
+                interfaceId={this.props.interfaceId}
+                environment={this.props.environment}
+                websocket_server={this.props.websocket_server}
+                startingTopic={this.props.startingTopic}
+                prefix={this.props.prefix}
+                checklistMode={false}
               />
             </Router>
           </div>

@@ -17,18 +17,23 @@ import { AppDispatch } from './store';
 import { Comm } from './types';
 
 
-interface BrowserProps {
-  testTree: TestTreeState;
-  comm: JupyterComm | WebSocketComm;
-  dispatch: AppDispatch;
-  location: any;
-  interfaceId: any;
+interface BrowserBaseProps {
+  interfaceId: string;
   environment: string;
   websocket_server: string;
-  history: any;
   prefix: string;
   startingTopic: string;
   checklistMode: boolean;
+  // React Router withRouter() props
+  match: any;
+  location: any;
+  history: any;
+}
+
+interface BrowserProps extends BrowserBaseProps {
+  testTree: TestTreeState;
+  comm: JupyterComm | WebSocketComm;
+  dispatch: AppDispatch;
 }
 
 interface BrowserState {
@@ -49,8 +54,8 @@ interface BrowserState {
   experiment_locations: any[];
   experiment: boolean;
   value2Filter: string;
-  test_types?: any[];
-  test_type_parts?: any[];
+  test_types: any[];
+  test_type_parts: any[];
   // score_columns?: any[];
   // test_tree_name?: any;
   // topic_description?: string;
@@ -67,16 +72,16 @@ interface BrowserState {
   // topic_marker_id?: string;
 }
 
-function useComm(env: string, interfaceId: any, websocket_server: string=null) {
+function useComm(env: string, interfaceId: any, websocket_server: string="") {
   console.log("pairs interfaceId", interfaceId)
   if (env === "jupyter") {
     return new JupyterComm(interfaceId);
   } else if (env === "web") {
-    if (websocket_server != null) {
+    if (websocket_server !== "") {
       return new WebSocketComm(interfaceId, websocket_server);
     } else {
-      console.error("websocket_server is null");
-      throw new Error("websocket_server is null");
+      console.error("websocket_server is not set");
+      throw new Error("websocket_server is not set");
     }
   } else {
     console.error("Unknown environment:", env);
@@ -97,7 +102,7 @@ function refreshBrowser(comm: Comm, dispatch: AppDispatch) {
 // TestTreeBrowser function component wraps the legacy Browser
 // class component so we can use hooks. It is responsible for setting
 // up all the props for the Browser component.
-export default function TestTreeBrowser(props: BrowserProps) {
+export default function TestTreeBrowser(props: BrowserBaseProps) {
   const testTree = useSelector((state: TestTreeState) => state);
   const dispatch = useDispatch();
   const comm = useComm(props.environment, props.interfaceId, props.websocket_server);
@@ -126,8 +131,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
   rows: any;
   totalPassesObjects: {};
   totalFailuresObjects: {};
-  divRef: HTMLDivElement;
-  suggestionsScrollWrapRef: HTMLDivElement;
+  divRef: HTMLDivElement | null;
+  suggestionsScrollWrapRef: HTMLDivElement | null;
 
   constructor(props) {
     super(props);
@@ -144,6 +149,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
       experiment_pos: 0,
       timerExpired: false,
       experiment_locations: [],
+      test_types: [],
+      test_type_parts: [],
       experiment: false,
       value2Filter: ""
     };
@@ -283,7 +290,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
           <div></div>
         </div>
         <div style={{textAlign: "left", color: "#999999", paddingLeft: "5px", marginBottom: "-2px", height: "15px"}}>
-          <ContentEditable defaultText="No topic description" text={this.props.testTree.topic_description} onFinish={this.finishTopicDescription} />
+          <ContentEditable defaultText="No topic description" text={this.props.testTree.topic_description ?? ""} onFinish={this.finishTopicDescription} />
         </div>
         <div style={{clear: 'both'}}></div>
 
@@ -314,7 +321,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
                   soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
                   onSelectToggle={this.toggleSelection}
                   comm={this.props.comm}
-                  scoreFilter={this.state.do_score_filter && this.props.testTree.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 && this.props.testTree.score_filter}
+                  scoreFilter={this.state.do_score_filter && this.props.testTree.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 ? this.props.testTree.score_filter : undefined}
                   // selectWidth={maxSelectWidth}
                   forceRelayout={this.debouncedForceUpdate}
                   // inFillin={inFillin}
@@ -499,7 +506,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
   }
 
   clickModel(modelName, e) {
-    if (modelName !== this.props.testTree.score_columns[0]) {
+    if (this.props.testTree.score_columns && modelName !== this.props.testTree.score_columns[0]) {
       this.props.comm.sendEvent(setFirstModel(modelName));
     }
   }
@@ -511,7 +518,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     div.innerText = text;
     document.body.appendChild(div);
     var width = div.offsetWidth;
-    div.parentNode.removeChild(div);
+    div?.parentNode?.removeChild(div);
     return width;
   }
 
@@ -559,7 +566,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     // change our selection to the new id
     if (newId !== undefined) {
       console.log(newId);
-      let selections = {};
+      let selections: any = {};
       selections[newId] = true;
       this.setState({selections: selections});
     }
@@ -722,13 +729,13 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
         if (in_suggestions || e.keyCode == 8 || e.keyCode == 46) {
           let lastId = undefined;
           for (const i in ids) {
-            if (this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
+            if (lastId && this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
               newId = ids[i];
               break;
             }
             lastId = ids[i];
           }
-          let selections = {};
+          let selections: any = {};
           if (newId !== undefined) selections[newId] = true;
           this.setState({selections: selections});
         }
@@ -768,7 +775,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
     // change our selection to the new id
     if (newId !== undefined) {
-      let selections = {};//clone(this.state.selections);
+      let selections: any = {};//clone(this.state.selections);
       selections[newId] = true;
       this.setState({selections: selections});
     }
@@ -819,13 +826,17 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
   finishTopicDescription(text) {
     console.log("finishTopicDescription", text)
-    this.props.comm.sendEvent(finishTopicDescription(this.props.testTree.topic_marker_id, text)).then((data) => {
-      if (data["status"] === "ok") {
-        this.props.dispatch(updateTopicDescription(text));
-      } else {
-        // TODO: Error handling
-      }
-    });
+    if (this.props.testTree.topic_marker_id != null) {
+      this.props.comm.sendEvent(finishTopicDescription(this.props.testTree.topic_marker_id, text)).then((data) => {
+        if (data["status"] === "ok") {
+          this.props.dispatch(updateTopicDescription(text));
+        } else {
+          // TODO: Error handling
+        }
+      });
+    } else {
+      console.log("finishTopicDescription: no topic marker id");
+    }
   }
 
   inputFilterText(text) {
@@ -917,8 +928,10 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
       this.setState({selections: selections});
     } else if (shiftKey) {
       const keys = Object.keys(this.state.selections);
-      let first_selection_id = null;
-      if (keys.length > 0) first_selection_id = keys[0];
+      let first_selection_id = "";
+      if (keys.length > 0) {
+        first_selection_id = keys[0];
+      }
       let selections = {};
       let selecting = false;
       console.log("first_selection_id", first_selection_id)
@@ -1020,7 +1033,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
       ids = Object.keys(this.state.selections);
       this.setState({selections: {}});
     } else ids = id;
-    this.comm.sendEvent(moveTest(ids, topic));
+    this.props.comm.sendEvent(moveTest(ids, topic));
   }
 
   goToTopic(topic) {

@@ -14,12 +14,12 @@ interface RowProps {
   id: string;
   soleSelected: boolean;
   forceRelayout: () => void;
-  scoreColumns: any[];
+  scoreColumns?: any[];
   updateTotals?: (id: string, passes: number, failures: number) => void;
-  scrollParent: HTMLElement;
-  value1Filter: string;
-  value2Filter: string;
-  comparatorFilter: string;
+  scrollParent: HTMLElement | null;
+  value1Filter?: string;
+  value2Filter?: string;
+  comparatorFilter?: string;
   scoreFilter?: number;
   selected: boolean;
   isSuggestion?: boolean;
@@ -28,9 +28,9 @@ interface RowProps {
   outputColumnWidth: string;
   inputDefault?: string;
   outputDefault?: string;
-  giveUpSelection?: (id: string) => void;
   user: string;
   topic: string;
+  giveUpSelection?: (id: string) => void;
   onOpen?: (topic: string) => void;
   onSelectToggle: (id: string, shiftKey: any, metaKey: any) => void;
   onDrop?: (id: string, topic: string) => void;
@@ -38,12 +38,12 @@ interface RowProps {
 
 interface RowState {
   type?: any;
-  scores: any[];
-  label: string;
-  topic_name: string;
-  value1?: string;
-  comparator?: string;
-  value2?: string;
+  scores?: any[] | null;
+  label?: string;
+  topic_name?: string;
+  value1: string;
+  comparator: string;
+  value2: string;
   dropHighlighted: number; // used as a boolean
   dragging: boolean; // used anywhere?
   hovering: boolean;
@@ -52,7 +52,6 @@ interface RowState {
   editing: boolean;
   labeler: string;
   display_parts: {};
-  max_score_ind?: number;
   contextTop?: number;
   contextLeft?: number;
   contextOpen?: boolean;
@@ -71,10 +70,10 @@ interface RowState {
 export default class Row extends React.Component<RowProps, RowState> {
   dataLoadActions: any[];
   scrollToView: boolean;
-  divRef: HTMLDivElement;
-  topicNameEditable: ContentEditable;
-  inputEditable: ContentEditable;
-  outputEditable: ContentEditable;
+  divRef: HTMLDivElement | null;
+  topicNameEditable: ContentEditable | null;
+  inputEditable: ContentEditable | null;
+  outputEditable: ContentEditable | null;
   mouseDownTarget: HTMLElement;
 
   constructor(props) {
@@ -83,11 +82,9 @@ export default class Row extends React.Component<RowProps, RowState> {
 
     this.state = {
       editing: false,
-      input: null,
-      output: null,
-      label: null,
-      labeler: null,
-      topic_name: null,
+      input: "",
+      output: "",
+      labeler: "anonymous",
       scores: null,
       dragging: false,
       dropHighlighted: 0,
@@ -95,6 +92,9 @@ export default class Row extends React.Component<RowProps, RowState> {
       plusHovering: false,
       maxImageHeight: 100,
       display_parts: {},
+      value1: "",
+      value2: "",
+      comparator: ""
     };
 
     this.dataLoadActions = [];
@@ -174,16 +174,16 @@ export default class Row extends React.Component<RowProps, RowState> {
 
   render() {
     // console.log("---- render Row ----");
-    if (this.state.label === null) return null; // only render if we have data
+    if (this.state.label == null) return null; // only render if we have data
     // console.log("real render Row");
 
     const main_score = this.props.scoreColumns ? this.props.scoreColumns[0] : undefined;
     // console.log("rendering row", this.props)
     // apply the value1/value2/topic filters
-    if (this.state.topic_name === null) {
+    if (this.state.topic_name == null) {
       if (this.props.value1Filter && this.state.value1 !== "") {
         const re = RegExp(this.props.value1Filter);
-        if (!re.test(this.state.value1)) return null;
+        if (!re.test(this.state.value1 ?? "")) return null;
       }
       if (this.props.comparatorFilter) {
         const re = RegExp(this.props.comparatorFilter);
@@ -286,7 +286,7 @@ export default class Row extends React.Component<RowProps, RowState> {
     var label_opacity = this.state.labeler === "imputed" ? 0.5 : 1;
 
     // get the display parts for the template instantiation with the highest score
-    const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
+    // const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
 
     // console.log("overall_score[main_score]", overall_score[main_score], this.props.score_filter)
     if (this.props.scoreFilter && overall_score[main_score] < this.props.scoreFilter && this.props.scoreFilter > -1000) {
@@ -307,17 +307,17 @@ export default class Row extends React.Component<RowProps, RowState> {
                 style={this.props.hideBorder ? {} : {borderTop: "1px solid rgb(216, 222, 228)"}} tabIndex={0} onKeyDown={this.keyDownHandler}>
       <ContextMenu top={this.state.contextTop} left={this.state.contextLeft} open={this.state.contextOpen}
                     onClose={this.closeContextMenu} rows={this.state.contextRows} onClick={this.handleContextMenuClick} />
-      {this.state.topic_name !== null && !this.props.isSuggestion &&
+      {this.state.topic_name != null && !this.props.isSuggestion &&
         <div onClick={this.onOpen} className="adatest-row-add-button" style={{marginLeft: "6px", lineHeight: "14px", opacity: "1", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
           <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", color: "rgb(84, 174, 255)", display: "inline-block"}} />
         </div>
       }
-      {this.props.isSuggestion && this.state.topic_name !== null &&
+      {this.props.isSuggestion && this.state.topic_name != null &&
         <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer", marginRight: "3px"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
           <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
-      {/* {this.state.topic_name === null &&
+      {/* {this.state.topic_name == null &&
         <svg height="20" width="50" style={{marginTop: "5px", flex: "0 0 50px", display: "inline-block", marginLeft: "8px"}}>
           <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="15px" style={{color: "rgb(0, 0, 0)", cursor: "pointer"}} textAnchor="middle" />
           <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-15px" style={{color: "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
@@ -325,7 +325,7 @@ export default class Row extends React.Component<RowProps, RowState> {
       } */}
       
       <div style={{padding: "0px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
-        {this.state.topic_name !== null ? <React.Fragment>
+        {this.state.topic_name != null ? <React.Fragment>
           <div style={{display: "flex", marginTop: "7px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "adatest-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
               <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.state.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
@@ -380,9 +380,9 @@ export default class Row extends React.Component<RowProps, RowState> {
         )}
       </div>
       {/* <div className="adatest-row-score-text-box"> 
-        {this.state.topic_name === null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
+        {this.state.topic_name == null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
-      {/* {this.state.topic_name === null &&
+      {/* {this.state.topic_name == null &&
         <svg height="30" width="90" style={{marginTop: "0px", flex: "0 0 90px", textAling: "left", display: "inline-block", marginLeft: "8px", marginRight: "0px"}}>
           {this.state.labeler === "imputed" && this.state.label === "pass" ?
             <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-30px" textAnchor="middle" />
@@ -407,11 +407,11 @@ export default class Row extends React.Component<RowProps, RowState> {
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
 
         let total_pass = 0;
-        if (this.state.topic_name !== null) {
+        if (this.state.topic_name != null && this.state.scores != null) {
           total_pass = this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0);
         }
         let total_fail = 0;
-        if (this.state.topic_name !== null) {
+        if (this.state.topic_name != null && this.state.scores != null) {
           total_fail = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         }
 
@@ -436,7 +436,7 @@ export default class Row extends React.Component<RowProps, RowState> {
                 <rect x="100" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
               </g>
             }
-            {this.state.topic_name === null &&
+            {this.state.topic_name == null &&
               <React.Fragment>
                 {/* {this.state.label == "pass" &&
                   <line x1="100" y1="15" x2={100 - (100-bar_width)/2} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
@@ -464,10 +464,10 @@ export default class Row extends React.Component<RowProps, RowState> {
                 <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
               </React.Fragment>
             }
-            {this.state.topic_name !== null && total_pass > 0 &&
+            {this.state.topic_name != null && total_pass > 0 &&
               <text x="75" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "bold", fontSize: "14px"}}>{total_pass}</text>
             }
-            {this.state.topic_name !== null && total_fail > 0 &&
+            {this.state.topic_name != null && total_fail > 0 &&
               <text x="125" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "bold", fontSize: "14px"}}>{total_fail}</text>
             }
           </svg>
@@ -516,11 +516,15 @@ export default class Row extends React.Component<RowProps, RowState> {
     if (e.keyCode == 13) {
       console.log("return!", this.props.soleSelected, this.props.selected)
       if (this.props.soleSelected) {
-        if (this.state.topic_name !== null) {
+        if (this.state.topic_name != null) {
           this.onOpen(e);
         } else if (this.props.isSuggestion) {
           this.addToCurrentTopic(e);
-          this.doOnNextDataLoad(() => this.props.giveUpSelection(this.props.id));
+          this.doOnNextDataLoad(() => {
+            if (this.props.giveUpSelection != null) {
+              this.props.giveUpSelection(this.props.id)
+            }
+          });
         }
       }
     }
@@ -560,18 +564,18 @@ export default class Row extends React.Component<RowProps, RowState> {
     this.setState({label: label});
   }
 
-  onScoreOver(e, key) {
-    this.setState({
-      previewValue1: this.props.comm.data[key].value1,
-      previewValue2: this.props.comm.data[key].value2
-    })
-  }
-  onScoreOut(e, key) {
-    this.setState({
-      previewValue1: null,
-      previewValue2: null
-    })
-  }
+  // onScoreOver(e, key) {
+  //   this.setState({
+  //     previewValue1: this.props.comm.data[key].value1,
+  //     previewValue2: this.props.comm.data[key].value2
+  //   })
+  // }
+  // onScoreOut(e, key) {
+  //   this.setState({
+  //     previewValue1: null,
+  //     previewValue2: null
+  //   })
+  // }
 
   toggleEditRow(e) {
     e.preventDefault();
@@ -580,10 +584,10 @@ export default class Row extends React.Component<RowProps, RowState> {
     if (!this.state.editing) {
       this.setState({editing: true});
       console.log("about to edit focus")
-      if (this.state.topic_name === null) {
-        defer(() => this.inputEditable.focus());
+      if (this.state.topic_name == null) {
+        defer(() => this.inputEditable?.focus());
       } else {
-        defer(() => this.topicNameEditable.focus());
+        defer(() => this.topicNameEditable?.focus());
       }
     } else {
       this.setState({editing: false});
@@ -603,7 +607,7 @@ export default class Row extends React.Component<RowProps, RowState> {
     e.stopPropagation();
     const newName = this.props.generateTopicName();
     const newTopic = this.props.topic + "/" + newName;
-    if (this.state.topic_name === null) {
+    if (this.state.topic_name == null) {
       this.props.comm.send(this.props.id, {"topic": newTopic });
     } else {
       this.props.comm.send(this.props.id, {"topic": newTopic + "/" + this.state.topic_name});
@@ -639,7 +643,7 @@ export default class Row extends React.Component<RowProps, RowState> {
     e.preventDefault();
     e.stopPropagation();
     console.log("this.state.topic_name XXXXXXXXXXXX", this.state.topic_name)//, "Row.onOpen(", e, ")");
-    if (this.state.topic_name !== null && this.props.onOpen) {
+    if (this.state.topic_name != null && this.props.onOpen) {
       this.props.onOpen(this.props.topic + "/" + this.state.topic_name);
     }
   }
@@ -708,7 +712,7 @@ export default class Row extends React.Component<RowProps, RowState> {
       console.log("topic editing", this.state.editing)
       e.preventDefault();
       e.stopPropagation();
-      defer(() => this.topicNameEditable.focus());
+      defer(() => this.topicNameEditable?.focus());
     }
   }
 
@@ -725,7 +729,7 @@ export default class Row extends React.Component<RowProps, RowState> {
       console.log("value1 editing", this.state.editing)
       e.preventDefault();
       e.stopPropagation();
-      defer(() => this.inputEditable.focus());
+      defer(() => this.inputEditable?.focus());
     }
   }
 
@@ -743,7 +747,7 @@ export default class Row extends React.Component<RowProps, RowState> {
       this.setState({editing: true});
       e.preventDefault();
       e.stopPropagation();
-      defer(() => this.outputEditable.focus());
+      defer(() => this.outputEditable?.focus());
     }
   }
 
@@ -778,7 +782,7 @@ export default class Row extends React.Component<RowProps, RowState> {
     console.log("enter", e.target)
     e.preventDefault();
     e.stopPropagation();
-    if (this.state.topic_name !== null) {
+    if (this.state.topic_name != null) {
       this.setState({dropHighlighted: this.state.dropHighlighted + 1});
     }
   }
@@ -787,7 +791,7 @@ export default class Row extends React.Component<RowProps, RowState> {
     console.log("leave", e.target)
     e.preventDefault();
     e.stopPropagation();
-    if (this.state.topic_name !== null) {
+    if (this.state.topic_name != null) {
       this.setState({dropHighlighted: this.state.dropHighlighted - 1});
     }
   }
@@ -796,10 +800,10 @@ export default class Row extends React.Component<RowProps, RowState> {
     
     const id = e.dataTransfer.getData("id");
     const topic_name = e.dataTransfer.getData("topic_name");
-    if (this.state.topic_name !== null) {
+    if (this.state.topic_name != null) {
       this.setState({dropHighlighted: 0});
       if (this.props.onDrop && id !== this.props.id) {
-        if (topic_name !== null && topic_name !== "null") {
+        if (topic_name != null && topic_name !== "null") {
           this.props.onDrop(id, this.props.topic + "/" + this.state.topic_name + "/" + topic_name);
         } else {
           this.props.onDrop(id, this.props.topic + "/" + this.state.topic_name);
@@ -812,7 +816,7 @@ export default class Row extends React.Component<RowProps, RowState> {
     e.preventDefault();
     e.stopPropagation();
     console.log("addToCurrentTopic X", this.props.topic, this.state.topic_name);
-    if (this.state.topic_name !== null) {
+    if (this.state.topic_name != null) {
       this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic + "/" + this.state.topic_name));
     } else {
       this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
