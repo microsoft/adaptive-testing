@@ -47,7 +47,7 @@ class Scorer():
             
             # see if we are scoring a generator or a classifier
             out = self.model(["string 1", "string 2"])
-            if isinstance(out[0], str):
+            if isinstance(out[0].item(), str):
                 self.__class__ = GeneratorScorer
                 GeneratorScorer.__init__(self, model)
             else:
@@ -257,7 +257,8 @@ class GeneratorScorer(Scorer):
             out_strings[eval_inds[i]].append(model_out[i])
             i += 1
         for i in eval_inds:
-            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |
+            # out_strings[i] = "|".join(out_strings[i][0].item()) # template outputs are joined by |
+            out_strings[i] = out_strings[i][0].item()
 
         scores = []
         outputs = []
