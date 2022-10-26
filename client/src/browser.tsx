@@ -598,9 +598,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
   changeMode(e) {
     this.props.comm.sendEvent(changeMode(e.target.value)).then(() => {
-
+      refreshBrowser(this.props.comm, this.props.dispatch);
     })
-    refreshBrowser(this.props.comm, this.props.dispatch);
     // this.setState({mode: e.target.value});
   }
 
