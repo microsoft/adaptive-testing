@@ -360,7 +360,6 @@ class TestTreeBrowser():
                         #     log.debug(e)
                         #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
                         #     self._suggestions_error = True
-                    self._compute_embeddings_and_scores(self.test_tree)
                     self._refresh_interface()
 
                 # generate a new set of suggested topics
@@ -368,7 +367,6 @@ class TestTreeBrowser():
                     log.study(f"Request topic suggestions\t{'ROOT' if not self.current_topic else self.current_topic}\tN/A")
                     self._clear_suggestions()
                     self._generate_suggestions(filter=msg[k].get("filter", ""),user_prompt = msg[k].get("user_topic_prompt",""), mode="topics")
-                    self._compute_embeddings_and_scores(self.test_tree)
                     #  temperature=msg[k].get("temperature",1), 
                     self._refresh_interface()
                 
