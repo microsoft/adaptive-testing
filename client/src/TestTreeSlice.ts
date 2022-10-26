@@ -62,8 +62,8 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface TestTreeState {
   topic: string;
-  suggestions: any[];
-  tests: any[];
+  suggestions: Object;
+  tests: Object;
   user: string;
   score_filter: number;
   filter_text: string;
@@ -89,28 +89,30 @@ const initialState: TestTreeState = {
   filter_text: "",
 }
 
+// See https://redux-toolkit.js.org/usage/immer-reducers#immer-usage-patterns for explanation
+// of how to use Immer to write reducers
 export const testTreeSlice = createSlice({
   name: 'testTree',
   initialState,
   reducers: {
     refresh: (state, action: PayloadAction<TestTreeState>) => {
-      state = {...action.payload}
+      return action.payload;
     },
 
     updateGenerator: (state, action: PayloadAction<string>) => {
-      state = {...state, active_generator: action.payload}
+      state.active_generator = action.payload;
     },
 
     updateTopicDescription: (state, action: PayloadAction<string>) => {
-      state = {...state, topic_description: action.payload}
+      state.topic_description = action.payload;
     },
 
     updateFilterText: (state, action: PayloadAction<string>) => {
-      state = {...state, filter_text: action.payload}
+      state.filter_text = action.payload;
     },
 
-    updateSuggestions: (state, action: PayloadAction<any>) => {
-      state = {...state, suggestions: action.payload}
+    updateSuggestions: (state, action: PayloadAction<any[]>) => {
+      state.suggestions = [...action.payload];
     }
   },
 })

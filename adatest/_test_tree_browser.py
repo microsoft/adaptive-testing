@@ -512,9 +512,6 @@ class TestTreeBrowser():
         """ Send our entire current state to the frontend interface.
         """
 
-        # get the children of the current topic
-        data = {}
-
         def create_children(data, tests, topic):
             children = []
             
@@ -592,18 +589,21 @@ class TestTreeBrowser():
             return sorted_children
         
         # get the children of the current topic
-        children = create_children(data, self.test_tree, self.current_topic)
-        suggestions_children = create_children(data, self.test_tree, self.current_topic + "/__suggestions__")
+        data = {}
+        children_data = {}
+        suggestions_children_data = {}
+        children_ids = create_children(children_data, self.test_tree, self.current_topic)
+        suggestions_children_ids = create_children(suggestions_children_data, self.test_tree, self.current_topic + "/__suggestions__")
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
         # SML: I expect we can delete this at some point?
         if self.score_filter == "auto":
-            if len(children) < 10:
+            if len(children_ids) < 10:
                 score_filter = -1e12
             else:
-                children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children])
-                suggestions_children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in suggestions_children])
+                children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children_ids])
+                suggestions_children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in suggestions_children_ids])
                 score_filter = children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2
                 if len(suggestions_children_scores) > 0:
                     score_filter = min(score_filter, np.nanmax(suggestions_children_scores) - 1e-2)
@@ -620,8 +620,8 @@ class TestTreeBrowser():
         topic_marker_id = self._get_topic_marker_id(self.current_topic)
         # compile the global browser state for the frontend
         data["browser"] = {
-            "suggestions": suggestions_children,
-            "tests": children,
+            "suggestions": suggestions_children_data,
+            "tests": children_data,
             "user": self.user,
             "topic": self.current_topic,
             "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",
@@ -641,7 +641,8 @@ class TestTreeBrowser():
             # "test_type_parts": test_type_parts,
         }
 
-        self.send_response(sequence_number, data)
+        # self.send_response(sequence_number, data)
+        self.send_response(sequence_number, data["browser"])
 
     def send_response(self, sequence_number: int, data: object = {}, status="ok"):
         self.comm.send({"sequence_number": sequence_number, "data": data, "status": status})

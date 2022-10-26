@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faFolderPlus, faCheck, faTimes, faChevronDown, faRedo, faFilter } from '@fortawesome/free-solid-svg-icons'
@@ -13,7 +13,7 @@ import ContentEditable from './content-editable';
 
 import { TestTreeState, refresh, updateGenerator, updateTopicDescription, updateFilterText, updateSuggestions } from './TestTreeSlice';
 import { useSelector, useDispatch } from 'react-redux'
-import { AppDispatch } from './store';
+import { AppDispatch, RootState } from './store';
 import { Comm } from './types';
 
 
@@ -72,6 +72,16 @@ interface BrowserState {
   // topic_marker_id?: string;
 }
 
+function refreshBrowser(comm: Comm, dispatch: AppDispatch) {
+  return comm.sendEvent(redraw()).then((data) => {
+    if (data["status"] === "ok") {
+      dispatch(refresh(data["data"]));
+    } else {
+      // TODO: handle error
+    }
+  });
+}
+
 function useComm(env: string, interfaceId: any, websocket_server: string="") {
   console.log("pairs interfaceId", interfaceId)
   if (env === "jupyter") {
@@ -89,40 +99,41 @@ function useComm(env: string, interfaceId: any, websocket_server: string="") {
   }
 }
 
-function refreshBrowser(comm: Comm, dispatch: AppDispatch) {
-  return comm.sendEvent(redraw()).then((data) => {
-    if (data["status"] === "ok") {
-      dispatch(refresh(data["data"]));
-    } else {
-      // TODO: handle error
-    }
-  });
-}
-
 // TestTreeBrowser function component wraps the legacy Browser
 // class component so we can use hooks. It is responsible for setting
 // up all the props for the Browser component.
 export default function TestTreeBrowser(props: BrowserBaseProps) {
-  const testTree = useSelector((state: TestTreeState) => state);
+  const testTree = useSelector((state: RootState) => state.testTree);
   const dispatch = useDispatch();
-  const comm = useComm(props.environment, props.interfaceId, props.websocket_server);
-  if (comm instanceof WebSocketComm) {
-    comm.connect(() => {
-      refreshBrowser(comm, dispatch);
-      // if we are in Jupyter we need to sync the URL in the MemoryRouter
-      // if (props.environment == "jupyter") {
-      //   this.props.history.push(this.props.prefix + this.props.startingTopic);
-      // // if we don't have a starting topic then we are stand-alone and need to sync our state with the address bar
-      // } else if (props.location.pathname !== (props.prefix == "" ? "/" : props.prefix)) {
-      //   defer(() => this.goToTopic(this.stripPrefix(this.props.location.pathname)));
-      // }
-      // props.history.listen(this.locationChanged);
-    });
-  }
+  const [comm, setComm] = useState<JupyterComm | WebSocketComm | null>(null);
+  useEffect(() => {
+    const c = useComm(props.environment, props.interfaceId, props.websocket_server);
+    setComm(c);
+    if (c instanceof WebSocketComm) {
+      c.connect(() => {
+        refreshBrowser(c, dispatch);
+        // if we are in Jupyter we need to sync the URL in the MemoryRouter
+        // if (props.environment == "jupyter") {
+        //   this.props.history.push(this.props.prefix + this.props.startingTopic);
+        // // if we don't have a starting topic then we are stand-alone and need to sync our state with the address bar
+        // } else if (props.location.pathname !== (props.prefix == "" ? "/" : props.prefix)) {
+        //   defer(() => this.goToTopic(this.stripPrefix(this.props.location.pathname)));
+        // }
+        // props.history.listen(this.locationChanged);
+      });
 
-  return (
-    <Browser testTree={testTree} comm={comm} dispatch={dispatch} {...props} />
-  )
+      // Return cleanup function
+      return () => {
+        c.wcomm.close();
+      }
+    }
+  }, [])
+
+  if (comm == null) {
+    return <div>Loading...</div>
+  } else {
+    return <Browser testTree={testTree} comm={comm} dispatch={dispatch} {...props} />
+  }
 }
 
 
@@ -201,6 +212,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
   render() {
     console.log("----- render AdaTest browser -----", )
+    let testKeys = Object.keys(this.props.testTree.tests);
+    let suggestionKeys = Object.keys(this.props.testTree.suggestions);
     // compute the width of the largest type selection option (used to size the type column)
     let selectWidths = {};
     for (const i in this.state.test_types) {
@@ -214,8 +227,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     //   ...this.state.tests.map(id => this.comm.data[id] ? this.comm.data[id].input.length : 1)
     // );
     let maxOutputLength = Math.max(
-      ...this.props.testTree.suggestions.map(id => this.props.testTree.tests[id] && this.props.testTree.tests[id].output ? this.props.testTree.tests[id].output.length : 1),
-      ...this.props.testTree.tests.map(id => this.props.testTree.tests[id] && this.props.testTree.tests[id].output ? this.props.testTree.tests[id].output.length : 1)
+      ...suggestionKeys.map(id => this.props.testTree.tests[id] && this.props.testTree.tests[id].output ? this.props.testTree.tests[id].output.length : 1),
+      ...testKeys.map(id => this.props.testTree.tests[id] && this.props.testTree.tests[id].output ? this.props.testTree.tests[id].output.length : 1)
     );
     let outputColumnWidth = "45%";
     if (maxOutputLength < 25) {
@@ -237,8 +250,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     if (this.props.testTree.score_columns) {
       for (const k of this.props.testTree.score_columns) {
         // console.log("k", k)
-        totalPasses[k] = <TotalValue activeIds={this.props.testTree.tests} ref={(el) => {this.totalPassesObjects[k] = el}} />;
-        totalFailures[k] = <TotalValue activeIds={this.props.testTree.tests} ref={(el) => {this.totalFailuresObjects[k] = el}} />;
+        totalPasses[k] = <TotalValue activeIds={Object.keys(this.props.testTree.tests)} ref={(el) => {this.totalPassesObjects[k] = el}} />;
+        totalFailures[k] = <TotalValue activeIds={Object.keys(this.props.testTree.tests)} ref={(el) => {this.totalFailuresObjects[k] = el}} />;
         // console.log("totalPasses", totalPasses)
       }
     }
@@ -297,7 +310,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
         {!this.props.testTree.read_only && <div className={this.state.suggestionsDropHighlighted ? "adatest-drop-highlighted adatest-suggestions-box" : "adatest-suggestions-box"} style={{paddingTop: "39px"}} onDragOver={this.onSuggestionsDragOver} onDragEnter={this.onSuggestionsDragEnter}
           onDragLeave={this.onSuggestionsDragLeave} onDrop={this.onSuggestionsDrop}>
           <div className="adatest-scroll-wrap" style={{maxHeight: 31*this.state.max_suggestions, overflowY: "auto"}} ref={(el) => this.suggestionsScrollWrapRef = el}>
-            {this.props.testTree.suggestions
+            {suggestionKeys
                 //.slice(this.state.suggestions_pos, this.state.suggestions_pos + this.state.max_suggestions)
                 // .filter(id => {
                 //   //console.log("Math.max(...this.comm.data[id].scores.map(x => x[1]))", Math.max(...this.comm.data[id].scores.map(x => x[1])))
@@ -321,7 +334,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
                   soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
                   onSelectToggle={this.toggleSelection}
                   comm={this.props.comm}
-                  scoreFilter={this.state.do_score_filter && this.props.testTree.suggestions.length > this.state.max_suggestions && index > this.state.max_suggestions-4 ? this.props.testTree.score_filter : undefined}
+                  scoreFilter={this.state.do_score_filter && suggestionKeys.length > this.state.max_suggestions && index > this.state.max_suggestions-4 ? this.props.testTree.score_filter : undefined}
                   // selectWidth={maxSelectWidth}
                   forceRelayout={this.debouncedForceUpdate}
                   // inFillin={inFillin}
@@ -345,7 +358,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
           
           <div className="adatest-suggestions-box-after"></div>
           <div style={{position: "absolute", top: "10px", width: "100%"}}>
-            {this.props.testTree.suggestions.length > 1 &&
+            {suggestionKeys.length > 1 &&
               <div onClick={this.clearSuggestions} className="adatest-row-add-button adatest-hover-opacity" style={{marginTop: "0px", left: "6px", top: "4px", width: "11px", lineHeight: "14px", cursor: "pointer", position: "absolute", display: "inline-block"}}>
                 <FontAwesomeIcon icon={faTimes} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} />
               </div>
@@ -407,10 +420,10 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
         </div>
         
         <div className="adatest-children-frame">
-          {this.props.testTree.tests.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
+          {testKeys.length == 0 && <div style={{textAlign: "center", fontStyle: "italic", padding: "10px", fontSize: "14px", color: "#999999"}}>
             This topic is empty. Click the plus (+) button to add a test.
           </div>}
-          {this.props.testTree.tests.map((id, index) => {
+          {testKeys.map((id, index) => {
             return <React.Fragment key={id}>
               <Row
                 id={id}
@@ -546,8 +559,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
   removeSelection(id) {
     console.log("removeSelection", id)
-    let newId = undefined;
-    const ids = this.props.testTree.suggestions.concat(this.props.testTree.tests);
+    let newId: string | null = null;
+    const ids = Object.keys(this.props.testTree.suggestions).concat(Object.keys(this.props.testTree.tests));
     for (let i = 0; i < ids.length; i++) {
       console.log(i, ids[i], id);
       if (ids[i] === id) {
@@ -564,7 +577,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     }
 
     // change our selection to the new id
-    if (newId !== undefined) {
+    if (newId != null) {
       console.log(newId);
       let selections: any = {};
       selections[newId] = true;
@@ -674,19 +687,19 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
   }
 
   keyDownHandler(e) {
-    let newId = undefined;
+    let newId: string | null = null;
     const passKey = 86;
     const failKey = 66;
     const offTopicKey = 67;
     console.log("keyCodeXX", e.keyCode);
     if (e.keyCode == 8 || e.keyCode == 46 || e.keyCode == passKey || e.keyCode == failKey || e.keyCode == offTopicKey) { // backspace and delete and labeling keys
       const keys = Object.keys(this.state.selections);
-      const ids = this.props.testTree.suggestions.concat(this.props.testTree.tests);
+      const ids = Object.keys(this.props.testTree.suggestions).concat(Object.keys(this.props.testTree.tests));
       if (keys.length > 0) {
 
         let in_suggestions = true;
         for (const i in keys) {
-          if (!this.props.testTree.suggestions.includes(keys[i])) {
+          if (!Object.keys(this.props.testTree.suggestions).includes(keys[i])) {
             in_suggestions = false;
           }
         }
@@ -727,7 +740,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
         // select the next test after the selected one when appropriate
         if (in_suggestions || e.keyCode == 8 || e.keyCode == 46) {
-          let lastId = undefined;
+          let lastId: string | null = null;
           for (const i in ids) {
             if (lastId && this.state.selections[lastId] !== undefined && this.state.selections[ids[i]] === undefined) {
               newId = ids[i];
@@ -736,16 +749,18 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
             lastId = ids[i];
           }
           let selections: any = {};
-          if (newId !== undefined) selections[newId] = true;
+          if (newId != null) {
+            selections[newId] = true;
+          }
           this.setState({selections: selections});
         }
       }
     } else if (e.keyCode == 38 || e.keyCode == 40) {
       const keys = Object.keys(this.state.selections);
-      const ids = this.props.testTree.suggestions.concat(this.props.testTree.tests);
+      const ids = Object.keys(this.props.testTree.suggestions).concat(Object.keys(this.props.testTree.tests));
       if (keys.length == 1) {
         const currId = keys[0];
-        let lastId = undefined;
+        let lastId: string | null = null;
         for (const i in ids) {
           if (e.keyCode == 38 && ids[i] === currId) { // up arrow
             newId = lastId;
@@ -759,7 +774,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
         }
         console.log(" arrow!", lastId, currId);
       } else if (keys.length === 0) {
-        if (this.props.testTree.suggestions.length > 1) {
+        if (Object.keys(this.props.testTree.suggestions).length > 1) {
           newId = this.props.testTree.suggestions[0];
         } else {
           newId = this.props.testTree.tests[0];
@@ -774,7 +789,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     e.stopPropagation();
 
     // change our selection to the new id
-    if (newId !== undefined) {
+    if (newId != null) {
       let selections: any = {};//clone(this.state.selections);
       selections[newId] = true;
       this.setState({selections: selections});
@@ -795,7 +810,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     let new_topic_name = "New topic";
     let suffix = "";
     let count = 0;
-    while (this.props.testTree.tests.includes(this.props.testTree.topic + "/" + new_topic_name + suffix)) {
+    while (Object.keys(this.props.testTree.tests).includes(this.props.testTree.topic + "/" + new_topic_name + suffix)) {
       count += 1;
       suffix = " " + count;
     }
@@ -873,7 +888,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     console.log("refreshSuggestions");
     if (this.state.loading_suggestions) return;
     for (let k in Object.keys(this.state.selections)) {
-      if (this.props.testTree.suggestions.includes(k)) {
+      if (Object.keys(this.props.testTree.suggestions).includes(k)) {
         delete this.state.selections[k];
       }
     }
@@ -935,7 +950,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
       let selections = {};
       let selecting = false;
       console.log("first_selection_id", first_selection_id)
-      for (let i = 0; i < this.props.testTree.suggestions.length; ++i) {
+      for (let i = 0; i < Object.keys(this.props.testTree.suggestions).length; ++i) {
         const curr_id = this.props.testTree.suggestions[i];
         if (curr_id === id) {
           if (selecting) {
@@ -957,7 +972,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
           selections[curr_id] = true;
         }
       }
-      for (let i = 0; i < this.props.testTree.tests.length; ++i) {
+      for (let i = 0; i < Object.keys(this.props.testTree.tests).length; ++i) {
         const curr_id = this.props.testTree.tests[i];
         if (curr_id === id) {
           if (selecting) {
@@ -1017,7 +1032,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     const id = e.dataTransfer.getData("id");
     const topic_name = e.dataTransfer.getData("topic_name");
     console.log("onSuggestionsDrop", e, id);
-    if (this.props.testTree.suggestions.indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
+    if (Object.keys(this.props.testTree.suggestions).indexOf(id) !== -1) return; // dropping a suggestion into suggestions should do nothing
     this.setState({suggestionsDropHighlighted: 0});
     if (topic_name !== null && topic_name !== "null") {
       this.onDrop(id, this.props.testTree.topic + "/__suggestions__" + "/" + topic_name);

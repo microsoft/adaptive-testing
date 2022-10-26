@@ -8,9 +8,11 @@ import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
 import JupyterComm from './jupyter-comm';
 import WebSocketComm from './web-socket-comm'
+import { useSelector } from 'react-redux';
+import { RootState } from './store';
 
 
-interface RowProps {
+interface RowBaseProps {
   id: string;
   soleSelected: boolean;
   forceRelayout: () => void;
@@ -36,14 +38,17 @@ interface RowProps {
   onDrop?: (id: string, topic: string) => void;
 }
 
+interface RowProps extends RowBaseProps {
+  // The test / topic / suggestion data
+  data: any;
+}
+
 interface RowState {
   type?: any;
   scores?: any[] | null;
   label?: string;
   topic_name?: string;
-  value1: string;
   comparator: string;
-  value2: string;
   dropHighlighted: number; // used as a boolean
   dragging: boolean; // used anywhere?
   hovering: boolean;
@@ -51,6 +56,8 @@ interface RowState {
   hidden?: boolean;
   editing: boolean;
   labeler: string;
+  value1: string;
+  value2: string;
   display_parts: {};
   contextTop?: number;
   contextLeft?: number;
@@ -67,7 +74,31 @@ interface RowState {
 }
 
 
-export default class Row extends React.Component<RowProps, RowState> {
+const Row = React.forwardRef((props: RowBaseProps, ref: React.LegacyRef<RowInternal>) => {
+  const testTree = useSelector((state: RootState) => state.testTree);
+  let data: any = null;
+  if (props.isSuggestion) {
+    if (Object.keys(testTree.suggestions).includes(props.id)) {
+      data = testTree.suggestions[props.id];
+    } else {
+      console.error("Could not find suggestions in TestTree store for id", props.id);
+      return null;
+    }
+  } else {
+    if (Object.keys(testTree.tests).includes(props.id)) {
+      data = testTree.tests[props.id];
+    } else {
+      console.error("Could not find tests in TestTree store for id", props.id);
+      return null;
+    }
+  }
+
+  return <RowInternal data={data} ref={ref} {...props} />
+});
+
+export default Row;
+
+export class RowInternal extends React.Component<RowProps, RowState> {
   dataLoadActions: any[];
   scrollToView: boolean;
   divRef: HTMLDivElement | null;
@@ -94,7 +125,8 @@ export default class Row extends React.Component<RowProps, RowState> {
       display_parts: {},
       value1: "",
       value2: "",
-      comparator: ""
+      comparator: "",
+      ...props.data
     };
 
     this.dataLoadActions = [];
@@ -105,24 +137,24 @@ export default class Row extends React.Component<RowProps, RowState> {
     window.faTimes = faTimes;
   }
 
-  dataLoaded(state) {
-    if (state == undefined) return;
+  // dataLoaded(state) {
+  //   if (state == undefined) return;
 
-    if (this.dataLoadActions.length > 0) {
-      for (let i = 0; i < this.dataLoadActions.length; i++) {
-        this.dataLoadActions[i]();
-      }
-      this.dataLoadActions = [];
-    }
-    // console.log("state.topic_name", state.topic_name)
-    // we automatically start editing topics that are selected and have an imputed name
-    if (state.topic_name && (state.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
-      state["editing"] = true;
-      console.log("setting editing state to true!")
-    }
+  //   if (this.dataLoadActions.length > 0) {
+  //     for (let i = 0; i < this.dataLoadActions.length; i++) {
+  //       this.dataLoadActions[i]();
+  //     }
+  //     this.dataLoadActions = [];
+  //   }
+  //   // console.log("state.topic_name", state.topic_name)
+  //   // we automatically start editing topics that are selected and have an imputed name
+  //   if (state.topic_name && (state.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
+  //     state["editing"] = true;
+  //     console.log("setting editing state to true!")
+  //   }
     
-    this.setState(state);
-  }
+  //   this.setState(state);
+  // }
 
   UNSAFE_componentWillUpdate(nextProps, nextState) {
 
@@ -822,14 +854,6 @@ export default class Row extends React.Component<RowProps, RowState> {
       this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
     }
   }
-}
-
-
-// const queryClient = new QueryClient();
-
-export function RowFunctional(props: RowProps) {
-  const comm = props.comm;
-  return <Row {...props} />;
 }
 
 

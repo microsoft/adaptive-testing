@@ -2,8 +2,6 @@ import JSON5 from 'json5';
 import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
 import { CommEvent, redraw } from './CommEvent';
-import { AppDispatch } from './store';
-import { refresh } from './TestTreeSlice';
 
 export default class WebSocketComm {
   interfaceId: string;
