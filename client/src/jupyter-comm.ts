@@ -1,7 +1,6 @@
 import JSON5 from 'json5';
 import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
-import { AppDispatch } from './store';
 
 export default class JupyterComm {
   interfaceId: string;
@@ -9,8 +8,6 @@ export default class JupyterComm {
   data: any;
   pendingData: any;
   jcomm: InnerJupyterComm;
-  debouncedSendPendingData500: () => void;
-  debouncedSendPendingData1000: () => void;
 
   constructor(interfaceId) {
     autoBind(this);
@@ -19,9 +16,6 @@ export default class JupyterComm {
     this.data = {};
     this.pendingData = {};
     this.jcomm = new InnerJupyterComm('adatest_interface_target_'+this.interfaceId, this.updateData);
-
-    this.debouncedSendPendingData500 = debounce(this.sendPendingData, 500);
-    this.debouncedSendPendingData1000 = debounce(this.sendPendingData, 1000);
   }
 
   send(keys, data) {
@@ -38,22 +32,22 @@ export default class JupyterComm {
     return Promise.resolve();
   }
 
-  debouncedSendEvent500(commEvent) {
-    for (const k of Object.keys(commEvent)) {
-      this.addPendingData(k, commEvent[k]);
-    }
-    this.debouncedSendPendingData500();
-  }
+  // debouncedSendEvent500(commEvent) {
+  //   for (const k of Object.keys(commEvent)) {
+  //     this.addPendingData(k, commEvent[k]);
+  //   }
+  //   this.debouncedSendPendingData500();
+  // }
 
-  debouncedSend500(keys, data) {
-    this.addPendingData(keys, data);
-    this.debouncedSendPendingData500();
-  }
+  // debouncedSend500(keys, data) {
+  //   this.addPendingData(keys, data);
+  //   this.debouncedSendPendingData500();
+  // }
 
-  debouncedSend1000(keys, data) {
-    this.addPendingData(keys, data);
-    this.debouncedSendPendingData1000();
-  }
+  // debouncedSend1000(keys, data) {
+  //   this.addPendingData(keys, data);
+  //   this.debouncedSendPendingData1000();
+  // }
 
   addPendingData(keys, data) {
 

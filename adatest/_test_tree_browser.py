@@ -594,6 +594,10 @@ class TestTreeBrowser():
         suggestions_children_data = {}
         children_ids = create_children(children_data, self.test_tree, self.current_topic)
         suggestions_children_ids = create_children(suggestions_children_data, self.test_tree, self.current_topic + "/__suggestions__")
+        
+        # Filter data for frontend so we only return direct children data
+        children_data = {k: children_data[k] for k in children_ids}
+        suggestions_children_data = {k: suggestions_children_data[k] for k in suggestions_children_ids}
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...

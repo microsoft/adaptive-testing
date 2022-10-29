@@ -1,7 +1,7 @@
 import JSON5 from 'json5';
 import autoBind from 'auto-bind';
 import { defer, debounce } from 'lodash';
-import { CommEvent, redraw } from './CommEvent';
+import { CommEvent } from './CommEvent';
 
 export default class WebSocketComm {
   interfaceId: string;
@@ -15,8 +15,6 @@ export default class WebSocketComm {
   wcomm: WebSocket;
   reconnectDelay: number;
   seqNumber: number;
-  debouncedSendPendingData500: () => void;
-  debouncedSendPendingData1000: () => void;
 
   constructor(interfaceId, websocketServer) {
     autoBind(this);
@@ -28,9 +26,6 @@ export default class WebSocketComm {
     this.pendingResponses = {};
     this.reconnectDelay = 100;
     this.seqNumber = 0;
-
-    this.debouncedSendPendingData500 = debounce(this.sendPendingData, 500);
-    this.debouncedSendPendingData1000 = debounce(this.sendPendingData, 1000);
   }
 
   send(keys, data) {
@@ -45,22 +40,22 @@ export default class WebSocketComm {
     return this.sendPendingData();
   }
 
-  debouncedSendEvent500(commEvent) {
-    for (const k of Object.keys(commEvent)) {
-      this.addPendingData(k, commEvent[k]);
-    }
-    this.debouncedSendPendingData500();
-  }
+  // debouncedSendEvent500(commEvent) {
+  //   for (const k of Object.keys(commEvent)) {
+  //     this.addPendingData(k, commEvent[k]);
+  //   }
+  //   this.debouncedSendPendingData500();
+  // }
 
-  debouncedSend500(keys, data) {
-    this.addPendingData(keys, data);
-    this.debouncedSendPendingData500();
-  }
+  // debouncedSend500(keys, data) {
+  //   this.addPendingData(keys, data);
+  //   this.debouncedSendPendingData500();
+  // }
 
-  debouncedSend1000(keys, data) {
-    this.addPendingData(keys, data);
-    this.debouncedSendPendingData1000();
-  }
+  // debouncedSend1000(keys, data) {
+  //   this.addPendingData(keys, data);
+  //   this.debouncedSendPendingData1000();
+  // }
 
   addPendingData(keys, data) {
     console.log("addPendingData", keys, data);

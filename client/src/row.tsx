@@ -2,14 +2,15 @@ import React from 'react';
 import autoBind from 'auto-bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faCheck, faBan, faFolderMinus, faArrowRight, faTimes, faFolderPlus, faFolder} from '@fortawesome/free-solid-svg-icons'
-import { defer } from 'lodash';
+import { defer, debounce } from 'lodash';
 import { changeInput, changeLabel, changeOutput, deleteTest, moveTest, redraw } from './CommEvent';
 import ContentEditable from './content-editable';
 import ContextMenu from './context-menu';
 import JupyterComm from './jupyter-comm';
 import WebSocketComm from './web-socket-comm'
 import { useSelector } from 'react-redux';
-import { RootState } from './store';
+import { AppDispatch, RootState } from './store';
+import { refreshBrowser } from './utils';
 
 
 interface RowBaseProps {
@@ -26,6 +27,7 @@ interface RowBaseProps {
   selected: boolean;
   isSuggestion?: boolean;
   comm: JupyterComm | WebSocketComm;
+  dispatch: AppDispatch;
   hideBorder?: boolean;
   outputColumnWidth: string;
   inputDefault?: string;
@@ -40,12 +42,11 @@ interface RowBaseProps {
 
 interface RowProps extends RowBaseProps {
   // The test / topic / suggestion data
-  data: any;
+  rowData: any;
 }
 
 interface RowState {
   type?: any;
-  scores?: any[] | null;
   label?: string;
   topic_name?: string;
   comparator: string;
@@ -55,7 +56,6 @@ interface RowState {
   plusHovering: boolean;
   hidden?: boolean;
   editing: boolean;
-  labeler: string;
   value1: string;
   value2: string;
   display_parts: {};
@@ -67,8 +67,6 @@ interface RowState {
   previewValue1?: boolean;
   previewValue2?: boolean;
   prefix?: string;
-  input: string;
-  output: string;
   maxImageHeight: number;
   contextFocus?: string;
 }
@@ -93,7 +91,7 @@ const Row = React.forwardRef((props: RowBaseProps, ref: React.LegacyRef<RowInter
     }
   }
 
-  return <RowInternal data={data} ref={ref} {...props} />
+  return <RowInternal rowData={data} ref={ref} {...props} />
 });
 
 export default Row;
@@ -183,11 +181,11 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     // update any listeners for score totals
     if (this.props.scoreColumns) {
       for (const k of this.props.scoreColumns) {
-        if (this.state.scores && this.props.updateTotals) {
+        if (this.props.rowData.scores && this.props.updateTotals) {
           // console.log("this.props.updateTotals", k, this.state.scores[k])
           this.props.updateTotals(k,
-            this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0),
-            this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0)
+            this.props.rowData.scores[k].reduce((total, value) => total + (value[1] <= 0), 0),
+            this.props.rowData.scores[k].reduce((total, value) => total + (value[1] > 0), 0)
           );
         }
       }
@@ -291,9 +289,9 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     // const test_type_parts = this.props.test_type_parts[this.state.type];
     
     let overall_score = {};
-    if (this.state.scores) {
-      for (let k in this.state.scores) {
-        const arr = this.state.scores[k].filter(x => Number.isFinite(x[1])).map(x => x[1])
+    if (this.props.rowData.scores) {
+      for (let k in this.props.rowData.scores) {
+        const arr = this.props.rowData.scores[k].filter(x => Number.isFinite(x[1])).map(x => x[1])
         overall_score[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
       }
     } else {
@@ -315,7 +313,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     //   console.log("heresss65", this.state["value1_outputs"], Object.keys(tmp));
     //   var hack_output_name = Object.keys(tmp).reduce((a, b) => tmp[a] > tmp[b] ? a : b);
     // }
-    var label_opacity = this.state.labeler === "imputed" ? 0.5 : 1;
+    var label_opacity = this.props.rowData.labeler === "imputed" ? 0.5 : 1;
 
     // get the display parts for the template instantiation with the highest score
     // const display_parts = this.state.display_parts ? this.state.display_parts[this.state.max_score_ind] : {};
@@ -387,10 +385,10 @@ export class RowInternal extends React.Component<RowProps, RowState> {
               <div onClick={this.clickInput} style={{display: "inline-block"}}>
                 <span style={{width: "0px"}}></span>
                 {/* <span onContextMenu={this.handleInputContextMenu}> */}
-                  {this.state.input.startsWith("__IMAGE=") ?
-                    <img src={this.state.input.substring(8)} onDoubleClick={this.toggleImageSize} style={{maxWidth: (this.state.maxImageHeight*3)+"px", maxHeight: this.state.maxImageHeight}} />
+                  {this.props.rowData.input.startsWith("__IMAGE=") ?
+                    <img src={this.props.rowData.input.substring(8)} onDoubleClick={this.toggleImageSize} style={{maxWidth: (this.state.maxImageHeight*3)+"px", maxHeight: this.state.maxImageHeight}} />
                     :
-                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.state.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
+                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
                   }
                 {/* </span> */}
                 <span style={{width: "0px"}}></span>
@@ -403,7 +401,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
               <span>
                 <span style={{width: "0px"}}></span>
                 <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.state.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
+                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </span>
@@ -439,12 +437,12 @@ export class RowInternal extends React.Component<RowProps, RowState> {
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
 
         let total_pass = 0;
-        if (this.state.topic_name != null && this.state.scores != null) {
-          total_pass = this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0);
+        if (this.state.topic_name != null && this.props.rowData.scores != null) {
+          total_pass = this.props.rowData.scores[k].reduce((total, value) => total + (value[1] <= 0), 0);
         }
         let total_fail = 0;
-        if (this.state.topic_name != null && this.state.scores != null) {
-          total_fail = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
+        if (this.state.topic_name != null && this.props.rowData.scores != null) {
+          total_fail = this.props.rowData.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         }
 
         let label_opacity = isNaN(overall_score[k]) ? 0.5 : 1;
@@ -476,17 +474,17 @@ export class RowInternal extends React.Component<RowProps, RowState> {
                 {this.state.label == "fail" &&
                   <line x1="100" y1="15" x2={100 + bar_width/2} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
                 } */}
-                {this.state.labeler === "imputed" && this.state.label === "pass" ?
+                {this.props.rowData.labeler === "imputed" && this.state.label === "pass" ?
                   <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.state.labeler === "imputed" && this.state.label === "fail" ?
+                {this.props.rowData.labeler === "imputed" && this.state.label === "fail" ?
                   <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.state.labeler === "imputed" && this.state.label === "off_topic" ?
+                {this.props.rowData.labeler === "imputed" && this.state.label === "off_topic" ?
                   <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(207, 140, 34, 1.0)" textAnchor="middle" />
                 :
                   <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
@@ -577,11 +575,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   }
 
   labelAsOffTopic(e) {
-    this.props.comm.sendEvent(changeLabel(this.props.id, "off_topic", this.props.user));
-    if (this.props.isSuggestion) {
-      this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
-    }
-    this.setState({label: "off_topic"});
+    this.setLabel("off_topic");
   }
 
   labelAsPass(e) {
@@ -589,10 +583,12 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   }
 
   setLabel(label) {
-    this.props.comm.sendEvent(changeLabel(this.props.id, label, this.props.user));
-    if (this.props.isSuggestion) {
-      this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
-    }
+    this.props.comm.sendEvent(changeLabel(this.props.id, label, this.props.user)).then(async () => {
+      if (this.props.isSuggestion) {
+        await this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
+      }
+      refreshBrowser(this.props.comm, this.props.dispatch);
+    });
     this.setState({label: label});
   }
 
@@ -682,8 +678,9 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
   inputInput(text) {
     console.log("inputInput", text)
-    this.setState({input: text, scores: null});
-    this.props.comm.debouncedSendEvent500(changeInput(this.props.id, text));
+    // this.setState({input: text, scores: null});
+    debounce(() => this.props.comm.sendEvent(changeInput(this.props.id, text))
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch)), 500);
   }
 
   finishInput(text) {
@@ -699,8 +696,8 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     // return;
     console.log("inputOutput", text);
     // text = text.trim(); // SML: causes the cursor to jump when editing because the text is updated
-    this.setState({output: text, scores: null});
-    this.props.comm.debouncedSendEvent500(changeOutput(this.props.id, text));
+    debounce(() => this.props.comm.sendEvent(changeOutput(this.props.id, text))
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch)), 500);
 
     // if (this.props.value2Edited) {
     //   this.props.value2Edited(this.props.id, this.state.value2, text);
@@ -719,7 +716,8 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     this.setState({topic_name: text, editing: false});
     let topic = this.props.topic;
     if (this.props.isSuggestion) topic += "/__suggestions__";
-    this.props.comm.sendEvent(moveTest(this.props.id, topic + "/" + text));
+    this.props.comm.sendEvent(moveTest(this.props.id, topic + "/" + text))
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
   }
   
   clickRow(e) {
@@ -835,7 +833,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     if (this.state.topic_name != null) {
       this.setState({dropHighlighted: 0});
       if (this.props.onDrop && id !== this.props.id) {
-        if (topic_name != null && topic_name !== "null") {
+        if (topic_name != null && topic_name !== "null" && topic_name !== "undefined") {
           this.props.onDrop(id, this.props.topic + "/" + this.state.topic_name + "/" + topic_name);
         } else {
           this.props.onDrop(id, this.props.topic + "/" + this.state.topic_name);
@@ -848,11 +846,9 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     e.preventDefault();
     e.stopPropagation();
     console.log("addToCurrentTopic X", this.props.topic, this.state.topic_name);
-    if (this.state.topic_name != null) {
-      this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic + "/" + this.state.topic_name));
-    } else {
-      this.props.comm.sendEvent(moveTest(this.props.id, this.props.topic));
-    }
+    let targetTopic = this.props.topic + (this.state.topic_name == null ? "" : "/" + this.state.topic_name);
+    this.props.comm.sendEvent(moveTest(this.props.id, targetTopic))
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
   }
 }
 

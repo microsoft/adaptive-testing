@@ -15,6 +15,7 @@ import { TestTreeState, refresh, updateGenerator, updateTopicDescription, update
 import { useSelector, useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from './store';
 import { Comm } from './types';
+import { goToTopic, refreshBrowser, stripPrefix, stripSlash, useComm } from './utils';
 
 
 interface BrowserBaseProps {
@@ -72,32 +73,6 @@ interface BrowserState {
   // topic_marker_id?: string;
 }
 
-function refreshBrowser(comm: Comm, dispatch: AppDispatch) {
-  return comm.sendEvent(redraw()).then((data) => {
-    if (data["status"] === "ok") {
-      dispatch(refresh(data["data"]));
-    } else {
-      // TODO: handle error
-    }
-  });
-}
-
-function useComm(env: string, interfaceId: any, websocket_server: string="") {
-  console.log("pairs interfaceId", interfaceId)
-  if (env === "jupyter") {
-    return new JupyterComm(interfaceId);
-  } else if (env === "web") {
-    if (websocket_server !== "") {
-      return new WebSocketComm(interfaceId, websocket_server);
-    } else {
-      console.error("websocket_server is not set");
-      throw new Error("websocket_server is not set");
-    }
-  } else {
-    console.error("Unknown environment:", env);
-    throw new Error(`Unknown environment: ${env}`);
-  }
-}
 
 // TestTreeBrowser function component wraps the legacy Browser
 // class component so we can use hooks. It is responsible for setting
@@ -111,15 +86,16 @@ export default function TestTreeBrowser(props: BrowserBaseProps) {
     setComm(c);
     if (c instanceof WebSocketComm) {
       c.connect(() => {
-        refreshBrowser(c, dispatch);
         // if we are in Jupyter we need to sync the URL in the MemoryRouter
-        // if (props.environment == "jupyter") {
-        //   this.props.history.push(this.props.prefix + this.props.startingTopic);
-        // // if we don't have a starting topic then we are stand-alone and need to sync our state with the address bar
-        // } else if (props.location.pathname !== (props.prefix == "" ? "/" : props.prefix)) {
-        //   defer(() => this.goToTopic(this.stripPrefix(this.props.location.pathname)));
-        // }
-        // props.history.listen(this.locationChanged);
+        if (props.environment == "jupyter") {
+          props.history.push(this.props.prefix + this.props.startingTopic);
+          refreshBrowser(c, dispatch);
+        // if we don't have a starting topic then we are stand-alone and need to sync our state with the address bar
+        } else if (props.location.pathname !== (props.prefix == "" ? "/" : props.prefix)) {
+          goToTopic(stripPrefix(props.location.pathname, props.prefix), c).then(() => refreshBrowser(c, dispatch));
+        } else {
+          refreshBrowser(c, dispatch);
+        }
       });
 
       // Return cleanup function
@@ -178,19 +154,13 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
     // @ts-ignore: Property does not exist on type 'Window'
     window.pair_chart = this;
+
+    props.history.listen(this.locationChanged);
   }
 
   debouncedForceUpdate() {
     // console.log("debouncedForceUpdate");
     this.forceUpdate();
-  }
-
-  stripPrefix(path) {
-    if (path.startsWith(this.props.prefix)) {
-      return path.slice(this.props.prefix.length);
-    } else {
-      return path;
-    }
   }
 
   componentDidUpdate() {
@@ -258,7 +228,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     let topicPath = "";
     // console.log("tests.render4", this.state.tests, stripSlash(this.stripPrefix(this.props.location.pathname)), this.state.topic);
 
-    let breadCrumbParts = stripSlash(this.stripPrefix(this.props.testTree.topic)).split("/");
+    let breadCrumbParts = stripSlash(stripPrefix(this.props.testTree.topic, this.props.prefix)).split("/");
     // let totalPasses = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalPassesObj = el} />;
     // let totalFailures = <TotalValue activeIds={this.state.tests} ref={(el) => this.totalFailuresObj = el} />;
 
@@ -334,6 +304,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
                   soleSelected={this.state.selections[id] && Object.keys(this.state.selections).length == 1}
                   onSelectToggle={this.toggleSelection}
                   comm={this.props.comm}
+                  dispatch={this.props.dispatch}
                   scoreFilter={this.state.do_score_filter && suggestionKeys.length > this.state.max_suggestions && index > this.state.max_suggestions-4 ? this.props.testTree.score_filter : undefined}
                   // selectWidth={maxSelectWidth}
                   forceRelayout={this.debouncedForceUpdate}
@@ -447,6 +418,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
                   }
                 }}
                 comm={this.props.comm}
+                dispatch={this.props.dispatch}
                 // selectWidth={maxSelectWidth}
                 forceRelayout={this.debouncedForceUpdate}
                 // inFillin={inFillin}
@@ -520,7 +492,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
 
   clickModel(modelName, e) {
     if (this.props.testTree.score_columns && modelName !== this.props.testTree.score_columns[0]) {
-      this.props.comm.sendEvent(setFirstModel(modelName));
+      this.props.comm.sendEvent(setFirstModel(modelName))
+        .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
     }
   }
 
@@ -597,21 +570,23 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
   }
 
   changeMode(e) {
-    this.props.comm.sendEvent(changeMode(e.target.value)).then(() => {
-      refreshBrowser(this.props.comm, this.props.dispatch);
-    })
+    this.props.comm.sendEvent(changeMode(e.target.value))
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
     // this.setState({mode: e.target.value});
   }
 
   setLocation(pathname) {
     console.log("setLocation", pathname);
     this.props.history.push(this.props.prefix + pathname);
-    this.setState({selections: {}});
+    // this.setState({selections: {}});
   }
 
   locationChanged(location, action) {
     console.log("locationChanged", location, action);
-    this.goToTopic(this.stripPrefix(location.pathname));
+    this.setState({selections: {}});
+    goToTopic(stripPrefix(location.pathname, this.props.prefix), this.props.comm).then(() => {
+      refreshBrowser(this.props.comm, this.props.dispatch);
+    });
   }
 
   newData(data) {
@@ -821,17 +796,15 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
   addNewTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.props.comm.sendEvent(addTopic()).then(() => {
-      refreshBrowser(this.props.comm, this.props.dispatch);
-    });
+    this.props.comm.sendEvent(addTopic())
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
   }
 
   addNewTest(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.props.comm.sendEvent(addTest()).then(() => {
-      refreshBrowser(this.props.comm, this.props.dispatch);
-    });
+    this.props.comm.sendEvent(addTest())
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
   }
 
   // inputTopicDescription(text) {
@@ -1047,17 +1020,8 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
       ids = Object.keys(this.state.selections);
       this.setState({selections: {}});
     } else ids = id;
-    this.props.comm.sendEvent(moveTest(ids, topic));
-  }
-
-  goToTopic(topic) {
-    console.log("goToTopic", topic);
-    // if (this.suggestionsTemplateRow) {
-    //   this.suggestionsTemplateRow.setState({value2: null});
-    // }
-    this.props.comm.sendEvent(changeTopic(stripSlash(topic).replaceAll(" ", "%20"))).then(() => {
-      refreshBrowser(this.props.comm, this.props.dispatch);
-    });
+    this.props.comm.sendEvent(moveTest(ids, topic))
+      .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
   }
 
 }
@@ -1067,8 +1031,4 @@ const red_blue_100 = ["rgb(0.0, 199.0, 100.0)", "rgb(7.68, 199.88, 96.12)", "rgb
 
 function red_blue_color(value, min, max) {
   return red_blue_100[Math.floor(99.9999 * (value - min)/(max - min))]
-}
-
-function stripSlash(str) {
-  return str.endsWith('/') ? str.slice(0, -1) : str;
 }
