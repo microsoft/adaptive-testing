@@ -11,7 +11,7 @@ import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
 
-import { TestTreeState, refresh, updateGenerator, updateTopicDescription, updateFilterText, updateSuggestions } from './TestTreeSlice';
+import { TestTreeState, refresh, updateGenerator, updateTopicDescription, updateSuggestions } from './TestTreeSlice';
 import { useSelector, useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from './store';
 import { Comm } from './types';
@@ -830,7 +830,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     console.log("inputFilterText", text)
     this.props.comm.sendEvent(changeFilter(text)).then((data) => {
       if (data["status"] === "ok") {
-        this.props.dispatch(updateFilterText(text));
+        refreshBrowser(this.props.comm, this.props.dispatch);
       } else {
         // TODO: Error handling
       }
@@ -922,8 +922,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
       let selections = {};
       let selecting = false;
       console.log("first_selection_id", first_selection_id)
-      for (let i = 0; i < Object.keys(this.props.testTree.suggestions).length; ++i) {
-        const curr_id = this.props.testTree.suggestions[i];
+      for (const curr_id in this.props.testTree.suggestions) {
         if (curr_id === id) {
           if (selecting) {
             selections[curr_id] = true;
@@ -944,8 +943,7 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
           selections[curr_id] = true;
         }
       }
-      for (let i = 0; i < Object.keys(this.props.testTree.tests).length; ++i) {
-        const curr_id = this.props.testTree.tests[i];
+      for (const curr_id in this.props.testTree.tests) {
         if (curr_id === id) {
           if (selecting) {
             selections[curr_id] = true;

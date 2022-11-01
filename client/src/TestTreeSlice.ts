@@ -107,10 +107,6 @@ export const testTreeSlice = createSlice({
       state.topic_description = action.payload;
     },
 
-    updateFilterText: (state, action: PayloadAction<string>) => {
-      state.filter_text = action.payload;
-    },
-
     updateSuggestions: (state, action: PayloadAction<any[]>) => {
       state.suggestions = [...action.payload];
     }
@@ -118,6 +114,6 @@ export const testTreeSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { refresh, updateGenerator, updateTopicDescription, updateFilterText, updateSuggestions } = testTreeSlice.actions
+export const { refresh, updateGenerator, updateTopicDescription, updateSuggestions } = testTreeSlice.actions
 
 export default testTreeSlice.reducer

@@ -144,9 +144,9 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   //     }
   //     this.dataLoadActions = [];
   //   }
-  //   // console.log("state.topic_name", state.topic_name)
+  //   // console.log("props.rowData.topic_name", props.rowData.topic_name)
   //   // we automatically start editing topics that are selected and have an imputed name
-  //   if (state.topic_name && (state.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
+  //   if (props.rowData.topic_name && (props.rowData.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
   //     state["editing"] = true;
   //     console.log("setting editing state to true!")
   //   }
@@ -182,7 +182,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     if (this.props.scoreColumns) {
       for (const k of this.props.scoreColumns) {
         if (this.props.rowData.scores && this.props.updateTotals) {
-          // console.log("this.props.updateTotals", k, this.state.scores[k])
+          // console.log("this.props.updateTotals", k, this.props.rowData.scores[k])
           this.props.updateTotals(k,
             this.props.rowData.scores[k].reduce((total, value) => total + (value[1] <= 0), 0),
             this.props.rowData.scores[k].reduce((total, value) => total + (value[1] > 0), 0)
@@ -204,13 +204,13 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
   render() {
     // console.log("---- render Row ----");
-    if (this.state.label == null) return null; // only render if we have data
+    if (this.props.rowData.label == null) return null; // only render if we have data
     // console.log("real render Row");
 
     const main_score = this.props.scoreColumns ? this.props.scoreColumns[0] : undefined;
     // console.log("rendering row", this.props)
     // apply the value1/value2/topic filters
-    if (this.state.topic_name == null) {
+    if (this.props.rowData.topic_name == null) {
       if (this.props.value1Filter && this.state.value1 !== "") {
         const re = RegExp(this.props.value1Filter);
         if (!re.test(this.state.value1 ?? "")) return null;
@@ -236,7 +236,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
     } else if (this.props.value2Filter) {
       const re = RegExp(this.props.value2Filter); // TODO: rename value2Filter to reflect it's global nature
-      if (!re.test(this.state.topic_name)) return null;
+      if (!re.test(this.props.rowData.topic_name)) return null;
     }
     // console.log("real render Row2");
 
@@ -284,7 +284,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
     let editRowClasses = "adatest-row-hide-button";
     if (this.state.hovering) editRowClasses += " adatest-row-hide-hovering";
-    if (this.state.editing) editRowClasses += " adatest-row-hide-hidden";
+    if (this.props.rowData.editing) editRowClasses += " adatest-row-hide-hidden";
 
     // const test_type_parts = this.props.test_type_parts[this.state.type];
     
@@ -337,17 +337,17 @@ export class RowInternal extends React.Component<RowProps, RowState> {
                 style={this.props.hideBorder ? {} : {borderTop: "1px solid rgb(216, 222, 228)"}} tabIndex={0} onKeyDown={this.keyDownHandler}>
       <ContextMenu top={this.state.contextTop} left={this.state.contextLeft} open={this.state.contextOpen}
                     onClose={this.closeContextMenu} rows={this.state.contextRows} onClick={this.handleContextMenuClick} />
-      {this.state.topic_name != null && !this.props.isSuggestion &&
+      {this.props.rowData.topic_name != null && !this.props.isSuggestion &&
         <div onClick={this.onOpen} className="adatest-row-add-button" style={{marginLeft: "6px", lineHeight: "14px", opacity: "1", cursor: "pointer", paddingLeft: "4px", marginRight: "3px", paddingRight: "0px", display: "inline-block"}}>
           <FontAwesomeIcon icon={faFolder} style={{fontSize: "14px", color: "rgb(84, 174, 255)", display: "inline-block"}} />
         </div>
       }
-      {this.props.isSuggestion && this.state.topic_name != null &&
+      {this.props.isSuggestion && this.props.rowData.topic_name != null &&
         <div onClick={this.addToCurrentTopic} className="adatest-row-add-button adatest-hover-opacity" style={{cursor: "pointer", marginRight: "3px"}} onMouseOver={this.onPlusMouseOver} onMouseOut={this.onPlusMouseOut}>
           <FontAwesomeIcon icon={faFolderPlus} style={{fontSize: "14px", color: "#000000", display: "inline-block"}} title="Add to current topic" />
         </div>
       }
-      {/* {this.state.topic_name == null &&
+      {/* {this.props.rowData.topic_name == null &&
         <svg height="20" width="50" style={{marginTop: "5px", flex: "0 0 50px", display: "inline-block", marginLeft: "8px"}}>
           <FontAwesomeIcon icon={faTimes} height="15px" y="3px" x="15px" style={{color: "rgb(0, 0, 0)", cursor: "pointer"}} textAnchor="middle" />
           <FontAwesomeIcon icon={faCheck} height="15px" y="3px" x="-15px" style={{color: "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
@@ -355,11 +355,11 @@ export class RowInternal extends React.Component<RowProps, RowState> {
       } */}
       
       <div style={{padding: "0px", flex: 1}} onClick={this.clickRow} onDoubleClick={this.onOpen}>  
-        {this.state.topic_name != null ? <React.Fragment>
+        {this.props.rowData.topic_name != null ? <React.Fragment>
           <div style={{display: "flex", marginTop: "7px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "adatest-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
-              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.state.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.state.editing} />
-              <span style={{color: "#999999"}}>{this.state.description}</span>
+              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.props.rowData.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.props.rowData.editing} />
+              <span style={{color: "#999999"}}>{this.props.rowData.description}</span>
             </div>
           </div>
           <div className="adatest-row" style={{opacity: 0.6, marginTop: "-16px", display: this.state.previewValue1 ? 'flex' : 'none'}}>
@@ -388,7 +388,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
                   {this.props.rowData.input.startsWith("__IMAGE=") ?
                     <img src={this.props.rowData.input.substring(8)} onDoubleClick={this.toggleImageSize} style={{maxWidth: (this.state.maxImageHeight*3)+"px", maxHeight: this.state.maxImageHeight}} />
                     :
-                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.state.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
+                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.props.rowData.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
                   }
                 {/* </span> */}
                 <span style={{width: "0px"}}></span>
@@ -397,11 +397,11 @@ export class RowInternal extends React.Component<RowProps, RowState> {
             <div style={{flex: "0 0 25px", display: "flex", alignItems: "center", color: "#999999", justifyContent: "center", overflow: "hidden"}}>
               <FontAwesomeIcon icon={faArrowRight} style={{fontSize: "14px", color: "#999999", display: "inline-block"}} textAnchor="left" />
             </div>
-            <div onClick={this.clickOutput} style={{textDecoration: this.state.label === "off_topic" ? "line-through" : "none", maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", alignItems: "center", display: "flex"}}>
+            <div onClick={this.clickOutput} style={{textDecoration: this.props.rowData.label === "off_topic" ? "line-through" : "none", maxWidth: "400px", paddingTop: "5px", paddingBottom: "5px", overflowWrap: "anywhere", background: "linear-gradient(90deg, rgba(0, 0, 0, 0.0) "+bar_width+"%, rgba(255, 255, 255, 0) "+bar_width+"%)", flex: "0 0 "+this.props.outputColumnWidth, textAlign: "left", alignItems: "center", display: "flex"}}>
               <span>
                 <span style={{width: "0px"}}></span>
                 <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.state.editing} defaultText={this.props.outputDefault} />
+                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.props.rowData.editing} defaultText={this.props.outputDefault} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </span>
@@ -410,22 +410,22 @@ export class RowInternal extends React.Component<RowProps, RowState> {
         )}
       </div>
       {/* <div className="adatest-row-score-text-box"> 
-        {this.state.topic_name == null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
+        {this.props.rowData.topic_name == null && !isNaN(score) && score.toFixed(3).replace(/\.?0*$/, '')}
       </div> */}
-      {/* {this.state.topic_name == null &&
+      {/* {this.props.rowData.topic_name == null &&
         <svg height="30" width="90" style={{marginTop: "0px", flex: "0 0 90px", textAling: "left", display: "inline-block", marginLeft: "8px", marginRight: "0px"}}>
-          {this.state.labeler === "imputed" && this.state.label === "pass" ?
-            <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-30px" textAnchor="middle" />
+          {this.props.rowData.labeler === "imputed" && this.props.rowData.label === "pass" ?
+            <FontAwesomeIcon icon={faCheck} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.props.rowData.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="-30px" textAnchor="middle" />
           :
-            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-30px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+            <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="-30px" style={{color: this.props.rowData.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           }
-          {this.state.labeler === "imputed" && this.state.label === "fail" ?
-            <FontAwesomeIcon icon={faTimes} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="0px" textAnchor="middle" />
+          {this.props.rowData.labeler === "imputed" && this.props.rowData.label === "fail" ?
+            <FontAwesomeIcon icon={faTimes} strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.props.rowData.label === "fail" ? "rgb(207, 34, 46)" : "rgba(0, 0, 0, 0.05)"} height="15px" y="8px" x="0px" textAnchor="middle" />
           :
-            <FontAwesomeIcon icon={faTimes} stroke="" height="17px" y="7px" x="0px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+            <FontAwesomeIcon icon={faTimes} stroke="" height="17px" y="7px" x="0px" style={{color: this.props.rowData.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           }
           {this.props.isSuggestion ?
-            <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="30px" style={{color: this.state.label === "off_topic" ? "rgb(0, 0, 0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+            <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="30px" style={{color: this.props.rowData.label === "off_topic" ? "rgb(0, 0, 0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
           :
             <span style={{width: "31px", display: "inline-block"}}></span>
           }
@@ -437,11 +437,11 @@ export class RowInternal extends React.Component<RowProps, RowState> {
       {this.props.scoreColumns && this.props.scoreColumns.map(k => {
 
         let total_pass = 0;
-        if (this.state.topic_name != null && this.props.rowData.scores != null) {
+        if (this.props.rowData.topic_name != null && this.props.rowData.scores != null) {
           total_pass = this.props.rowData.scores[k].reduce((total, value) => total + (value[1] <= 0), 0);
         }
         let total_fail = 0;
-        if (this.state.topic_name != null && this.props.rowData.scores != null) {
+        if (this.props.rowData.topic_name != null && this.props.rowData.scores != null) {
           total_fail = this.props.rowData.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         }
 
@@ -449,8 +449,8 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
         let scaled_score = scale_score(overall_score[k]);
         
-        // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.state.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
-        // this.totalFailures[k] = this.state.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
+        // this.totalPasses[k] = Number.isFinite(overall_score[k]) ? this.props.rowData.scores[k].reduce((total, value) => total + (value[1] <= 0), 0) : NaN;
+        // this.totalFailures[k] = this.props.rowData.scores[k].reduce((total, value) => total + (value[1] > 0), 0);
         return <div key={k} className="adatest-row-score-plot-box">
           {/* {overall_score[k] > 0 ? */}
           <svg height="30" width="150">(total_pass / (total_pass + total_fail))
@@ -466,38 +466,38 @@ export class RowInternal extends React.Component<RowProps, RowState> {
                 <rect x="100" y="2.5" height="25" width="50" style={{fillOpacity: 0, stroke: "rgb(207, 34, 46, 1)", strokeWidth: "1"}} />
               </g>
             }
-            {this.state.topic_name == null &&
+            {this.props.rowData.topic_name == null &&
               <React.Fragment>
-                {/* {this.state.label == "pass" &&
+                {/* {this.props.rowData.label == "pass" &&
                   <line x1="100" y1="15" x2={100 - (100-bar_width)/2} y2="15" style={{stroke: "rgb(26, 127, 55, 0.05)", strokeWidth: "25"}}></line>
                 }
-                {this.state.label == "fail" &&
+                {this.props.rowData.label == "fail" &&
                   <line x1="100" y1="15" x2={100 + bar_width/2} y2="15" style={{stroke: "rgb(207, 34, 46, 0.05)", strokeWidth: "25"}}></line>
                 } */}
-                {this.props.rowData.labeler === "imputed" && this.state.label === "pass" ?
-                  <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                {this.props.rowData.labeler === "imputed" && this.props.rowData.label === "pass" ?
+                  <FontAwesomeIcon icon={faCheck} height="15px" y="8px" x="0px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.props.rowData.label === "pass" ? "rgb(26, 127, 55)" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.state.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faCheck} height="17px" y="7px" x="0px" style={{color: this.props.rowData.label === "pass" ? "rgb(26, 127, 55,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.props.rowData.labeler === "imputed" && this.state.label === "fail" ?
-                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
+                {this.props.rowData.labeler === "imputed" && this.props.rowData.label === "fail" ?
+                  <FontAwesomeIcon icon={faTimes} height="15px" y="8px" x="50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke={this.props.rowData.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)"} textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.state.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faTimes} height="17px" y="7px" x="50px" style={{color: this.props.rowData.label === "fail" ? "rgb(207, 34, 46,"+label_opacity+")" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
-                {this.props.rowData.labeler === "imputed" && this.state.label === "off_topic" ?
+                {this.props.rowData.labeler === "imputed" && this.props.rowData.label === "off_topic" ?
                   <FontAwesomeIcon icon={faBan} height="15px" y="8px" x="-50px" strokeWidth="50px" style={{color: "rgba(0, 0, 0, 0.05)"}} stroke="rgb(207, 140, 34, 1.0)" textAnchor="middle" />
                 :
-                  <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.state.label === "off_topic" ? "rgb(207, 140, 34, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
+                  <FontAwesomeIcon icon={faBan} height="17px" y="7px" x="-50px" style={{color: this.props.rowData.label === "off_topic" ? "rgb(207, 140, 34, 1.0)" : "rgba(0, 0, 0, 0.05)", cursor: "pointer"}} textAnchor="middle" />
                 }
                 <line x1="0" y1="15" x2="50" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsOffTopic}></line>
                 <line x1="50" y1="15" x2="100" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsPass}></line>
                 <line x1="100" y1="15" x2="150" y2="15" style={{stroke: "rgba(0, 0, 0, 0)", strokeWidth: "30", cursor: "pointer"}} onClick={this.labelAsFail}></line>
               </React.Fragment>
             }
-            {this.state.topic_name != null && total_pass > 0 &&
+            {this.props.rowData.topic_name != null && total_pass > 0 &&
               <text x="75" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(26, 127, 55)", fontWeight: "bold", fontSize: "14px"}}>{total_pass}</text>
             }
-            {this.state.topic_name != null && total_fail > 0 &&
+            {this.props.rowData.topic_name != null && total_fail > 0 &&
               <text x="125" y="16" dominantBaseline="middle" textAnchor="middle" style={{pointerEvents: "none", fill: "rgb(207, 34, 46)", fontWeight: "bold", fontSize: "14px"}}>{total_fail}</text>
             }
           </svg>
@@ -546,7 +546,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     if (e.keyCode == 13) {
       console.log("return!", this.props.soleSelected, this.props.selected)
       if (this.props.soleSelected) {
-        if (this.state.topic_name != null) {
+        if (this.props.rowData.topic_name != null) {
           this.onOpen(e);
         } else if (this.props.isSuggestion) {
           this.addToCurrentTopic(e);
@@ -609,10 +609,10 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!this.state.editing) {
+    if (!this.props.rowData.editing) {
       this.setState({editing: true});
       console.log("about to edit focus")
-      if (this.state.topic_name == null) {
+      if (this.props.rowData.topic_name == null) {
         defer(() => this.inputEditable?.focus());
       } else {
         defer(() => this.topicNameEditable?.focus());
@@ -635,10 +635,10 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     e.stopPropagation();
     const newName = this.props.generateTopicName();
     const newTopic = this.props.topic + "/" + newName;
-    if (this.state.topic_name == null) {
+    if (this.props.rowData.topic_name == null) {
       this.props.comm.send(this.props.id, {"topic": newTopic });
     } else {
-      this.props.comm.send(this.props.id, {"topic": newTopic + "/" + this.state.topic_name});
+      this.props.comm.send(this.props.id, {"topic": newTopic + "/" + this.props.rowData.topic_name});
     }
     this.props.setSelected(newTopic);
   } */
@@ -670,9 +670,9 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   onOpen(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("this.state.topic_name XXXXXXXXXXXX", this.state.topic_name)//, "Row.onOpen(", e, ")");
-    if (this.state.topic_name != null && this.props.onOpen) {
-      this.props.onOpen(this.props.topic + "/" + this.state.topic_name);
+    console.log("this.props.rowData.topic_name XXXXXXXXXXXX", this.props.rowData.topic_name)//, "Row.onOpen(", e, ")");
+    if (this.props.rowData.topic_name != null && this.props.onOpen) {
+      this.props.onOpen(this.props.topic + "/" + this.props.rowData.topic_name);
     }
   }
 
@@ -686,6 +686,8 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   finishInput(text) {
     console.log("finishInput", text)
     this.setState({editing: false});
+    this.props.comm.sendEvent(changeInput(this.props.id, text))
+          .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
     // if (text.includes("/")) {
     //   this.setState({input: text, scores: null});
     //   this.props.comm.send(this.props.id, {input: text});
@@ -721,25 +723,24 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   }
   
   clickRow(e) {
-    const modKey = e.metaKey || e.shiftKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey);
+      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
   }
 
   clickTopicName(e) {
     console.log("clickTopicName");
-    const modKey = e.metaKey || e.shiftKey;
+    const modKey = e.metaKey || e.shiftKey || e.ctrlKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey);
+      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
-    if (!modKey && !this.state.editing) {
+    if (!modKey && !this.props.rowData.editing) {
       this.setState({editing: true});
-      console.log("topic editing", this.state.editing)
+      console.log("topic editing", this.props.rowData.editing)
       e.preventDefault();
       e.stopPropagation();
       defer(() => this.topicNameEditable?.focus());
@@ -748,15 +749,15 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
   clickInput(e) {
     console.log("clickInput", e);
-    const modKey = e.metaKey || e.shiftKey;
+    const modKey = e.metaKey || e.shiftKey || e.ctrlKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey);
+      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
-    if (!modKey && !this.state.editing) {
+    if (!modKey && !this.props.rowData.editing) {
       this.setState({editing: true});
-      console.log("value1 editing", this.state.editing)
+      console.log("value1 editing", this.props.rowData.editing)
       e.preventDefault();
       e.stopPropagation();
       defer(() => this.inputEditable?.focus());
@@ -767,13 +768,13 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
   clickOutput(e) {
     console.log("clickOutput");
-    const modKey = e.metaKey || e.shiftKey;
+    const modKey = e.metaKey || e.shiftKey || e.ctrlKey;
     if (this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey);
+      this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
-    if (!modKey && !this.state.editing) {
+    if (!modKey && !this.props.rowData.editing) {
       this.setState({editing: true});
       e.preventDefault();
       e.stopPropagation();
@@ -790,7 +791,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     //console.log("drag start", e, this.mouseDownTarget.getAttribute("contenteditable") === "true")
     this.setState({dragging: true});
     e.dataTransfer.setData("id", this.props.id);
-    e.dataTransfer.setData("topic_name", this.state.topic_name);
+    e.dataTransfer.setData("topic_name", this.props.rowData.topic_name);
     // if (this.props.onDragStart) {
     //   this.props.onDragStart(e, this);
     // }
@@ -812,7 +813,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     console.log("enter", e.target)
     e.preventDefault();
     e.stopPropagation();
-    if (this.state.topic_name != null) {
+    if (this.props.rowData.topic_name != null) {
       this.setState({dropHighlighted: this.state.dropHighlighted + 1});
     }
   }
@@ -821,7 +822,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     console.log("leave", e.target)
     e.preventDefault();
     e.stopPropagation();
-    if (this.state.topic_name != null) {
+    if (this.props.rowData.topic_name != null) {
       this.setState({dropHighlighted: this.state.dropHighlighted - 1});
     }
   }
@@ -830,13 +831,13 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     
     const id = e.dataTransfer.getData("id");
     const topic_name = e.dataTransfer.getData("topic_name");
-    if (this.state.topic_name != null) {
+    if (this.props.rowData.topic_name != null) {
       this.setState({dropHighlighted: 0});
       if (this.props.onDrop && id !== this.props.id) {
         if (topic_name != null && topic_name !== "null" && topic_name !== "undefined") {
-          this.props.onDrop(id, this.props.topic + "/" + this.state.topic_name + "/" + topic_name);
+          this.props.onDrop(id, this.props.topic + "/" + this.props.rowData.topic_name + "/" + topic_name);
         } else {
-          this.props.onDrop(id, this.props.topic + "/" + this.state.topic_name);
+          this.props.onDrop(id, this.props.topic + "/" + this.props.rowData.topic_name);
         }
       }
     }
@@ -845,8 +846,8 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   addToCurrentTopic(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("addToCurrentTopic X", this.props.topic, this.state.topic_name);
-    let targetTopic = this.props.topic + (this.state.topic_name == null ? "" : "/" + this.state.topic_name);
+    console.log("addToCurrentTopic X", this.props.topic, this.props.rowData.topic_name);
+    let targetTopic = this.props.topic + (this.props.rowData.topic_name == null ? "" : "/" + this.props.rowData.topic_name);
     this.props.comm.sendEvent(moveTest(this.props.id, targetTopic))
       .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
   }
