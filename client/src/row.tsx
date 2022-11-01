@@ -129,30 +129,9 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
     this.dataLoadActions = [];
 
-    // this.props.comm.subscribe(this.props.id, this.dataLoaded);
-
     window["row_"+this.props.id] = this;
     window.faTimes = faTimes;
   }
-
-  // dataLoaded(state) {
-  //   if (state == undefined) return;
-
-  //   if (this.dataLoadActions.length > 0) {
-  //     for (let i = 0; i < this.dataLoadActions.length; i++) {
-  //       this.dataLoadActions[i]();
-  //     }
-  //     this.dataLoadActions = [];
-  //   }
-  //   // console.log("props.rowData.topic_name", props.rowData.topic_name)
-  //   // we automatically start editing topics that are selected and have an imputed name
-  //   if (props.rowData.topic_name && (props.rowData.topic_name.startsWith("New topic") || state.value1 === "New test") && this.props.soleSelected) {
-  //     state["editing"] = true;
-  //     console.log("setting editing state to true!")
-  //   }
-    
-  //   this.setState(state);
-  // }
 
   UNSAFE_componentWillUpdate(nextProps, nextState) {
 

@@ -157,8 +157,9 @@ class TopicMembershipModel:
         else:
             
             # we are in a highly overparametrized situation, so we use a linear SVC to get "max-margin" based generalization
-            self.model = CVModel()
-            self.model.fit(embeddings, labels)
+            self.model = ConstantModel(1.0)
+            # self.model = CVModel()
+            # self.model.fit(embeddings, labels)
 
     def __call__(self, input):
         embeddings = adatest.embed([input])[0]

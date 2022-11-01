@@ -38,18 +38,12 @@ interface BrowserProps extends BrowserBaseProps {
 }
 
 interface BrowserState {
-  // topic: string;
-  // suggestions: any[];
-  // tests: any[];
   selections: any;
-  // user: string;
   loading_suggestions: boolean;
   max_suggestions: number;
   suggestions_pos: number;
   suggestionsDropHighlighted: number;
-  // score_filter: number;
   do_score_filter: boolean;
-  // filter_text: string;
   experiment_pos: number;
   timerExpired: boolean;
   experiment_locations: any[];
@@ -57,27 +51,16 @@ interface BrowserState {
   value2Filter: string;
   test_types: any[];
   test_type_parts: any[];
-  // score_columns?: any[];
-  // test_tree_name?: any;
-  // topic_description?: string;
-  // read_only?: boolean;
   topicFilter?: string;
   value1Filter?: string;
   comparatorFilter?: string;
-  // disable_suggestions?: boolean;
-  // mode_options?: any[];
-  // generator_options?: any[];
-  // active_generator?: string;
-  // mode?: string;
-  // suggestions_error?: string;
-  // topic_marker_id?: string;
 }
 
 
 // TestTreeBrowser function component wraps the legacy Browser
 // class component so we can use hooks. It is responsible for setting
 // up all the props for the Browser component.
-export default function TestTreeBrowser(props: BrowserBaseProps) {
+export default function Browser(props: BrowserBaseProps) {
   const testTree = useSelector((state: RootState) => state.testTree);
   const dispatch = useDispatch();
   const [comm, setComm] = useState<JupyterComm | WebSocketComm | null>(null);
@@ -108,12 +91,12 @@ export default function TestTreeBrowser(props: BrowserBaseProps) {
   if (comm == null) {
     return <div>Loading...</div>
   } else {
-    return <Browser testTree={testTree} comm={comm} dispatch={dispatch} {...props} />
+    return <BrowserInternal testTree={testTree} comm={comm} dispatch={dispatch} {...props} />
   }
 }
 
 
-export class Browser extends React.Component<BrowserProps, BrowserState> {
+export class BrowserInternal extends React.Component<BrowserProps, BrowserState> {
   id: string;
   rows: any;
   totalPassesObjects: {};
@@ -566,19 +549,16 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
         // TODO: error handling
       }
     });
-    // this.setState({active_generator: e.target.value})
   }
 
   changeMode(e) {
     this.props.comm.sendEvent(changeMode(e.target.value))
       .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
-    // this.setState({mode: e.target.value});
   }
 
   setLocation(pathname) {
     console.log("setLocation", pathname);
     this.props.history.push(this.props.prefix + pathname);
-    // this.setState({selections: {}});
   }
 
   locationChanged(location, action) {
@@ -587,48 +567,6 @@ export class Browser extends React.Component<BrowserProps, BrowserState> {
     goToTopic(stripPrefix(location.pathname, this.props.prefix), this.props.comm).then(() => {
       refreshBrowser(this.props.comm, this.props.dispatch);
     });
-  }
-
-  newData(data) {
-    if (data === undefined) return;
-
-    if (data && "suggestions" in data && !("loading_suggestions" in data)) {
-      data["loading_suggestions"] = false;
-    }
-
-    console.log("data", data);
-
-    // always select new topics for renaming when they exist
-    for (let i in data.tests) {
-      if (data.tests[i].startsWith("/New topic")) {
-        data.selections = {};
-        data.selections[data.tests[i]] = true;
-        break;
-      }
-    }
-
-    // select the first suggestion if we have several and there is no current selection
-    if (Object.keys(this.state.selections).length === 0 && data.suggestions.length > 1) {
-      data.selections = {};
-      data.selections[data.suggestions[0]] = true;
-    }
-    
-    this.setState(data);
-
-    // TODO: this is just a hack for the Checklist baseline user study
-    // defer(() => {
-    //   //console.log("this.state.suggestions", this.state.suggestions, this.suggestionsTemplateRow.state.value2);
-    //   // fill in the value of the template output if it is blank and we have a guess
-    //   if (this.state.suggestions && this.suggestionsTemplateRow && (this.suggestionsTemplateRow.state.value2 === null || this.suggestionsTemplateRow.state.value2 === "")) {
-        
-    //     const key = this.state.suggestions[this.state.suggestions.length - 1];
-    //     //console.log("key", key, Object.keys(this.comm.data))
-    //     if (key in this.comm.data) {
-    //       //console.log("DDFSSS")
-    //       this.suggestionsTemplateRow.setState({value2: this.comm.data[key].value2, comparator: this.comm.data[key].comparator});
-    //     }
-    //   }
-    // });
   }
 
   clockFinished() {

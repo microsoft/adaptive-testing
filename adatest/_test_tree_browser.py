@@ -324,7 +324,6 @@ class TestTreeBrowser():
             #     log.debug(e)
             #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
             #     self._suggestions_error = True
-            # self._refresh_interface(sequence_number)
             
         # change the current topic
         elif event_id == "change_topic":
@@ -339,14 +338,11 @@ class TestTreeBrowser():
             else:
                 self.mode = "tests"
             self.send_response(sequence_number)
-
-            # self._refresh_interface(sequence_number)
             
         # clear the current set of suggestions
         elif event_id == "clear_suggestions":
             self._clear_suggestions()
             self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
 
         # add a new empty subtopic to the current topic
@@ -361,7 +357,6 @@ class TestTreeBrowser():
             }
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
             
         # add a new empty test to the current topic
@@ -382,7 +377,6 @@ class TestTreeBrowser():
             self.test_tree.loc[uuid.uuid4().hex] = row
 
             self._auto_save()
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
 
         # change which scorer/model is used for sorting tests
@@ -400,7 +394,6 @@ class TestTreeBrowser():
             self.score_columns.insert(0, name)
 
             self._auto_save()
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
 
         elif event_id == "change_generator":
@@ -421,14 +414,12 @@ class TestTreeBrowser():
                 self.test_tree.loc[id, 'label'] = "topic_marker"
             self.test_tree.loc[msg['topic_marker_id'], 'description'] = msg['description']
             self._auto_save()
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
 
         elif event_id == 'change_filter':
             print("change_filter")
             self.filter_text = msg['filter_text']
             self.send_response(sequence_number)
-            # self._refresh_interface(sequence_number)
 
         # Move a test/topic to a new topic
         # Also used to rename
@@ -447,7 +438,6 @@ class TestTreeBrowser():
             # Recompute any missing embeddings to handle any changes
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
 
         elif event_id == "delete_test":
@@ -464,7 +454,6 @@ class TestTreeBrowser():
                             self.test_tree.drop(id, inplace=True)
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            # self._refresh_interface(sequence_number)
             self.send_response(sequence_number)
         
         # if we are just updating a single row in tests then we only recompute the scores
