@@ -5,12 +5,12 @@ import { defer } from 'lodash';
 
 interface ContentEditableProps {
   id?: string;
-  text: string; // current text value
+  text: string; // the starting text value before user makes edits
   defaultText: string; // text to show when empty
   editable: boolean; // if true, allow editing
   finishOnReturn: boolean; // if true, call onFinish when return is pressed
-  onInput?: Function; // called when text is changed
-  onFinish?: Function; // called when editing is finished
+  onInput?: (s: string) => string; // called when text is changed. Reacts to the input and returns the new text
+  onFinish?: (s: string) => void; // called when editing is finished
   onClick?: Function; // called when the element is clicked
   onTemplateExpand?: () => void;
 }
@@ -30,7 +30,7 @@ export default class ContentEditable extends React.Component<ContentEditableProp
   constructor(props: ContentEditableProps) {
     super(props);
     autoBind(this);
-    this.lastText = null;
+    // this.lastText = null;
 
     this.divRef = {};
     window["cedit_"+this.props.id] = this;
@@ -40,7 +40,7 @@ export default class ContentEditable extends React.Component<ContentEditableProp
     //console.log("this.props.text", this.props.text)
     const emptyContent = this.props.text === undefined || this.props.text.length === 0;
     this.lastEditable = this.props.editable;
-    if (this.lastText === null) this.lastText = this.props.text;
+    // if (this.lastText === null) this.lastText = this.props.text;
     return <div
       ref={(el) => this.divRef = el}
       id={this.props.id}
@@ -113,11 +113,11 @@ export default class ContentEditable extends React.Component<ContentEditableProp
     e.stopPropagation();
   }
 
-  getValue() {
-    const text = this.divRef.textContent;
-    if (text === this.props.defaultText) return "";
-    else return text;
-  }
+  // getValue() {
+  //   const text = this.divRef.textContent;
+  //   if (text === this.props.defaultText) return "";
+  //   else return text;
+  // }
 
   shouldComponentUpdate(nextProps) {
     return nextProps.text !== this.divRef.textContent && (nextProps.text != "" || this.divRef.textContent != this.props.defaultText) || nextProps.editable != this.lastEditable;
@@ -133,27 +133,28 @@ export default class ContentEditable extends React.Component<ContentEditableProp
   
   componentDidUpdateOrMount(mount) {
     // console.log("ContentEditable componentDidUpdateOrMount", mount, this.props.text, this.props.editable);
-    if (this.props.text !== this.divRef.textContent) {
-      if (this.props.text !== undefined && this.props.text !== null && (this.props.text.length > 0 || this.divRef.textContent !== this.props.defaultText)) {
-        this.divRef.textContent = this.props.text;
-      } else {
-        if (mount) this.divRef.textContent = this.props.defaultText;
-      }
-    }
-    if (this.props.text && (this.props.text.startsWith("New topic") || this.props.text === "New test") && this.props.editable) { // hacky but works for now
-      // console.log("HACK!", this.props.text)
-      this.divRef.focus();
-      selectElement(this.divRef);
-      // document.execCommand('selectAll', false, null);
-    }
+    // if (this.props.text !== this.divRef.textContent) {
+    //   if (this.props.text !== undefined && this.props.text !== null && (this.props.text.length > 0 || this.divRef.textContent !== this.props.defaultText)) {
+    //     this.divRef.textContent = this.props.text;
+    //   } else {
+    //     if (mount) this.divRef.textContent = this.props.defaultText;
+    //   }
+    // }
+    // if (this.props.text && (this.props.text.startsWith("New topic") || this.props.text === "New test") && this.props.editable) { // hacky but works for now
+    //   // console.log("HACK!", this.props.text)
+    //   this.divRef.focus();
+    //   selectElement(this.divRef);
+    //   // document.execCommand('selectAll', false, null);
+    // }
   }
       
   handleInput(e, finishing) {
     console.log("handleInput", finishing, this.divRef.textContent)
-    const text = this.divRef.textContent;
+    let text = this.divRef.textContent;
     if (this.props.onInput && text !== this.lastText) {
-      this.props.onInput(text);
+      text = this.props.onInput(text);
       this.lastText = text;
+      this.divRef.textContent = text;
     }
 
     if (finishing && this.props.onFinish) {

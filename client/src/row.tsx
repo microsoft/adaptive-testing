@@ -388,7 +388,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
                   {this.props.rowData.input.startsWith("__IMAGE=") ?
                     <img src={this.props.rowData.input.substring(8)} onDoubleClick={this.toggleImageSize} style={{maxWidth: (this.state.maxImageHeight*3)+"px", maxHeight: this.state.maxImageHeight}} />
                     :
-                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onInput={this.inputInput} onFinish={this.finishInput} editable={this.props.rowData.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
+                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onFinish={this.finishInput} editable={this.props.rowData.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
                   }
                 {/* </span> */}
                 <span style={{width: "0px"}}></span>
@@ -401,7 +401,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
               <span>
                 <span style={{width: "0px"}}></span>
                 <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onInput={this.inputOutput} onFinish={_ => this.setState({editing: false})} editable={this.props.rowData.editing} defaultText={this.props.outputDefault} />
+                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onFinish={this.finishOutput} editable={this.props.rowData.editing} defaultText={this.props.outputDefault} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </span>
@@ -676,12 +676,12 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     }
   }
 
-  inputInput(text) {
-    console.log("inputInput", text)
-    // this.setState({input: text, scores: null});
-    debounce(() => this.props.comm.sendEvent(changeInput(this.props.id, text))
-      .then(() => refreshBrowser(this.props.comm, this.props.dispatch)), 500);
-  }
+  // inputInput(text) {
+  //   console.log("inputInput", text)
+  //   this.setState({input: text, scores: null});
+  //   debounce(() => this.props.comm.sendEvent(changeInput(this.props.id, text))
+  //     .then(() => refreshBrowser(this.props.comm, this.props.dispatch)), 500);
+  // }
 
   finishInput(text) {
     console.log("finishInput", text)
@@ -694,22 +694,34 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     // }
   }
 
-  inputOutput(text) {
-    // return;
-    console.log("inputOutput", text);
-    // text = text.trim(); // SML: causes the cursor to jump when editing because the text is updated
-    debounce(() => this.props.comm.sendEvent(changeOutput(this.props.id, text))
-      .then(() => refreshBrowser(this.props.comm, this.props.dispatch)), 500);
-
-    // if (this.props.value2Edited) {
-    //   this.props.value2Edited(this.props.id, this.state.value2, text);
+  finishOutput(text) {
+    console.log("finishOutput", text)
+    this.setState({editing: false});
+    this.props.comm.sendEvent(changeOutput(this.props.id, text))
+          .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
+    // if (text.includes("/")) {
+    //   this.setState({input: text, scores: null});
+    //   this.props.comm.send(this.props.id, {input: text});
     // }
-    // this.setValue2(text);
   }
+
+  // inputOutput(text) {
+  //   // return;
+  //   console.log("inputOutput", text);
+  //   // text = text.trim(); // SML: causes the cursor to jump when editing because the text is updated
+  //   debounce(() => this.props.comm.sendEvent(changeOutput(this.props.id, text))
+  //     .then(() => refreshBrowser(this.props.comm, this.props.dispatch)), 500);
+
+  //   // if (this.props.value2Edited) {
+  //   //   this.props.value2Edited(this.props.id, this.state.value2, text);
+  //   // }
+  //   // this.setValue2(text);
+  // }
 
   inputTopicName(text) {
     text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
     this.setState({topic_name: text});
+    return text;
   }
 
   finishTopicName(text) {
