@@ -521,7 +521,7 @@ class TestTreeBrowser():
                                 "scores": {c: [] for c in self.score_columns},
                                 "topic_marker_id": k,
                                 "topic_name": name,
-                                "editing": test.topic.endswith("/New topic")
+                                # "editing": test.topic.endswith("/New topic")
                             }
                             children.append(test.topic)
                 
@@ -534,7 +534,7 @@ class TestTreeBrowser():
                         "labeler": test.labeler,
                         "description": test.description,
                         "scores": {c: [[k, v] for v in ui_score_parts(test[c], test.label)] for c in self.score_columns},
-                        "editing": test.input == "New test"
+                        # "editing": test.input == "New test"
                     }
 
                     data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}

@@ -9,7 +9,7 @@ interface ContentEditableProps {
   defaultText: string; // text to show when empty
   editable: boolean; // if true, allow editing
   finishOnReturn: boolean; // if true, call onFinish when return is pressed
-  onInput?: (s: string) => string; // called when text is changed. Reacts to the input and returns the new text
+  onInput?: (s: string) => void; // called when text is changed
   onFinish?: (s: string) => void; // called when editing is finished
   onClick?: Function; // called when the element is clicked
   onTemplateExpand?: () => void;
@@ -140,21 +140,20 @@ export default class ContentEditable extends React.Component<ContentEditableProp
     //     if (mount) this.divRef.textContent = this.props.defaultText;
     //   }
     // }
-    // if (this.props.text && (this.props.text.startsWith("New topic") || this.props.text === "New test") && this.props.editable) { // hacky but works for now
-    //   // console.log("HACK!", this.props.text)
-    //   this.divRef.focus();
-    //   selectElement(this.divRef);
-    //   // document.execCommand('selectAll', false, null);
-    // }
+    if (this.props.text && (this.props.text.startsWith("New topic") || this.props.text === "New test") && this.props.editable) { // hacky but works for now
+      // console.log("HACK!", this.props.text)
+      this.divRef.focus();
+      selectElement(this.divRef);
+      // document.execCommand('selectAll', false, null);
+    }
   }
       
   handleInput(e, finishing) {
     console.log("handleInput", finishing, this.divRef.textContent)
-    let text = this.divRef.textContent;
+    const text = this.divRef.textContent;
     if (this.props.onInput && text !== this.lastText) {
-      text = this.props.onInput(text);
+      this.props.onInput(text);
       this.lastText = text;
-      this.divRef.textContent = text;
     }
 
     if (finishing && this.props.onFinish) {

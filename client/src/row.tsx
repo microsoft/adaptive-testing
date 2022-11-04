@@ -55,7 +55,7 @@ interface RowState {
   hovering: boolean;
   plusHovering: boolean;
   hidden?: boolean;
-  editing: boolean;
+  // editing: boolean;
   value1: string;
   value2: string;
   display_parts: {};
@@ -110,7 +110,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     autoBind(this);
 
     this.state = {
-      editing: false,
+      // editing: false,
       input: "",
       output: "",
       labeler: "anonymous",
@@ -254,16 +254,16 @@ export class RowInternal extends React.Component<RowProps, RowState> {
     if (this.props.isSuggestion && this.state.plusHovering) outerClasses += " adatest-row-hover-highlighted";
     //if (this.state.hidden) outerClasses += " adatest-row-hidden";
 
-    let hideClasses = "adatest-row-hide-button";
-    if (this.state.hovering) hideClasses += " adatest-row-hide-hovering";
-    if (this.state.hidden) hideClasses += " adatest-row-hide-hidden";
+    // let hideClasses = "adatest-row-hide-button";
+    // if (this.state.hovering) hideClasses += " adatest-row-hide-hovering";
+    // if (this.state.hidden) hideClasses += " adatest-row-hide-hidden";
 
-    let addTopicClasses = "adatest-row-hide-button";
-    if (this.state.hovering) addTopicClasses += " adatest-row-hide-hovering";
+    // let addTopicClasses = "adatest-row-hide-button";
+    // if (this.state.hovering) addTopicClasses += " adatest-row-hide-hovering";
 
-    let editRowClasses = "adatest-row-hide-button";
-    if (this.state.hovering) editRowClasses += " adatest-row-hide-hovering";
-    if (this.props.rowData.editing) editRowClasses += " adatest-row-hide-hidden";
+    // let editRowClasses = "adatest-row-hide-button";
+    // if (this.state.hovering) editRowClasses += " adatest-row-hide-hovering";
+    // if (this.props.rowData.editing) editRowClasses += " adatest-row-hide-hidden";
 
     // const test_type_parts = this.props.test_type_parts[this.state.type];
     
@@ -337,7 +337,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
         {this.props.rowData.topic_name != null ? <React.Fragment>
           <div style={{display: "flex", marginTop: "7px", fontSize: "14px"}}> 
             <div className={this.state.hidden ? "adatest-row-hidden": ""} style={{flex: "1", textAlign: "left"}}>
-              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.props.rowData.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} editable={this.props.rowData.editing} />
+              <ContentEditable onClick={this.clickTopicName} finishOnReturn={true} ref={el => this.topicNameEditable = el} text={decodeURIComponent(this.props.rowData.topic_name)} onInput={this.inputTopicName} onFinish={this.finishTopicName} /*editable={this.props.rowData.editing}*/ />
               <span style={{color: "#999999"}}>{this.props.rowData.description}</span>
             </div>
           </div>
@@ -367,7 +367,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
                   {this.props.rowData.input.startsWith("__IMAGE=") ?
                     <img src={this.props.rowData.input.substring(8)} onDoubleClick={this.toggleImageSize} style={{maxWidth: (this.state.maxImageHeight*3)+"px", maxHeight: this.state.maxImageHeight}} />
                     :
-                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onFinish={this.finishInput} editable={this.props.rowData.editing} defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
+                    <ContentEditable onClick={this.clickInput} ref={el => this.inputEditable = el} text={this.props.rowData.input} onFinish={this.finishInput} /*editable={this.props.rowData.editing}*/ defaultText={this.props.inputDefault} onTemplateExpand={this.templateExpandValue1} />
                   }
                 {/* </span> */}
                 <span style={{width: "0px"}}></span>
@@ -380,7 +380,7 @@ export class RowInternal extends React.Component<RowProps, RowState> {
               <span>
                 <span style={{width: "0px"}}></span>
                 <span style={{opacity: Number.isFinite(overall_score[main_score]) ? 1 : 0.5}}>
-                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onFinish={this.finishOutput} editable={this.props.rowData.editing} defaultText={this.props.outputDefault} />
+                  <ContentEditable onClick={this.clickOutput} ref={el => this.outputEditable = el} text={this.props.rowData.output} onFinish={this.finishOutput} /*editable={this.props.rowData.editing}*/ defaultText={this.props.outputDefault} />
                 </span>
                 <span style={{width: "0px"}}></span>
               </span>
@@ -584,22 +584,22 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   //   })
   // }
 
-  toggleEditRow(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  // toggleEditRow(e) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
 
-    if (!this.props.rowData.editing) {
-      this.setState({editing: true});
-      console.log("about to edit focus")
-      if (this.props.rowData.topic_name == null) {
-        defer(() => this.inputEditable?.focus());
-      } else {
-        defer(() => this.topicNameEditable?.focus());
-      }
-    } else {
-      this.setState({editing: false});
-    }
-  }
+  //   if (!this.props.rowData.editing) {
+  //     this.setState({editing: true});
+  //     console.log("about to edit focus")
+  //     if (this.props.rowData.topic_name == null) {
+  //       defer(() => this.inputEditable?.focus());
+  //     } else {
+  //       defer(() => this.topicNameEditable?.focus());
+  //     }
+  //   } else {
+  //     this.setState({editing: false});
+  //   }
+  // }
 
   toggleHideTopic(e) {
     // Still used?
@@ -664,9 +664,13 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
   finishInput(text) {
     console.log("finishInput", text)
-    this.setState({editing: false});
-    this.props.comm.sendEvent(changeInput(this.props.id, text))
+    // this.setState({editing: false});
+    if (this.props.rowData.input !== text) {
+      this.props.comm.sendEvent(changeInput(this.props.id, text))
           .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
+    } else {
+      console.log("finishInput skipping update because text is the same")
+    }
     // if (text.includes("/")) {
     //   this.setState({input: text, scores: null});
     //   this.props.comm.send(this.props.id, {input: text});
@@ -675,9 +679,13 @@ export class RowInternal extends React.Component<RowProps, RowState> {
 
   finishOutput(text) {
     console.log("finishOutput", text)
-    this.setState({editing: false});
-    this.props.comm.sendEvent(changeOutput(this.props.id, text))
-          .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
+    // this.setState({editing: false});
+    if (this.props.rowData.output !== text) {
+      this.props.comm.sendEvent(changeOutput(this.props.id, text))
+            .then(() => refreshBrowser(this.props.comm, this.props.dispatch))
+    } else {
+      console.log("finishOutput skipping update because text is the same")
+    }
     // if (text.includes("/")) {
     //   this.setState({input: text, scores: null});
     //   this.props.comm.send(this.props.id, {input: text});
@@ -698,15 +706,15 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   // }
 
   inputTopicName(text) {
-    text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
-    this.setState({topic_name: text});
-    return text;
+    text = text.replaceAll("\\", "").replaceAll("\n", "");
+    const encodedText = encodeURIComponent(text);
+    this.setState({topic_name: encodedText});
   }
 
   finishTopicName(text) {
     console.log("finishTopicName", text)
     text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
-    this.setState({topic_name: text, editing: false});
+    this.setState({topic_name: text, /*editing: false*/});
     let topic = this.props.topic;
     if (this.props.isSuggestion) topic += "/__suggestions__";
     this.props.comm.sendEvent(moveTest(this.props.id, topic + "/" + text))
@@ -724,35 +732,35 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   clickTopicName(e) {
     console.log("clickTopicName");
     const modKey = e.metaKey || e.shiftKey || e.ctrlKey;
-    if (this.props.onSelectToggle) {
+    if (modKey && this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
       this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
-    if (!modKey && !this.props.rowData.editing) {
-      this.setState({editing: true});
-      console.log("topic editing", this.props.rowData.editing)
-      e.preventDefault();
-      e.stopPropagation();
-      defer(() => this.topicNameEditable?.focus());
-    }
+    // if (!modKey && !this.props.rowData.editing) {
+    //   this.setState({editing: true});
+    //   console.log("topic editing", this.props.rowData.editing)
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    //   defer(() => this.topicNameEditable?.focus());
+    // }
   }
 
   clickInput(e) {
     console.log("clickInput", e);
     const modKey = e.metaKey || e.shiftKey || e.ctrlKey;
-    if (this.props.onSelectToggle) {
+    if (modKey && this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
       this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
-    if (!modKey && !this.props.rowData.editing) {
-      this.setState({editing: true});
-      console.log("value1 editing", this.props.rowData.editing)
-      e.preventDefault();
-      e.stopPropagation();
-      defer(() => this.inputEditable?.focus());
-    }
+    // if (!modKey && !this.props.rowData.editing) {
+    //   this.setState({editing: true});
+    //   console.log("value1 editing", this.props.rowData.editing)
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    //   defer(() => this.inputEditable?.focus());
+    // }
   }
 
   
@@ -760,17 +768,17 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   clickOutput(e) {
     console.log("clickOutput");
     const modKey = e.metaKey || e.shiftKey || e.ctrlKey;
-    if (this.props.onSelectToggle) {
+    if (modKey && this.props.onSelectToggle) {
       e.preventDefault();
       e.stopPropagation();
       this.props.onSelectToggle(this.props.id, e.shiftKey, e.metaKey || e.ctrlKey);
     }
-    if (!modKey && !this.props.rowData.editing) {
-      this.setState({editing: true});
-      e.preventDefault();
-      e.stopPropagation();
-      defer(() => this.outputEditable?.focus());
-    }
+    // if (!modKey && !this.props.rowData.editing) {
+    //   this.setState({editing: true});
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    //   defer(() => this.outputEditable?.focus());
+    // }
   }
 
   onDragStart(e) {
