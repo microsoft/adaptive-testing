@@ -197,7 +197,7 @@ export default class ContentEditable extends React.Component<ContentEditableProp
 
 function selectElement(element){
   var doc = document;
-  console.log(this, element);
+  console.log("ContentEditable selectElement", this, element);
   // @ts-ignore - deprecated IE method? https://stackoverflow.com/questions/21572682/createtextrange-is-not-working-in-chrome
   if (doc.body.createTextRange) {
       // @ts-ignore

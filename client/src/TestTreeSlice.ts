@@ -3,8 +3,9 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface TestTreeState {
   topic: string;
-  suggestions: Object;
   tests: Object;
+  suggestions: Object;
+  loading_suggestions: boolean;
   user: string;
   score_filter: number;
   filter_text: string;
@@ -23,8 +24,9 @@ export interface TestTreeState {
 
 const initialState: TestTreeState = {
   topic: "/",
-  suggestions: [],
   tests: [],
+  suggestions: [],
+  loading_suggestions: false,
   user: "anonymous",
   score_filter: 0.3,
   filter_text: "",
@@ -50,11 +52,15 @@ export const testTreeSlice = createSlice({
 
     updateSuggestions: (state, action: PayloadAction<any[]>) => {
       state.suggestions = [...action.payload];
+    },
+
+    updateLoadingSuggestions(state, action: PayloadAction<boolean>) {
+      state.loading_suggestions = action.payload;
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { refresh, updateGenerator, updateTopicDescription, updateSuggestions } = testTreeSlice.actions
+export const { refresh, updateGenerator, updateTopicDescription, updateSuggestions, updateLoadingSuggestions } = testTreeSlice.actions
 
 export default testTreeSlice.reducer

@@ -11,7 +11,7 @@ import BreadCrum from './bread-crum';
 import TotalValue from './total-value';
 import ContentEditable from './content-editable';
 
-import { TestTreeState, refresh, updateGenerator, updateTopicDescription, updateSuggestions } from './TestTreeSlice';
+import { TestTreeState, refresh, updateGenerator, updateTopicDescription, updateSuggestions, updateLoadingSuggestions } from './TestTreeSlice';
 import { useSelector, useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from './store';
 import { Comm } from './types';
@@ -39,7 +39,6 @@ interface BrowserProps extends BrowserBaseProps {
 
 interface BrowserState {
   selections: any;
-  loading_suggestions: boolean;
   max_suggestions: number;
   suggestions_pos: number;
   suggestionsDropHighlighted: number;
@@ -111,7 +110,6 @@ export class BrowserInternal extends React.Component<BrowserProps, BrowserState>
     // our starting state 
     this.state = {
       selections: {},
-      loading_suggestions: false,
       max_suggestions: 10,
       suggestions_pos: 0,
       suggestionsDropHighlighted: 0,
@@ -319,7 +317,7 @@ export class BrowserInternal extends React.Component<BrowserProps, BrowserState>
             }
             {!this.props.testTree.disable_suggestions && 
               <div onClick={this.refreshSuggestions} style={{color: "#555555", cursor: "pointer", display: "inline-block", padding: "2px", paddingLeft: "15px", paddingRight: "15px", marginBottom: "5px", background: "rgba(221, 221, 221, 0)", borderRadius: "7px"}}>
-                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.state.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
+                <div style={{width: "15px", display: "inline-block"}}><FontAwesomeIcon className={this.props.testTree.loading_suggestions ? "fa-spin" : ""} icon={faRedo} style={{fontSize: "13px", color: "#555555", display: "inline-block"}} /></div>
                 <span style={{fontSize: "13px", fontWeight: "bold"}}>&nbsp;&nbsp;Suggest&nbsp;<select dir="ltr" title="Current suggestion mode" className="adatest-plain-select" onClick={e => e.stopPropagation()} value={this.props.testTree.mode} onChange={this.changeMode} style={{fontWeight: "bold", color: "#555555", marginTop: "1px"}}>
                   {(this.props.testTree.mode_options || []).map((mode_option) => {
                     return <option key={mode_option}>{mode_option}</option>
@@ -796,14 +794,15 @@ export class BrowserInternal extends React.Component<BrowserProps, BrowserState>
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
-    if (this.state.loading_suggestions) return;
+    if (this.props.testTree.loading_suggestions) return;
     for (let k in Object.keys(this.state.selections)) {
       if (Object.keys(this.props.testTree.suggestions).includes(k)) {
         delete this.state.selections[k];
       }
     }
     this.props.dispatch(updateSuggestions([]));
-    this.setState({loading_suggestions: true, suggestions_pos: 0, do_score_filter: true});
+    this.setState({suggestions_pos: 0, do_score_filter: true});
+    this.props.dispatch(updateLoadingSuggestions(true));
     this.props.comm.sendEvent(generateSuggestions({
       value2_filter: this.state.value2Filter, value1_filter: this.state.value1Filter,
       comparator_filter: this.state.comparatorFilter,
@@ -817,6 +816,8 @@ export class BrowserInternal extends React.Component<BrowserProps, BrowserState>
       } else {
         // TODO: Error handling
       }
+    }).finally(() => {
+      this.props.dispatch(updateLoadingSuggestions(false));
     })
   }
 

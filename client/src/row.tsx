@@ -48,7 +48,7 @@ interface RowProps extends RowBaseProps {
 interface RowState {
   type?: any;
   label?: string;
-  topic_name?: string;
+  // topic_name?: string;
   comparator: string;
   dropHighlighted: number; // used as a boolean
   dragging: boolean; // used anywhere?
@@ -706,19 +706,24 @@ export class RowInternal extends React.Component<RowProps, RowState> {
   // }
 
   inputTopicName(text) {
-    text = text.replaceAll("\\", "").replaceAll("\n", "");
-    const encodedText = encodeURIComponent(text);
-    this.setState({topic_name: encodedText});
+    // text = text.replaceAll("\\", "").replaceAll("\n", "");
+    // const encodedText = encodeURIComponent(text);
+    // this.setState({topic_name: encodedText});
   }
 
   finishTopicName(text) {
     console.log("finishTopicName", text)
     text = encodeURIComponent(text.replaceAll("\\", "").replaceAll("\n", ""));
-    this.setState({topic_name: text, /*editing: false*/});
     let topic = this.props.topic;
-    if (this.props.isSuggestion) topic += "/__suggestions__";
-    this.props.comm.sendEvent(moveTest(this.props.id, topic + "/" + text))
-      .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
+    if (this.props.rowData.topic_name !== text) {
+      if (this.props.isSuggestion) topic += "/__suggestions__";
+      topic = topic + "/" + text;
+      this.props.comm.sendEvent(moveTest(this.props.id, topic))
+        .then(() => refreshBrowser(this.props.comm, this.props.dispatch));
+      // this.setState({topic_name: text, editing: false});
+    } else {
+      console.log("finishTopicName skipping update because text is the same")
+    }
   }
   
   clickRow(e) {

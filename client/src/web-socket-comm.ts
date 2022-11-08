@@ -7,10 +7,9 @@ export default class WebSocketComm {
   interfaceId: string;
   websocketServer: string;
   callbackMap: { [key: string]: (data: any) => void };
-  // local data cache
-  data: {};
   // data to send to the server
   pendingData: {};
+  // data received from the server
   pendingResponses: {};
   wcomm: WebSocket;
   reconnectDelay: number;
@@ -21,7 +20,6 @@ export default class WebSocketComm {
     this.interfaceId = interfaceId;
     this.websocketServer = websocketServer;
     this.callbackMap = {};
-    this.data = {};
     this.pendingData = {};
     this.pendingResponses = {};
     this.reconnectDelay = 100;
@@ -63,7 +61,6 @@ export default class WebSocketComm {
     for (const i in keys) {
       const k = keys[i];
       this.pendingData[k] = data;
-      this.data[k] = Object.assign(this.data[k] || {}, data); // pretend it has already changed in our data cache
     }
   }
 
@@ -85,17 +82,6 @@ export default class WebSocketComm {
     }
   }
 
-  updateData(e) {
-    console.log("WEBSOCKET UPDATEDATA, received unexpected data", this.data)
-    for (const k in this.data) {
-      // console.log("data[k]", data[k])
-      this.data[k] = Object.assign(this.data[k] || {}, this.data[k]);
-      if (k in this.callbackMap) {
-        this.callbackMap[k](this.data[k]);
-      }
-    }
-  }
-
   onError(e) {
     console.log("Websocket error", e);
   }
@@ -104,12 +90,6 @@ export default class WebSocketComm {
     console.log('Socket is closed. Reconnect will be attempted...', e.reason);
     setTimeout(this.connect, this.reconnectDelay);
     this.reconnectDelay += 1000;
-  }
-
-  subscribe(key, callback) {
-    console.log("WEBSOCKET SUBSCRIBE", key, callback);
-    this.callbackMap[key] = callback;
-    defer(_ => this.callbackMap[key](this.data[key]));
   }
 
   getSeqNumber() {
@@ -136,7 +116,9 @@ export default class WebSocketComm {
         if (this.pendingResponses[seqNumber] !== "pending") {
           clearTimeout(timeout);
           clearInterval(interval);
-          resolve(this.pendingResponses[seqNumber]);
+          const responseData = this.pendingResponses[seqNumber];
+          this.pendingResponses[seqNumber] = undefined;
+          resolve(responseData);
         }
       }, 100);
     });
