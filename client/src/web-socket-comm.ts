@@ -8,9 +8,8 @@ export default class WebSocketComm {
   websocketServer: string;
   callbackMap: { [key: string]: (data: any) => void };
   // data to send to the server
-  pendingData: {};
-  // data received from the server
-  pendingResponses: {};
+  // map of seqNum to resolve function for the promise
+  resolvers: { [seqNum: number]: (value: unknown) => void };
   wcomm: WebSocket;
   reconnectDelay: number;
   seqNumber: number;
@@ -20,22 +19,22 @@ export default class WebSocketComm {
     this.interfaceId = interfaceId;
     this.websocketServer = websocketServer;
     this.callbackMap = {};
-    this.pendingData = {};
-    this.pendingResponses = {};
+    this.resolvers = {};
     this.reconnectDelay = 100;
     this.seqNumber = 0;
   }
 
   send(keys, data) {
-    this.addPendingData(keys, data);
-    return this.sendPendingData();
+    const pendingData = this.addPendingData(keys, data);
+    return this.sendPendingData(pendingData);
   }
 
   sendEvent(commEvent: CommEvent) {
+    let pendingData = {};
     for (const k of Object.keys(commEvent)) {
-      this.addPendingData(k, commEvent[k]);
+      this.addPendingData(k, commEvent[k], pendingData);
     }
-    return this.sendPendingData();
+    return this.sendPendingData(pendingData);
   }
 
   // debouncedSendEvent500(commEvent) {
@@ -55,13 +54,13 @@ export default class WebSocketComm {
   //   this.debouncedSendPendingData1000();
   // }
 
-  addPendingData(keys, data) {
+  addPendingData(keys, data, pendingData={}) {
     console.log("addPendingData", keys, data);
     if (!Array.isArray(keys)) keys = [keys];
-    for (const i in keys) {
-      const k = keys[i];
-      this.pendingData[k] = data;
+    for (const k of keys) {
+      pendingData[k] = data;
     }
+    return pendingData;
   }
 
   connect(onOpen: any) {
@@ -78,7 +77,12 @@ export default class WebSocketComm {
     const keys = Object.keys(data);
     if (keys.includes("sequence_number")) {
       console.log(`received message#${data.sequence_number}`, data);
-      this.pendingResponses[data.sequence_number] = data;
+      if (data.sequence_number in this.resolvers) {
+        this.resolvers[data.sequence_number](data);
+        delete this.resolvers[data.sequence_number];
+      } else {
+        console.log(`no resolver for message#${data.sequence_number}`);
+      }
     }
   }
 
@@ -96,32 +100,19 @@ export default class WebSocketComm {
     return this.seqNumber++;
   }
 
-  sendPendingData() {
+  sendPendingData(pendingData: any): Promise<any> {
     const seqNumber = this.getSeqNumber();
-    this.pendingData["sequence_number"] = seqNumber;
-    console.log(`sending message#${seqNumber}`, this.pendingData);
-    this.wcomm.send(JSON.stringify(this.pendingData));
-    this.pendingData = {};
-    return this.waitForResponse(seqNumber);
-  }
-
-  waitForResponse(seqNumber): Promise<any> {
-    const timeout_ms = 60000;
-    this.pendingResponses[seqNumber] = "pending";
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
+    const promise = new Promise((resolve, reject) => {
+      const timeout_ms = 60000;
+      setTimeout(() => {
         reject(`timeout waiting for response to message#${seqNumber}`);
       }, timeout_ms);
-      const interval = setInterval(() => {
-        if (this.pendingResponses[seqNumber] !== "pending") {
-          clearTimeout(timeout);
-          clearInterval(interval);
-          const responseData = this.pendingResponses[seqNumber];
-          this.pendingResponses[seqNumber] = undefined;
-          resolve(responseData);
-        }
-      }, 100);
+      console.log(`sending message#${seqNumber}`, pendingData);
+      pendingData["sequence_number"] = seqNumber;
+      this.resolvers[seqNumber] = resolve;
+      this.wcomm.send(JSON.stringify(pendingData));
     });
+    return promise;
   }
 
 }
