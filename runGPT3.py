@@ -28,11 +28,11 @@ generator = adatest.generators.OpenAI('text-curie-001',)
 # print(run_openai('hello how are you'))
 
 # create a new test tree
-tests = adatest.TestTree("gpt3_tree.csv")
+tests = adatest.TestTree("gpt3_tree1.csv")
 
 # # adapt the tests to our model to launch a notebook-based testing interface
 # # (wrap with adatest.serve to launch a standalone server)
 # # adatest.serve(tests.adapt(classifier, generator, auto_save=True), port=8089)
-adatest.serve(tests.adapt(run_openai, generator=generator, auto_save=True, control=False),port = 8081)
+adatest.serve(tests.adapt(run_openai, generator=generator, auto_save=True, control=False,description="question"),port = 8081)
 
 
