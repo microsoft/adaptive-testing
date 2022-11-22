@@ -4,84 +4,76 @@ import { defer, debounce } from 'lodash';
 
 export default class JupyterComm {
   interfaceId: string;
-  callbackMap: { [key: string]: (data: any) => void };
-  data: any;
-  pendingData: any;
   jcomm: InnerJupyterComm;
+  resolvers: { [seqNum: number]: (value: unknown) => void };
+  seqNumber: number;
 
   constructor(interfaceId) {
     autoBind(this);
     this.interfaceId = interfaceId;
-    this.callbackMap = {};
-    this.data = {};
-    this.pendingData = {};
-    this.jcomm = new InnerJupyterComm('adatest_interface_target_'+this.interfaceId, this.updateData);
+    this.jcomm = new InnerJupyterComm('adatest_interface_target_'+this.interfaceId, this.handleResponse);
+    this.resolvers = {};
+    this.seqNumber = 0;
   }
 
   send(keys, data) {
-    this.addPendingData(keys, data);
-    this.sendPendingData();
+    console.log("JUPYTERCOMM send", keys, data)
+    const pendingData = this.addPendingData(keys, data);
+    return this.sendPendingData(pendingData);
   }
 
   sendEvent(commEvent) {
+    console.log("JUPYTERCOMM sendEvent", commEvent)
+    let pendingData = {};
     for (const k of Object.keys(commEvent)) {
-      this.addPendingData(k, commEvent[k]);
+      this.addPendingData(k, commEvent[k], pendingData);
     }
-    this.sendPendingData();
-    // TODO: Make promises work here too
-    return Promise.resolve();
+    return this.sendPendingData(pendingData);
   }
 
-  // debouncedSendEvent500(commEvent) {
-  //   for (const k of Object.keys(commEvent)) {
-  //     this.addPendingData(k, commEvent[k]);
-  //   }
-  //   this.debouncedSendPendingData500();
-  // }
-
-  // debouncedSend500(keys, data) {
-  //   this.addPendingData(keys, data);
-  //   this.debouncedSendPendingData500();
-  // }
-
-  // debouncedSend1000(keys, data) {
-  //   this.addPendingData(keys, data);
-  //   this.debouncedSendPendingData1000();
-  // }
-
-  addPendingData(keys, data) {
-
-    // console.log("addPendingData", keys, data);
+  addPendingData(keys, data, pendingData={}) {
+    console.log("JUPYTERCOMM addPendingData", keys, data, pendingData)
     if (!Array.isArray(keys)) keys = [keys];
-    for (const i in keys) this.pendingData[keys[i]] = data;
+    for (const k of keys) {
+      pendingData[k] = data;
+    }
+    return pendingData;
   }
 
-  updateData(data) {
+  handleResponse(data) {
+    console.log("JUPYTERCOMM handleResponse", data)
     data = JSON5.parse(data["data"]) // data from Jupyter is wrapped so we get to do our own JSON encoding
-    console.log("updateData", data)
-
-    // save the data locally
-    for (const k in data) {
-      this.data[k] = data[k];
-    }
-
-    // call all the registered callbacks
-    for (const k in data) {
-      if (k in this.callbackMap) {
-        this.callbackMap[k](this.data[k]);
+    const keys = Object.keys(data);
+    if (keys.includes("sequence_number")) {
+      console.log(`received message#${data.sequence_number}`, data);
+      if (data.sequence_number in this.resolvers) {
+        this.resolvers[data.sequence_number](data);
+        delete this.resolvers[data.sequence_number];
+      } else {
+        console.log(`no resolver for message#${data.sequence_number}`);
       }
     }
   }
 
-  subscribe(key, callback) {
-    this.callbackMap[key] = callback;
-    defer(_ => this.callbackMap[key](this.data[key]));
+  getSeqNumber() {
+    return this.seqNumber++;
   }
 
-  sendPendingData() {
-    console.log("sending", this.pendingData);
-    this.jcomm.send_data(this.pendingData);
-    this.pendingData = {};
+  sendPendingData(pendingData: any) {
+    console.log("JUPYTERCOMM sendPendingData", pendingData)
+
+    const seqNumber = this.getSeqNumber();
+    const promise = new Promise((resolve, reject) => {
+      const timeout_ms = 60000;
+      setTimeout(() => {
+        reject(`timeout waiting for response to message#${seqNumber}`);
+      }, timeout_ms);
+      console.log(`sending message#${seqNumber}`, pendingData);
+      pendingData["sequence_number"] = seqNumber;
+      this.resolvers[seqNumber] = resolve;
+      this.jcomm.send_data(pendingData);
+    });
+    return promise;
   }
 }
 
@@ -108,6 +100,7 @@ class InnerJupyterComm {
   }
 
   send_data(data) {
+    console.log("INNERJUPYTERCOMM send_data", data)
     if (this.jcomm !== undefined) {
       this.jcomm.send(data);
     } else {
@@ -116,11 +109,13 @@ class InnerJupyterComm {
   }
 
   _register(jcomm, msg) {
+    console.log("INNERJUPYTERCOMM _register", jcomm)
     this.jcomm = jcomm;
     this.jcomm.on_msg(this._fire_callback);
   }
 
   _fire_callback(msg) {
+    console.log("INNERJUPYTERCOMM _fire_callback", msg)
     this.callback(msg.content.data)
   }
 }

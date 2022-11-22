@@ -6,7 +6,6 @@ import { CommEvent } from './CommEvent';
 export default class WebSocketComm {
   interfaceId: string;
   websocketServer: string;
-  callbackMap: { [key: string]: (data: any) => void };
   // data to send to the server
   // map of seqNum to resolve function for the promise
   resolvers: { [seqNum: number]: (value: unknown) => void };
@@ -18,7 +17,6 @@ export default class WebSocketComm {
     autoBind(this);
     this.interfaceId = interfaceId;
     this.websocketServer = websocketServer;
-    this.callbackMap = {};
     this.resolvers = {};
     this.reconnectDelay = 100;
     this.seqNumber = 0;
@@ -37,23 +35,6 @@ export default class WebSocketComm {
     return this.sendPendingData(pendingData);
   }
 
-  // debouncedSendEvent500(commEvent) {
-  //   for (const k of Object.keys(commEvent)) {
-  //     this.addPendingData(k, commEvent[k]);
-  //   }
-  //   this.debouncedSendPendingData500();
-  // }
-
-  // debouncedSend500(keys, data) {
-  //   this.addPendingData(keys, data);
-  //   this.debouncedSendPendingData500();
-  // }
-
-  // debouncedSend1000(keys, data) {
-  //   this.addPendingData(keys, data);
-  //   this.debouncedSendPendingData1000();
-  // }
-
   addPendingData(keys, data, pendingData={}) {
     console.log("addPendingData", keys, data);
     if (!Array.isArray(keys)) keys = [keys];
@@ -61,15 +42,6 @@ export default class WebSocketComm {
       pendingData[k] = data;
     }
     return pendingData;
-  }
-
-  connect(onOpen: any) {
-    let wsUri = (window.location.protocol=='https:' ? 'wss://' : 'ws://') + (this.websocketServer.startsWith("/") ? window.location.host : "") + this.websocketServer;
-    this.wcomm = new WebSocket(wsUri);
-    this.wcomm.onopen = onOpen;
-    this.wcomm.onmessage = this.handleResponse;
-    this.wcomm.onerror = this.onError;
-    this.wcomm.onclose = this.onClose;
   }
 
   handleResponse(e) {
@@ -84,16 +56,6 @@ export default class WebSocketComm {
         console.log(`no resolver for message#${data.sequence_number}`);
       }
     }
-  }
-
-  onError(e) {
-    console.log("Websocket error", e);
-  }
-
-  onClose(e) {
-    console.log('Socket is closed. Reconnect will be attempted...', e.reason);
-    setTimeout(this.connect, this.reconnectDelay);
-    this.reconnectDelay += 1000;
   }
 
   getSeqNumber() {
@@ -113,6 +75,25 @@ export default class WebSocketComm {
       this.wcomm.send(JSON.stringify(pendingData));
     });
     return promise;
+  }
+
+  connect(onOpen: any) {
+    let wsUri = (window.location.protocol=='https:' ? 'wss://' : 'ws://') + (this.websocketServer.startsWith("/") ? window.location.host : "") + this.websocketServer;
+    this.wcomm = new WebSocket(wsUri);
+    this.wcomm.onopen = onOpen;
+    this.wcomm.onmessage = this.handleResponse;
+    this.wcomm.onerror = this.onError;
+    this.wcomm.onclose = this.onClose;
+  }
+
+  onError(e) {
+    console.log("Websocket error", e);
+  }
+
+  onClose(e) {
+    console.log('Socket is closed. Reconnect will be attempted...', e.reason);
+    setTimeout(this.connect, this.reconnectDelay);
+    this.reconnectDelay += 1000;
   }
 
 }
