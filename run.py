@@ -6,6 +6,7 @@ import numpy as np
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
+
 import logging
 
 id = '0001'
@@ -39,7 +40,7 @@ classifier = transformers.pipeline("sentiment-analysis", top_k = 1)
 # specify the backend generator used to help you write tests
 generator = adatest.generators.OpenAI('text-curie-001',
                                      )
-
+print(classifier(['hey','hi']))
 # ...or you can use an open source generator
 #neo = transformers.pipeline('text-generation', model="EleutherAI/gpt-neo-125M")
 #generator = adatest.generators.Transformers(neo.model, neo.tokenizer)

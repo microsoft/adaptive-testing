@@ -58,7 +58,7 @@ model = adatest.Model(classifier, output_names = labels)
 # specify the backend generator used to help you write tests
 generator = adatest.generators.OpenAI('text-davinci-002')
 
-
+print(classifier(['where are you going?', 'where you are going?']))
 
 # ...or you can use an open source generator
 #neo = transformers.pipeline('text-generation', model="EleutherAI/gpt-neo-125M")

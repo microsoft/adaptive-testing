@@ -47,7 +47,8 @@ class Scorer():
             
             # see if we are scoring a generator or a classifier
             out = self.model(["string 1", "string 2"])
-            if isinstance(out[0].item(), str):
+            if isinstance(out[0], str):	
+            # if isinstance(out[0].item(), str): # NICK ADDED THIS FOR GENERATIVE MODEL
                 self.__class__ = GeneratorScorer
                 GeneratorScorer.__init__(self, model)
             else:
@@ -132,6 +133,7 @@ class ClassifierScorer(Scorer):
         # run the model
         try:
             model_out = self.model(eval_inputs)
+            print(' model out ',model_out)
         except Exception as e:
             model_out = np.zeros((len(eval_inputs), len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
             log.error(e)
@@ -141,6 +143,7 @@ class ClassifierScorer(Scorer):
         # compute the output strings and probabilites for each output in template form
         out_strings = [[] for _ in range(len(eval_ids))]
         out_probs = [[] for _ in range(len(eval_ids))]
+        
         i = 0
         while i < len(model_out):
             out_strings[eval_inds[i]].append(self.model.output_names[np.argmax(model_out[i])])
@@ -257,9 +260,10 @@ class GeneratorScorer(Scorer):
             out_strings[eval_inds[i]].append(model_out[i])
             i += 1
         for i in eval_inds:
+            out_strings[i] = "|".join(out_strings[i]) # template outputs are joined by |	
             # out_strings[i] = "|".join(out_strings[i][0].item()) # template outputs are joined by |
-            out_strings[i] = out_strings[i][0].item()
-
+            # out_strings[i] = out_strings[i][0].item()
+#### NICK ADDED THE PREVIOUS TWO LINES FOR GENERATIVE MODEL TESTING?
         scores = []
         outputs = []
         for i, ind in enumerate(eval_inds):

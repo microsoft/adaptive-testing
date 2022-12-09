@@ -477,7 +477,7 @@ class OpenAI(TextCompletionGenerator):
 
             if user_prompt == call_prompt: 
                 print('hello user prompt is being used ')
-                print(user_prompt)
+                # print(user_prompt)
                 parsed_text = []
 
                 for p in parsed_suggestion: 
@@ -494,6 +494,7 @@ class OpenAI(TextCompletionGenerator):
             # logging will not work in case of suggest parent topics type prompts
             # study_log = {'Custom Prompt': 'No' if user_prompt != call_prompt else user_prompt, 'Mode': {mode}, 'Suggestions': output}
             # log.study(f"Generated suggestions\t{'ROOT' if not topic else topic}\t{study_log}")
+
         return output
         # return self._parse_suggestion_texts(suggestion_texts, prompts)
 
