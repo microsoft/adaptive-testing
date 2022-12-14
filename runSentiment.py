@@ -43,33 +43,35 @@ client = authenticate_client()
 
 # Example method for detecting sentiment and opinions in text 
 def sentiment_analysis(documents, client=client):
-
     outcome =[]
-    result = client.analyze_sentiment(documents, show_opinion_mining=False)
-    doc_result = [doc for doc in result if not doc.is_error]
-
-
-    for document in doc_result:
+    print(type(documents), len(documents))
+    doc_result_total = []
+    batch_size = 10
+    # for num,i in enumerate(range(len(documents)//10 + 1 )) : 
+    for i in range(0, len(documents), batch_size):
+        print( i, i+batch_size)
+  
+        result = client.analyze_sentiment(documents[i:i+batch_size], show_opinion_mining=False)
+        
+        doc_result_batch = [doc for doc in result if not doc.is_error]
+        
+        doc_result_total.extend(doc_result_batch)
+    for document in doc_result_total:
         outcome.append([])
-        # outcome[-1] = [{'label':'Positive', 'score':document.confidence_scores.positive},
-        # {'label':'Neutral', 'score':document.confidence_scores.neutral},
-        # {'label':'Negative', 'score':document.confidence_scores.negative}, ]
-        # res = 
+    
         outcome[-1] = [document.confidence_scores.positive , document.confidence_scores.neutral,document.confidence_scores.negative ]
+        # res = [document.confidence_scores.positive , document.confidence_scores.neutral,document.confidence_scores.negative ]
+
         # score = np.max(res)
         # label = ['Positive', 'Neutral', 'Negative'][np.argmax(res)]
         # outcome[-1] = [{'label':label, 'score':score}]
-    print(outcome)
-        # print("Document Sentiment: {}".format(document.sentiment))
-        # print("Overall scores: positive={0:.2f}; neutral={1:.2f}; negative={2:.2f} \n".format(
-        #     document.confidence_scores.positive,
-        #     document.confidence_scores.neutral,
-        #     document.confidence_scores.negative,
+
         # ))
     return outcome
         
 doc_ex = [
-        "The food and service were unacceptable. The concierge was nice, however.", 'fuck off', 'i love you'
+        "The food and service were unacceptable. The concierge was nice, however.", 'fuck off', 'i love you', 'sdf' , 'wef', 'yhrhtyhb', 'fef', 'rgege', 'grgs',
+        'grgg', 'weada', 'awad' ,'bmnjm', 'vnghn'
     ]
 
 # classifier = 
@@ -86,4 +88,4 @@ tests = adatest.TestTree(csv_filename)
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
 
-adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence"), port=8967)
+adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence"), port=8977)

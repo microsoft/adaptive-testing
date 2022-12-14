@@ -25,3 +25,8 @@ d2f4039ad61f4195b88c105acab92fc1,/Not%20Sure,My name is Charvi.,Acceptable,not_s
 da5528db92114664834e37eb4ce2d73f,/Name%20introduction,Charvi is my name.,Acceptable,pass,anonymous,,0.0,anonymous
 ecc63653e7ba48d4bb84cd19919292ca,/Punctuation/Dash/Em%20dash,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
 f429a5fed5704dc58d948676d9f0e6f4,/Punctuation/Dash/En-dash,,__TOOVERWRITE__,topic_marker,imputed,,__TOEVAL__,
+46722dfb85064262909bf07a8caf622d,/Name%20introduction,"Okay, and I'm Sasha.",Unacceptable,fail,anonymous,,0.8703052997589111,anonymous
+8912b124d989401799bfa2171d1a9a8c,/Name%20introduction,"Oh, okay.  Is that your nickname?",Acceptable,pass,anonymous,,0.9915383458137512,anonymous
+b9b844205b454306b4bfd4196b9df02c,/Name%20introduction,Charvi? Interesting name. What nationality is that?,Unacceptable,fail,anonymous,,0.699496328830719,anonymous
+443cd992f45d4d7da9cc5927c18d70a6,/Not%20Sure,I'm Sasha too.,Unacceptable,not_sure,anonymous,,0.7130537033081055,
+05b08b467de848b4b15a39e7cd23fe72,/Name%20introduction,"I'm Sasha, too,",Unacceptable,pass,anonymous,,0.65144944190979,anonymous

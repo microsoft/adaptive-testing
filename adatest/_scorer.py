@@ -158,8 +158,8 @@ class ClassifierScorer(Scorer):
         outputs = []
         for i, ind in enumerate(eval_inds):
             outputs.append(out_strings[ind])
-            scores.append(self._score_test(tests, eval_ids[ind], out_probs[ind], self.top_probs))
-
+            scores.append(np.max(out_probs[ind]))
+            # self._score_test(tests, eval_ids[ind], out_probs[ind], self.top_probs)
         return outputs,scores
  
     def _score_test(self, tests, id, probs, top_probs):

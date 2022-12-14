@@ -36,7 +36,7 @@ model = adatest.Model(classifier, output_names = labels)
 # specify the backend generator used to help you write tests
 generator = adatest.generators.OpenAI('text-davinci-003')
 
-# print(classifier(['how are you?', 'where are y9ou?']))
+print(classifier(['how are you?', 'where are y9ou?']))
 #  [[{'label': '5 stars', 'score': 0.47160935401916504}], [{'label': '1 star', 'score': 0.3922109305858612}]]
 
 # ...or you can use an open source generator
