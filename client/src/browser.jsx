@@ -201,17 +201,13 @@ export default class Browser extends React.Component {
                   limit={15}
                   data={[
                     {
-                      value: "List important/common topics/domains in (task domain)",
+                      value: "List some common categories of " + this.state.description ,
                       group: "Where do I start/Where do I look next?"
                     },
-                    {
-                      value: "List some common types of (task input description)",
-                      group: "Where do I start/Where do I look next?"
-                    },
-                    {
-                      value: "I am working on (task). List the different topics and sub-topics I should consider.",
-                      group: "Where do I start/Where do I look next?"
-                    },
+                    // {
+                    //   value: "I am working on (task). List the different topics and sub-topics I should consider.",
+                    //   group: "Where do I start/Where do I look next?"
+                    // },
                     {
                       value: "Suggest sibling topics for " + this.state.topic,
                       group: "Expand the tree"
@@ -322,53 +318,53 @@ export default class Browser extends React.Component {
                     prefix: "C.",
                     group: "Where to start/Where to look next"
                   }, 
+                  // {
+                  //   view: `
+                  //       <span>Write a ` + this.state.description + `</span>
+                  //       <span style="color: red">output/context, if available</span>
+                  //       <span> such as </span>
+                  //       <span style="color: red">"example" </span>
+                  //   `,
+                  //   prefix: "A.",
+                  //   group: "Found one or more errors, now what?"
+                  // }, 
                   {
                     view: `
-                        <span>Write a sentence that is a ` + this.state.description + `</span>
+                        <span>Write a ` + this.state.description +` using the phrase </span>
+                        <span style="color: red">"phrase"</span>
+                        <span> that is </span>
                         <span style="color: red">output/context, if available</span>
-                        <span> such as </span>
-                        <span style="color: red">example of input</span>
+                        <span> such as \n </span>
+                        <span style="color: red">"example" </span>
                     `,
                     prefix: "A.",
-                    group: "Found one or more errors, now what? (Focused exploration)"
-                  }, 
-                  {
-                    view: `
-                        <span>Write a sentence using the phrase/word </span>
-                        <span style="color: red">"phrase"</span>
-                        <span> that is a ` + this.state.description +`</span>
-                        <span style="color: red">output/context, if available</span>
-                        <span> such as </span>
-                        <span style="color: red">example of input</span>
-                    `,
-                    prefix: "B.",
-                    group: "Found one or more errors, now what? (Focused exploration)"
+                    group: "Found one or more errors, now what?"
                   },
                   {
                     view: `
                         <span>Write a ` + this.state.description + ` with the template: </span>
                         <span style="color: red">template</span>
                         <span>, such as </span>
-                        <span style="color: red">example</span>
+                        <span style="color: red">"example"</span>
                     `,
-                    prefix: "C.",
-                    group: "Found one or more errors, now what? (Focused exploration)"
+                    prefix: "B.",
+                    group: "Found one or more errors, now what?"
                   },
                   {
                     view: `
                         <span>Write more tests similar to the tests saved below</span>
                     `,
-                    prefix: "D.",
+                    prefix: "C.",
                     editable: false,
-                    group: "Found one or more errors, now what? (Focused exploration)"
+                    group: "Found one or more errors, now what?"
                   },
                   {
                     view: `
                         <span>Write more tests similar to the <b>selected</b> tests saved below</span>
                     `,
-                    prefix: "E.",
+                    prefix: "D.",
                     editable: false,
-                    group: "Found one or more errors, now what? (Focused exploration)"
+                    group: "Found one or more errors, now what?"
                   },
               ]}
               onSubmit={this.refreshTestSuggestions}

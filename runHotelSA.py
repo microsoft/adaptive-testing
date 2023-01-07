@@ -31,12 +31,12 @@ model = AutoModelForSequenceClassification.from_pretrained(huggingfacemodel)
 # classifier = transformers.pipeline("sentiment-analysis", return_all_scores=True)
 
 classifier = transformers.pipeline("text-classification", model=model, tokenizer=tokenizer, top_k=1)
-labels = ['negative','negative', 'neutral', 'positive', 'positive']
+labels = ['Negative','Negative', 'Neutral', 'Positive', 'Positive']
 model = adatest.Model(classifier, output_names = labels)
 # specify the backend generator used to help you write tests
 generator = adatest.generators.OpenAI('text-davinci-003')
 
-print(classifier(['how are you?', 'where are y9ou?']))
+# print(classifier(['how are you?', 'where are y9ou?']))
 #  [[{'label': '5 stars', 'score': 0.47160935401916504}], [{'label': '1 star', 'score': 0.3922109305858612}]]
 
 # ...or you can use an open source generator
@@ -53,4 +53,4 @@ tests = adatest.TestTree(csv_filename)
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
 
-adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="hotel review"), port=8067)
+adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence-long hotel review"), port=8067)
