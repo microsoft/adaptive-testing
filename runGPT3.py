@@ -12,7 +12,7 @@ def run_openai(prompts):
     completions = []
     for prompt in prompts:
         response = openai.Completion.create(
-                    engine='text-curie-001', prompt=prompt, max_tokens=20,
+                    engine='text-curie-001', prompt=prompt, max_tokens=40,
                     temperature=0.7, top_p= 0.95 , n=1, stop="")
         suggestion_texts = [choice["text"] for choice in response["choices"]]
         completions.append(suggestion_texts[0].strip())
