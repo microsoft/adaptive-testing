@@ -6,7 +6,7 @@ import numpy as np
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
-id = '0001'
+id = 'devang'
 logname  = 'hotelsa' + id + '.log'
 import logging
 logging.basicConfig(
