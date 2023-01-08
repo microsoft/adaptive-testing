@@ -191,7 +191,7 @@ export default class Browser extends React.Component {
             <div className='adatest-title'>Suggested Topics</div>
             <div style={{position: "relative"}}>
               <Autocomplete 
-                  placeholder={"▼ Suggest more sub-topics for this folder ▼"}
+                  placeholder={"Choose prompt or write or your own ▼"}
                   value={this.state.topicPrompt}
                   onChange={this.changeTopicPrompt} 
                   id={"topic_prompt_input_box"}
@@ -204,22 +204,18 @@ export default class Browser extends React.Component {
                       value: "List some common categories of " + this.state.description ,
                       group: "Where do I start/Where do I look next?"
                     },
+                    {
+                      value: "Write more topics similar to the topics in this folder",
+                      group: "Expand the tree"
+                    },
                     // {
-                    //   value: "I am working on (task). List the different topics and sub-topics I should consider.",
-                    //   group: "Where do I start/Where do I look next?"
+                    //   value: "Suggest sub-topics for " + this.state.topic,
+                    //   group: "Expand the tree"
                     // },
-                    {
-                      value: "Suggest sibling topics for " + this.state.topic,
-                      group: "Expand the tree"
-                    },
-                    {
-                      value: "Suggest sub-topics for " + this.state.topic,
-                      group: "Expand the tree"
-                    },
-                    {
-                      value: "Suggest parent topics for " + this.state.topic,
-                      group: "Expand the tree"
-                    }
+                    // {
+                    //   value: "Suggest parent topics for " + this.state.topic,
+                    //   group: "Expand the tree"
+                    // }
 
                 ]} />
                 <button disabled={this.state.isControl} onClick={() => this.setState({topicPrompt: ""})} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
@@ -296,12 +292,6 @@ export default class Browser extends React.Component {
                     prefix: "A.",
                     group: "Where to start/Where to look next"
                   },
-                  // {
-                  //   value: "Write a sentence from a " + this.state.description,
-                  //   view: `<span>Write a sentence from a ` + this.state.description + `</span>`,
-                  //   prefix: "B.",
-                  //   group: "Where to start/Where to look next"
-                  // },
                   {
                     view: `
                         <span>Write a ` + this.state.description + ` that is </span>
