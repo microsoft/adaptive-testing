@@ -5,6 +5,8 @@ import os
 import openai
 import numpy as np
 
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 id = '0002'
 logname  = 'perspective' + id + '.log'
 import logging
@@ -27,7 +29,7 @@ t = toxicity.ToxicityModel('cache_file', googleapikey)
 classifier = t.predict_proba
 model = adatest.Model(classifier, output_names = ["Non-toxic", "Toxic"])
 # specify the backend generator used to help you write tests
-generator = adatest.generators.OpenAI('text-davinci-003',)                               
+generator = adatest.generators.OpenAI('text-curie-001',)                               
 
 # ...or you can use an open source generator
 #neo = transformers.pipeline('text-generation', model="EleutherAI/gpt-neo-125M")

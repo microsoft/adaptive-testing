@@ -10,6 +10,7 @@ const placeholder=`
 // Magic values - TODO: clean up in future
 const autoText = "Write more tests similar to the tests saved below";
 const selectExamplesText = "Write more tests similar to the selected tests saved below";
+const autoTopicText = "Give more topics similar to those in the current folder"
 
 export default function PromptInput({value, onSubmit, disabled, dropdownOptions, style, isLoading}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function PromptInput({value, onSubmit, disabled, dropdownOptions,
     } 
     
     let submitText = "";
-    if (inputText === autoText) {
+    if (inputText === autoText || inputText === autoTopicText) {
       submitText = "";
     } else if (inputText === selectExamplesText) {
       submitText = "Select examples";

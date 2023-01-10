@@ -189,7 +189,7 @@ export default class Browser extends React.Component {
           </div>
           <div  style={{padding: "10px", height: "50%", marginRight: "1rem"}}>
             <div className='adatest-title'>Suggested Topics</div>
-            <div style={{position: "relative"}}>
+            {/* <div style={{position: "relative"}}>
               <Autocomplete 
                   placeholder={"Choose prompt or write or your own ▼"}
                   value={this.state.topicPrompt}
@@ -221,12 +221,42 @@ export default class Browser extends React.Component {
                 <button disabled={this.state.isControl} onClick={() => this.setState({topicPrompt: ""})} style={{right: "5px", top: "10px", position: "absolute", border: "none", backgroundColor: "transparent"}}>
                   <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#333333", display: "inline-block"}} /> 
                 </button>
-              </div>
-              <div style={{display: "flex", flexDirection: "row", justifyContent: "end", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
+              </div> */}
+
+<div style={{display: "flex", marginTop: "10px"}} >  
+            <PromptInput 
+              style={{width:"auto", flexGrow: "1", border: "solid rgb(216, 222, 228) 1px", cursor: "pointer" }}
+              value={this.state.topicPrompt}
+              onChange={this.changeTopicPrompt} 
+              error={this.state.topicPromptError}
+              disabled={this.state.isControl}
+              limit={15}
+              id={"topic_prompt_input_box"}
+              dropdownOptions={[
+                  {
+                    view:  "List some common categories of " + this.state.description ,            
+                    prefix: "",
+                    group: "Where to start/Where to look next"
+                  }, 
+                  {
+                    view: "Give more topics similar to those in the current folder",
+                    prefix: "",
+                    group: "Found one or more topics, now what?"
+                  },
+              ]}
+              onSubmit={this.refreshTopicSuggestions}
+              isLoading={this.state.loading_topic_suggestions}
+            />
+            {/* <Button color="gray" style={{marginLeft: "10px", alignSelf: "end"}} onClick={this.clearSuggestions} disabled={this.state.disable_suggestions || testSuggestions.length < 1}>
+              <FontAwesomeIcon icon={faTimes} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} /> 
+            </Button> */}
+          </div>
+
+              {/* <div style={{display: "flex", flexDirection: "row", justifyContent: "end", marginTop: "0.25rem", marginBottom: "0.25rem"}}>
                 <Button onClick={this.refreshTopicSuggestions} style={{alignSelf: "end"}}>
                 <FontAwesomeIcon className={this.state.loading_topic_suggestions ? "rotating" : ""} icon={faRedo} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
                 </Button>
-              </div>
+              </div> */}
             <div className="adatest-scroll-wrap" style={{height: "50%", borderRadius: "5px", border: "solid rgb(216, 222, 228) 1px", backgroundColor: "rgb(246, 248, 250)"}}>
               <div id="topicsuggestions" style={{display: "flex", flexDirection: "column"}}>
                 {/* <span style={{fontSize: "13px", fontWeight: "bold", marginBottom: "0.25rem"}}>Suggested topics</span> */}
@@ -287,27 +317,29 @@ export default class Browser extends React.Component {
               limit={15}
               id={"test_prompt_input_box"}
               dropdownOptions={[
-                  {
-                    view: `<span>Write a ` + this.state.description + `</span>`,
-                    prefix: "A.",
-                    group: "Where to start/Where to look next"
-                  },
+                  // {
+                  //   view: `<span>Write a ` + this.state.description + `</span>`,
+                  //   prefix: "A.",
+                  //   group: "Where to start/Where to look next"
+                  // },
                   {
                     view: `
                         <span>Write a ` + this.state.description + ` that is </span>
-                        <span style="color: red">output type</span>
-                    `,
-                    prefix: "B.",
-                    group: "Where to start/Where to look next"
-                  },
-                  {
-                    view: `
-                        <span>Write a ` + this.state.description + ` that refers to</span>
+                        <span style="color: red">output type or context </span>
+                        <span>and/or refers to </span> 
                         <span style="color: red">input feature</span>
                     `,
-                    prefix: "C.",
+                    prefix: "1.",
                     group: "Where to start/Where to look next"
-                  }, 
+                  },
+                  // {
+                  //   view: `
+                  //       <span>Write a ` + this.state.description + ` that refers to</span>
+                  //       <span style="color: red">input feature</span>
+                  //   `,
+                  //   prefix: "C.",
+                  //   group: "Where to start/Where to look next"
+                  // }, 
                   // {
                   //   view: `
                   //       <span>Write a ` + this.state.description + `</span>
@@ -327,24 +359,24 @@ export default class Browser extends React.Component {
                         <span> such as \n </span>
                         <span style="color: red">"example" </span>
                     `,
-                    prefix: "A.",
+                    prefix: "1.",
                     group: "Found one or more errors, now what?"
                   },
                   {
                     view: `
                         <span>Write a ` + this.state.description + ` with the template: </span>
-                        <span style="color: red">template</span>
+                        <span style="color: red">"template using {insert}"</span>
                         <span>, such as </span>
                         <span style="color: red">"example"</span>
                     `,
-                    prefix: "B.",
+                    prefix: "2.",
                     group: "Found one or more errors, now what?"
                   },
                   {
                     view: `
                         <span>Write more tests similar to the tests saved below</span>
                     `,
-                    prefix: "C.",
+                    prefix: "3.",
                     editable: false,
                     group: "Found one or more errors, now what?"
                   },
@@ -352,7 +384,7 @@ export default class Browser extends React.Component {
                     view: `
                         <span>Write more tests similar to the <b>selected</b> tests saved below</span>
                     `,
-                    prefix: "D.",
+                    prefix: "4.",
                     editable: false,
                     group: "Found one or more errors, now what?"
                   },
@@ -939,14 +971,14 @@ export default class Browser extends React.Component {
     });
   }
 
-  refreshTopicSuggestions(e) {
+  refreshTopicSuggestions(e, topicPrompt) {
     e.preventDefault();
     e.stopPropagation();
     console.log("refreshSuggestions");
     if (this.state.loading_topic_suggestions) return;
 
     const topics = this.state.tests.find(test => test.startsWith("/"));
-    if (!this.state.isControl && this.state.topic === "" && topics == null && this.state.topicPrompt === "") {
+    if (!this.state.isControl && this.state.topic === "" && topics == null && topicPrompt === "") {
       this.setState({topicPromptError: "Please provide a prompt."})
       return;
     }
@@ -966,7 +998,8 @@ export default class Browser extends React.Component {
       suggestions_template_value2: this.suggestionsTemplateRow && this.suggestionsTemplateRow.state.value2,
       checklist_mode: !!this.suggestionsTemplateRow,
       // temperature: this.state.active_temperature,
-      user_topic_prompt: this.state.topicPrompt
+      user_topic_prompt: topicPrompt
+
     });
   }
 

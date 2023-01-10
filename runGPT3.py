@@ -12,7 +12,7 @@ def run_openai(prompts):
     completions = []
     for prompt in prompts:
         response = openai.Completion.create(
-                    engine='text-davinci-003', prompt=prompt, max_tokens=40,
+                    engine='text-curie-001', prompt=prompt, max_tokens=40,
                     temperature=0.7, top_p= 0.95 , n=1, stop="")
         suggestion_texts = [choice["text"] for choice in response["choices"]]
         completions.append(suggestion_texts[0].strip())
@@ -23,7 +23,7 @@ def run_openai(prompts):
 # classifier = transformers.pipeline("sentiment-analysis", top_k = 1)
 # print(classifier('hello how are you'))
 # specify the backend generator used to help you write tests
-generator = adatest.generators.OpenAI('text-davinci-003',)
+generator = adatest.generators.OpenAI('text-curie-001',)
 
 # print(run_openai('hello how are you'))
 
