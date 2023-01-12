@@ -236,12 +236,12 @@ export default class Browser extends React.Component {
                   {
                     view:  "List some common categories of " + this.state.description ,            
                     prefix: "",
-                    group: "Where to start/Where to look next"
+                    group: "Exploration"
                   }, 
                   {
                     view: "Give more topics similar to those in the current folder",
                     prefix: "",
-                    group: "Found one or more topics, now what?"
+                    group: "Exploitation"
                   },
               ]}
               onSubmit={this.refreshTopicSuggestions}
@@ -325,12 +325,12 @@ export default class Browser extends React.Component {
                   {
                     view: `
                         <span>Write a ` + this.state.description + ` that is </span>
-                        <span style="color: red">output type or context </span>
+                        <span style="color: red">output type or style </span>
                         <span>and/or refers to </span> 
                         <span style="color: red">input feature</span>
                     `,
                     prefix: "1.",
-                    group: "Where to start/Where to look next"
+                    group: "Where to start/Where to look next [Exploration]"
                   },
                   // {
                   //   view: `
@@ -355,12 +355,12 @@ export default class Browser extends React.Component {
                         <span>Write a ` + this.state.description +` using the phrase </span>
                         <span style="color: red">"phrase"</span>
                         <span> that is </span>
-                        <span style="color: red">output/context, if available</span>
+                        <span style="color: red">output/style </span>
                         <span> such as \n </span>
                         <span style="color: red">"example" </span>
                     `,
                     prefix: "1.",
-                    group: "Found one or more errors, now what?"
+                    group: "Found one or more errors, now what? [Exploitation]"
                   },
                   {
                     view: `
@@ -370,7 +370,7 @@ export default class Browser extends React.Component {
                         <span style="color: red">"example"</span>
                     `,
                     prefix: "2.",
-                    group: "Found one or more errors, now what?"
+                    group: "Found one or more errors, now what? [Exploitation]"
                   },
                   {
                     view: `
@@ -378,7 +378,7 @@ export default class Browser extends React.Component {
                     `,
                     prefix: "3.",
                     editable: false,
-                    group: "Found one or more errors, now what?"
+                    group: "Found one or more errors, now what? [Exploitation]"
                   },
                   {
                     view: `
@@ -386,7 +386,7 @@ export default class Browser extends React.Component {
                     `,
                     prefix: "4.",
                     editable: false,
-                    group: "Found one or more errors, now what?"
+                    group: "Found one or more errors, now what? [Exploitation]"
                   },
               ]}
               onSubmit={this.refreshTestSuggestions}

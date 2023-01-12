@@ -78,7 +78,7 @@ doc_ex = [
 labels = ['Positive', 'Neutral', 'Negative']
 model = adatest.Model(sentiment_analysis, output_names = labels)
 # specify the backend generator used to help you write tests
-generator = adatest.generators.OpenAI('text-davinci-002')
+generator = adatest.generators.OpenAI('text-davinci-001')
 print(sentiment_analysis(doc_ex))
 csv_filename = 'azuresa' +id + '.csv'
 # create a new test tree

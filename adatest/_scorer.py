@@ -133,7 +133,7 @@ class ClassifierScorer(Scorer):
         # run the model
         try:
             model_out = self.model(eval_inputs)
-            print(' model out ',model_out)
+            # print(' model out ',model_out)
         except Exception as e:
             model_out = np.zeros((len(eval_inputs), len(self.model.output_names))) * np.nan # TODO: remove this hack after the user study
             log.error(e)

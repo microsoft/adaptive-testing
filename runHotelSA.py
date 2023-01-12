@@ -6,7 +6,7 @@ import numpy as np
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
 
-id = 'devang'
+id = '0000'
 logname  = 'hotelsa' + id + '.log'
 import logging
 logging.basicConfig(
@@ -34,7 +34,7 @@ classifier = transformers.pipeline("text-classification", model=model, tokenizer
 labels = ['Negative','Negative', 'Neutral', 'Positive', 'Positive']
 model = adatest.Model(classifier, output_names = labels)
 # specify the backend generator used to help you write tests
-generator = adatest.generators.OpenAI('text-davinci-003')
+generator = adatest.generators.OpenAI('text-davinci-001')
 
 # print(classifier(['how are you?', 'where are y9ou?']))
 #  [[{'label': '5 stars', 'score': 0.47160935401916504}], [{'label': '1 star', 'score': 0.3922109305858612}]]
@@ -53,4 +53,4 @@ tests = adatest.TestTree(csv_filename)
 # adapt the tests to our model to launch a notebook-based testing interface
 # (wrap with adatest.serve to launch a standalone server)
 
-adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="sentence-long hotel review"), port=8067)
+adatest.serve(tests.adapt(model, generator=generator, auto_save=True, control=False, description="short hotel review"), port=8067)
