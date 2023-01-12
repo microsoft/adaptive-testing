@@ -4,6 +4,18 @@ import os
 import openai
 import numpy as np
 
+id = '0002'
+logname  = 'qna' + id + '.log'
+import logging
+logging.basicConfig(
+    filename=logname,
+    format='{asctime}\t{levelname}\t{message}',
+    style='{',
+    level=logging.STUDY,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+
 # openai.api_key = os.environ.get("OPENAI_API_KEY")
 with open(os.path.expanduser('~/.openai_api_key.txt'), 'r') as file:
     openai.api_key = file.read().replace('\n', '')
@@ -19,16 +31,14 @@ def run_openai(prompts):
     return completions
 
 
-# # create a HuggingFace sentiment analysis model
-# classifier = transformers.pipeline("sentiment-analysis", top_k = 1)
-# print(classifier('hello how are you'))
+
 # specify the backend generator used to help you write tests
-generator = adatest.generators.OpenAI('text-curie-001',)
+generator = adatest.generators.OpenAI('text-davinci-001',)
 
 # print(run_openai('hello how are you'))
-
+csv_filename = 'qna' +id + '.csv'
 # create a new test tree
-tests = adatest.TestTree("gpt3_tree1.csv")
+tests = adatest.TestTree(csv_filename)
 
 # # adapt the tests to our model to launch a notebook-based testing interface
 # # (wrap with adatest.serve to launch a standalone server)

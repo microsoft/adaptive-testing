@@ -69,17 +69,18 @@ def sentiment_analysis(documents, client=client):
         # ))
     return outcome
         
-doc_ex = [
-        "The food and service were unacceptable. The concierge was nice, however.", 'fuck off', 'i love you', 'sdf' , 'wef', 'yhrhtyhb', 'fef', 'rgege', 'grgs',
-        'grgg', 'weada', 'awad' ,'bmnjm', 'vnghn'
-    ]
+# doc_ex = [
+#         "The food and service were unacceptable. The concierge was nice, however.", 'fuck off', 'i love you', 'sdf' , 'wef', 'yhrhtyhb', 'fef', 'rgege', 'grgs',
+#         'grgg', 'weada', 'awad' ,'bmnjm', 'vnghn'
+#     ]
+# print(sentiment_analysis(doc_ex))
 
 # classifier = 
 labels = ['Positive', 'Neutral', 'Negative']
 model = adatest.Model(sentiment_analysis, output_names = labels)
 # specify the backend generator used to help you write tests
 generator = adatest.generators.OpenAI('text-davinci-001')
-print(sentiment_analysis(doc_ex))
+
 csv_filename = 'azuresa' +id + '.csv'
 # create a new test tree
 tests = adatest.TestTree(csv_filename)
