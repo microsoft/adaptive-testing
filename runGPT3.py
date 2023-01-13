@@ -4,7 +4,7 @@ import os
 import openai
 import numpy as np
 
-id = '0002'
+id = 'dw1'
 logname  = 'qna' + id + '.log'
 import logging
 logging.basicConfig(
@@ -38,7 +38,9 @@ generator = adatest.generators.OpenAI('text-davinci-001',)
 # print(run_openai('hello how are you'))
 csv_filename = 'qna' +id + '.csv'
 # create a new test tree
-tests = adatest.TestTree(csv_filename)
+# tests = adatest.TestTree(csv_filename)
+tests = adatest.TestTree('ankurgpt3.csv')
+
 
 # # adapt the tests to our model to launch a notebook-based testing interface
 # # (wrap with adatest.serve to launch a standalone server)
