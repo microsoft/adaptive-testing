@@ -7,7 +7,7 @@ import numpy as np
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 
-id = 'gr1'
+id = '0002'
 logname  = 'azuresa' + id + '.log'
 import logging
 logging.basicConfig(

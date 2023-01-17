@@ -470,17 +470,15 @@ export default class Browser extends React.Component {
                     <FontAwesomeIcon icon={faPlus} style={{fontSize: "13px", color: "#FFFFFF", display: "inline-block"}} />
             </Button>
           </div>
-        <div style={{width: "300px", textAlign: "left", display: "inline-block", fontWeight: "bold"}}>
+        <div style={{width: "50px", textAlign: "left", display: "inline-block", fontWeight: "bold"}}>
           </div>
           <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
-            Input
-          </div>
+            Input</div>
           <div style={{width: "25px", textAlign: "left", display: "inline-block"}}>
             
           </div>
           <div style={{width: outputColumnWidth, textAlign: "left", display: "inline-block"}}>
-            Output
-          </div>
+            Output </div>
          
           <div style={{width: "50px", textAlign: "center", display: "inline-block", marginRight: "0px"}}>
             Pass
