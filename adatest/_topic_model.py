@@ -19,7 +19,8 @@ class ConstantModel():
 
 class CVModel():
     def __init__(self, embeddings, labels):
-        self.inner_model = RidgeClassifierCV(class_weight={"pass": 1, "fail": 1})
+        class_weight = {label: 1 for label in labels}
+        self.inner_model = RidgeClassifierCV(class_weight=class_weight)
         self.inner_model.fit(embeddings, labels)
 
     def predict_prob(self, embeddings):
