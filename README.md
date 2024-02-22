@@ -14,7 +14,7 @@ pip install adatest
 
 ## Sentiment analysis example
 
-adaptive-testing can test any NLP model you can call with a python function, here we will test a basic open source sentiment analysis model. Since adaptive-testing relies on a generative language model to help you create tests, you need to specify what generative model it will use, here we use GPT-3 from OpenAI or GPT-Neo locally. Tests are organized into a test tree that follows the DataFrame API and is organized like a file system, here we create a new empty tree, but you can also start with a previous test tree that targets a similar task. The core adaptive-testing testing loop starts when you call the `.adapt()` method on a test tree passing the model(s) you want to test and the backend generator you want to use. The code for all this is below:
+adaptive-testing can test any NLP model you can call with a python function, here we will test a basic open source sentiment analysis model. Since adaptive-testing relies on a generative language model to help you create tests, you need to specify what generative model it will use, here we use GPT-3 from OpenAI or GPT-Neo locally. Tests are organized into a test tree that follows the DataFrame API and is organized like a file system, here we create a new empty tree, but you can also start with a previous test tree that targets a similar task. The core adaptive-testing loop starts when you call the `.adapt()` method on a test tree passing the model(s) you want to test and the backend generator you want to use. The code for all this is below:
 
 ```python
 import transformers
