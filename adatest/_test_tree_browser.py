@@ -18,7 +18,7 @@ from threading import Timer
 from ._scorer import expand_template, clean_template, Scorer
 import adatest # Need to import like this to prevent circular dependencies
 import urllib.parse
-from .utils import is_subtopic
+from .utils import is_subtopic, convert_float
 
 # from https://gist.github.com/walkermatt/2871026
 def throttle(interval):
@@ -1136,14 +1136,6 @@ def ui_score_parts(s, label):
     else:
         return [np.clip(offset + s*sign, -1, 1)]
 
-def convert_float(s):
-    if s == "":
-        return np.nan
-    try:
-        f = float(s)
-    except ValueError:
-        f = np.nan
-    return f
 
 def safe_json_load(input):
     if isinstance(input, float): # catch NaN's
