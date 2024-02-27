@@ -289,17 +289,19 @@ class TestTreeBrowser():
             log.error("interface_event: missing event_id. msg dump: %s", msg)
             return
         event_id = msg["event_id"]
+        sequence_number = msg.get("sequence_number")
 
         # redraw the entire interface
         if event_id == "redraw":
-            self._refresh_interface()
-
+            self._refresh_interface(sequence_number)
+        
         # generate a new set of suggested tests/topics
         elif event_id == "generate_suggestions":
             self._clear_suggestions()
             self.test_tree.retrain_topic_labeling_model(self.current_topic)
             self.test_tree.retrain_topic_membership_model(self.current_topic)
             self._generate_suggestions(filter=msg.get("filter", ""))
+            self.send_response(sequence_number)
             # if self._active_generator_obj is None:
             #     self._suggestions_error = "No AdaTest generator has been set!"
             # else:
@@ -322,7 +324,6 @@ class TestTreeBrowser():
             #     log.debug(e)
             #     self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
             #     self._suggestions_error = True
-            self._refresh_interface()
             
         # change the current topic
         elif event_id == "change_topic":
@@ -336,14 +337,13 @@ class TestTreeBrowser():
                 self.mode = "topics"
             else:
                 self.mode = "tests"
-
-            self._refresh_interface()
+            self.send_response(sequence_number)
             
         # clear the current set of suggestions
         elif event_id == "clear_suggestions":
             self._clear_suggestions()
-            # self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
-            self._refresh_interface()
+            self.suggestions = pd.DataFrame([], columns=self.test_tree.columns)
+            self.send_response(sequence_number)
 
         # add a new empty subtopic to the current topic
         elif event_id == "add_new_topic":
@@ -357,7 +357,7 @@ class TestTreeBrowser():
             }
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            self._refresh_interface()
+            self.send_response(sequence_number)
             
         # add a new empty test to the current topic
         elif event_id == "add_new_test":
@@ -377,7 +377,7 @@ class TestTreeBrowser():
             self.test_tree.loc[uuid.uuid4().hex] = row
 
             self._auto_save()
-            self._refresh_interface()
+            self.send_response(sequence_number)
 
         # change which scorer/model is used for sorting tests
         elif event_id == "set_first_model":
@@ -394,14 +394,16 @@ class TestTreeBrowser():
             self.score_columns.insert(0, name)
 
             self._auto_save()
-            self._refresh_interface()
+            self.send_response(sequence_number)
 
         elif event_id == "change_generator":
             self.active_generator = msg["generator"]
             self._active_generator_obj = self.generators[self.active_generator]
+            self.send_response(sequence_number)
 
         elif event_id == "change_mode":
             self.mode = msg["mode"]
+            self.send_response(sequence_number)
 
         elif event_id == 'change_description':
             id = msg['topic_marker_id']
@@ -412,12 +414,12 @@ class TestTreeBrowser():
                 self.test_tree.loc[id, 'label'] = "topic_marker"
             self.test_tree.loc[msg['topic_marker_id'], 'description'] = msg['description']
             self._auto_save()
-            self._refresh_interface()
+            self.send_response(sequence_number)
 
         elif event_id == 'change_filter':
             print("change_filter")
             self.filter_text = msg['filter_text']
-            self._refresh_interface()
+            self.send_response(sequence_number)
 
         # Move a test/topic to a new topic
         # Also used to rename
@@ -436,7 +438,7 @@ class TestTreeBrowser():
             # Recompute any missing embeddings to handle any changes
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            self._refresh_interface()
+            self.send_response(sequence_number)
 
         elif event_id == "delete_test":
             log.debug("delete_test")
@@ -452,7 +454,7 @@ class TestTreeBrowser():
                             self.test_tree.drop(id, inplace=True)
             self._compute_embeddings_and_scores(self.test_tree)
             self._auto_save()
-            self._refresh_interface()
+            self.send_response(sequence_number)
         
         # if we are just updating a single row in tests then we only recompute the scores
         elif event_id == "change_label" or event_id == "change_input" or event_id == "change_output":
@@ -488,19 +490,16 @@ class TestTreeBrowser():
             sendback_data["label"] = self.test_tree.loc[test_id, "label"]
             sendback_data["labeler"] = self.test_tree.loc[test_id, "labeler"]
             sendback_data.update(self.test_display_parts(self.test_tree.loc[test_id]))
-            self.comm.send({test_id: sendback_data})
+            self.send_response(sequence_number, {test_id: sendback_data})
             
             self._auto_save()
         
         else:
             log.error(f"Unable to parse the interface message: {msg}")
 
-    def _refresh_interface(self):
+    def _refresh_interface(self, sequence_number):
         """ Send our entire current state to the frontend interface.
         """
-
-        # get the children of the current topic
-        data = {}
 
         def create_children(data, tests, topic):
             children = []
@@ -522,7 +521,7 @@ class TestTreeBrowser():
                                 "scores": {c: [] for c in self.score_columns},
                                 "topic_marker_id": k,
                                 "topic_name": name,
-                                "editing": test.topic.endswith("/New topic")
+                                # "editing": test.topic.endswith("/New topic")
                             }
                             children.append(test.topic)
                 
@@ -535,7 +534,7 @@ class TestTreeBrowser():
                         "labeler": test.labeler,
                         "description": test.description,
                         "scores": {c: [[k, v] for v in ui_score_parts(test[c], test.label)] for c in self.score_columns},
-                        "editing": test.input == "New test"
+                        # "editing": test.input == "New test"
                     }
 
                     data[k]["raw_outputs"] = {c: [[k, safe_json_load(test.get(c[:-6] + " raw outputs", "{}"))]] for c in self.score_columns}
@@ -579,18 +578,25 @@ class TestTreeBrowser():
             return sorted_children
         
         # get the children of the current topic
-        children = create_children(data, self.test_tree, self.current_topic)
-        suggestions_children = create_children(data, self.test_tree, self.current_topic + "/__suggestions__")
+        data = {}
+        children_data = {}
+        suggestions_children_data = {}
+        children_ids = create_children(children_data, self.test_tree, self.current_topic)
+        suggestions_children_ids = create_children(suggestions_children_data, self.test_tree, self.current_topic + "/__suggestions__")
+        
+        # Filter data for frontend so we only return direct children data
+        children_data = {k: children_data[k] for k in children_ids}
+        suggestions_children_data = {k: suggestions_children_data[k] for k in suggestions_children_ids}
 
         # TODO: This is a complete hack to hide lower scoring suggestions when we are likely already in the exploit phase
         # this is just for users who don't know when to stop scrolling down...
         # SML: I expect we can delete this at some point?
         if self.score_filter == "auto":
-            if len(children) < 10:
+            if len(children_ids) < 10:
                 score_filter = -1e12
             else:
-                children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children])
-                suggestions_children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in suggestions_children])
+                children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in children_ids])
+                suggestions_children_scores = sorted([np.max([score_max(x[1]) for x in data[key]['scores'][self.score_columns[0]]]) for key in suggestions_children_ids])
                 score_filter = children_scores[-5] - (children_scores[-1] - children_scores[-5]) * 0.2
                 if len(suggestions_children_scores) > 0:
                     score_filter = min(score_filter, np.nanmax(suggestions_children_scores) - 1e-2)
@@ -607,8 +613,8 @@ class TestTreeBrowser():
         topic_marker_id = self._get_topic_marker_id(self.current_topic)
         # compile the global browser state for the frontend
         data["browser"] = {
-            "suggestions": suggestions_children,
-            "tests": children,
+            "suggestions": suggestions_children_data,
+            "tests": children_data,
             "user": self.user,
             "topic": self.current_topic,
             "topic_description": self.test_tree.loc[topic_marker_id]["description"] if topic_marker_id is not None else "",
@@ -622,12 +628,17 @@ class TestTreeBrowser():
             "active_generator": self.active_generator,
             "mode": self.mode,
             "mode_options": self.mode_options,
-            "test_tree_name": self.test_tree.name
+            "test_tree_name": self.test_tree.name,
+            "filter_text": self.filter_text
             # "test_types": test_types,
             # "test_type_parts": test_type_parts,
         }
 
-        self.comm.send(data)
+        # self.send_response(sequence_number, data)
+        self.send_response(sequence_number, data["browser"])
+
+    def send_response(self, sequence_number: int, data: object = {}, status="ok"):
+        self.comm.send({"sequence_number": sequence_number, "data": data, "status": status})
 
     def _clear_suggestions(self):
         """ Clear the suggestions for the current topic.
