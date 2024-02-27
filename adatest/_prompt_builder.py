@@ -63,7 +63,7 @@ class PromptBuilder():
             The column to use for scoring the tests.
 
         repetitions : int
-            The number of times to repeat the prompt generation process. This is how many prompots we will return.
+            The number of times to repeat the prompt generation process. This is how many prompts we will return.
 
         filter : str
             A filter to apply to the test set before selecting tests to build the prompt.
@@ -78,6 +78,11 @@ class PromptBuilder():
 
         embeddings : dict
             A dictionary of embeddings to use for the prompt. This is used to compute the prompt_diversity.
+
+        Returns
+        -------
+        A list of length `repetitions` prompts, each entry of which is a list of `prompt_size`
+        3-tuples. Each tuple contains the index, topic and 'input' of a row in the test_tree
         """
 
         ids = np.array(test_tree.index)

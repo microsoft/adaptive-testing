@@ -1,4 +1,3 @@
-from operator import truediv
 import os
 import pathlib
 import tempfile
