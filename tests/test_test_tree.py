@@ -5,21 +5,21 @@ import tempfile
 
 import numpy as np
 
-import adatest
+import adaptivetesting
 
 
 def test_simple_init():
-    tree = adatest.TestTree()
+    tree = adaptivetesting.TestTree()
     assert len(tree) == 0
 
 
 def test_simple_init_with_file():
-    tree = adatest.TestTree("temp_test_tree.csv")
+    tree = adaptivetesting.TestTree("temp_test_tree.csv")
     assert len(tree) == 0
 
 
 def test_simple_init_with_list():
-    tree = adatest.TestTree(["The food was nice!", "The location is excellent."])
+    tree = adaptivetesting.TestTree(["The food was nice!", "The location is excellent."])
     assert len(tree) == 3
     assert tree.columns.to_list() == [
         "topic",
@@ -39,7 +39,7 @@ def test_simple_init_with_list():
 
 
 def test_to_csv():
-    tree = adatest.TestTree(
+    tree = adaptivetesting.TestTree(
         [
             {
                 "topic": "",
@@ -61,7 +61,7 @@ def test_has_subtopic_or_tests():
     curr_dir = curr_file.parent
     input_csv = curr_dir / "simple_test_tree.csv"
     assert input_csv.exists()
-    tree = adatest.TestTree(str(input_csv))
+    tree = adaptivetesting.TestTree(str(input_csv))
     # The top level topic appears to be an empty string, which is odd
     assert tree.topic_has_subtopics("") == True
     assert tree.topic_has_direct_tests("") == True
