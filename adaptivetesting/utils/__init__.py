@@ -3,6 +3,8 @@ import urllib
 import io
 import shap
 
+import numpy as np
+
 
 def parse_test_type(test_type):
     part_names = ["text1", "value1", "text2", "value2", "text3", "value3", "text4"]
