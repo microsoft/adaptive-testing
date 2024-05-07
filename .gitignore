@@ -7,7 +7,7 @@ node_modules
 .jekyll-cache
 .ipynb_checkpoints
 .sass-cache
-adatest.egg-info
+adaptivetesting.egg-info
 dist/gadfly-*
 local_scratch*
 wandb
