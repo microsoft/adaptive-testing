@@ -3,7 +3,7 @@ import pytest
 
 from transformers import pipeline
 
-from adatest import generators
+from adaptivetesting import generators
 
 TRANSFORMER_PIPELINE_MODELS = ["EleutherAI/gpt-neo-125M"]
 
