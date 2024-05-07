@@ -26,10 +26,8 @@ setup(
     author="Scott Lundberg and Marco Tulio Ribeiro",
     author_email="scott.lundberg@microsoft.com",
     description="Adaptively test and debug any natural language machine learning model.",
-    packages=find_packages(
-        exclude=["user_studies", "notebooks", "client"],
-    ),
-    entry_points={"console_scripts": ["adatest = adaptivetesting.__main__:main"]},
+    packages=['adatest'],
+    package_dir={"adatest": "adativetesting"},
     package_data={"adatest": ["resources/*"]},
     install_requires=[
         "aiohttp",
