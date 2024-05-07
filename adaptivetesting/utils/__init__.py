@@ -3,6 +3,9 @@ import urllib
 import io
 import shap
 
+import numpy as np
+
+
 def parse_test_type(test_type):
     part_names = ["text1", "value1", "text2", "value2", "text3", "value3", "text4"]
     parts = re.split(r"(\{\}|\[\])", test_type)
@@ -40,6 +43,7 @@ def get_image(url):
 
 def _download_image(url):
     import PIL
+
     urllib_request = urllib.request.Request(
         url,
         data=None,
@@ -56,8 +60,16 @@ def is_subtopic(topic, candidate):
     # Returns true if candidate is a subtopic of topic
     # Both arguments are strings, which look like UNIX paths
     # Return is boolean
-    #return True if re.search(r"^%s(/|$)" % re.escape(topic), candidate) else False
-    if len(topic)==len(candidate):
+    # return True if re.search(r"^%s(/|$)" % re.escape(topic), candidate) else False
+    if len(topic) == len(candidate):
         return topic == candidate
     else:
-        return candidate.startswith(topic) and candidate[len(topic)]=='/'
+        return candidate.startswith(topic) and candidate[len(topic)] == "/"
+
+
+def convert_float(s):
+    try:
+        f = float(s)
+    except ValueError:
+        f = np.nan
+    return f
