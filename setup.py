@@ -28,8 +28,8 @@ setup(
     description="Adaptively test and debug any natural language machine learning model.",
     packages=find_packages(
         exclude=["user_studies", "notebooks", "client"],
-        entry_points={"console_scripts": ["adatest = adaptivetesting.__main__:main"]},
     ),
+    entry_points={"console_scripts": ["adatest = adaptivetesting.__main__:main"]},
     package_data={"adatest": ["resources/*"]},
     install_requires=[
         "aiohttp",
