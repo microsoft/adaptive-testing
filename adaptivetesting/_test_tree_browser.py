@@ -5,7 +5,7 @@ import json
 import re
 from tqdm import tqdm
 
-from adatest.generators import TestTreeSource
+from adaptivetesting.generators import TestTreeSource
 
 from .comm import JupyterComm
 import uuid
@@ -16,7 +16,7 @@ import logging
 import statistics
 from threading import Timer
 from ._scorer import expand_template, clean_template, Scorer
-import adatest # Need to import like this to prevent circular dependencies
+import adaptivetesting # Need to import like this to prevent circular dependencies
 import urllib.parse
 from .utils import is_subtopic
 
@@ -115,12 +115,12 @@ class TestTreeBrowser():
         if not isinstance(self.generators, dict):
             self.generators = {'generator': self.generators}
 
-        if adatest.default_generators is not None: # Merge default generators into generators
-            self.generators = {**self.generators, **adatest.default_generators}
+        if adaptivetesting.default_generators is not None: # Merge default generators into generators
+            self.generators = {**self.generators, **adaptivetesting.default_generators}
 
         # Find and cast any TestTrees in generators to TestTreeSource
         for generator_name, generator in self.generators.items():
-            if isinstance(generator, adatest._test_tree.TestTree): # TODO: make this autoreload friendly
+            if isinstance(generator, adaptivetesting._test_tree.TestTree): # TODO: make this autoreload friendly
                 self.generators[generator_name] = TestTreeSource(generator) 
 
         # get a reference to the active backend object

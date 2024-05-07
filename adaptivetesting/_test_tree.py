@@ -10,7 +10,7 @@ from ._prompt_builder import PromptBuilder
 from ._test_tree_browser import TestTreeBrowser, is_subtopic
 from ._model import Model
 from ._topic_model import TopicLabelingModel, TopicMembershipModel
-import adatest
+import adaptivetesting
 from pathlib import Path
 
 # class TestTreeIterator():
@@ -289,7 +289,7 @@ class TestTree():
         )
         return has_subtopics_df.any()
 
-    def adapt(self, scorer=None, generator=adatest.generators.OpenAI(), auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
+    def adapt(self, scorer=None, generator=adaptivetesting.generators.OpenAI(), auto_save=False, user="anonymous", recompute_scores=False, drop_inactive_score_columns=False,
               max_suggestions=100, suggestion_thread_budget=0.5, prompt_builder=PromptBuilder(), active_generator="default", starting_path="",
               score_filter=-1e10, topic_model_scale=0): # TODO: remove active_generator and replace with the ability to set the generator?
         """ Apply this test tree to a scorer/model and browse/edit the tests to adapt them to the target model.
@@ -417,7 +417,7 @@ class TestTree():
         # all_strings.append("__suggestions__")
         
         # we don't use the output of the embedding, just do this to get the embeddings cached
-        adatest.embed(all_strings)
+        adaptivetesting.embed(all_strings)
 
     def impute_labels(self):
         """ Impute missing labels in the test tree. """

@@ -5,7 +5,7 @@ import uuid
 import itertools
 import shap
 from ._model import Model
-import adatest
+import adaptivetesting
 
 log = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class ClassifierScorer(Scorer):
             out_probs[i] = np.column_stack(out_probs[i]) # the probability of a set of items is the prob of the min item
 
         # compute the embeddings as a batch (this fills a cache we will use when scoring below)
-        adatest.embed(list(tests.loc[eval_ids, "input"]))
+        adaptivetesting.embed(list(tests.loc[eval_ids, "input"]))
 
         # score all the tests
         scores = []

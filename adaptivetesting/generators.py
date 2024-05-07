@@ -5,7 +5,7 @@ import aiohttp
 from profanity import profanity
 import numpy as np
 import os
-import adatest
+import adaptivetesting
 from .embedders import cos_sim
 import urllib
 
@@ -386,8 +386,8 @@ class TestTreeSource(Generator):
         # Find tests closest to the proposals in the embedding space
         # TODO: Hallicunate extra samples if len(prompts) is insufficient for good embedding calculations.
         # TODO: Handle case when suggestion_threads>1 better than just selecting the first set of prompts as we do here
-        topic_embeddings = np.vstack([adatest._embedding_cache[input] for topic,input in prompts[0]]) 
-        data_embeddings = np.vstack([adatest._embedding_cache[input] for input in self.source["input"]])
+        topic_embeddings = np.vstack([adaptivetesting._embedding_cache[input] for topic,input in prompts[0]]) 
+        data_embeddings = np.vstack([adaptivetesting._embedding_cache[input] for input in self.source["input"]])
         
         max_suggestions = min(num_samples * len(prompts), len(data_embeddings))
         method = 'distance_to_avg'

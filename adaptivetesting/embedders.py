@@ -1,5 +1,5 @@
 import numpy as np
-import adatest
+import adaptivetesting
 from sklearn.preprocessing import normalize
 import appdirs
 import diskcache
@@ -55,7 +55,7 @@ def _text_embedding_model():
     
     Much of this code block is from the sentence_transformers documentation.
     """
-    if adatest.text_embedding_model is None:
+    if adaptivetesting.text_embedding_model is None:
 
         # # get the modules we need to compute embeddings
         # import torch
@@ -82,12 +82,12 @@ def _text_embedding_model():
         #     # Perform pooling. In this case, max pooling.
         #     return mean_pooling(model_output, encoded_input['attention_mask']).cpu().numpy()
         
-        adatest.text_embedding_model = TransformersTextEmbedding()
+        adaptivetesting.text_embedding_model = TransformersTextEmbedding()
     
-    return adatest.text_embedding_model
+    return adaptivetesting.text_embedding_model
 
 def _image_embedding_model():
-    if adatest.image_embedding_model is None:
+    if adaptivetesting.image_embedding_model is None:
         import clip  # pylint: disable=import-outside-toplevel
         import torch
 
@@ -97,16 +97,16 @@ def _image_embedding_model():
             with torch.no_grad():
                 out = []
                 for url in urls:
-                    image = adatest.utils.get_image(url)
+                    image = adaptivetesting.utils.get_image(url)
                     image_emb = model.encode_image(preprocess(image).unsqueeze(0).to("cpu"))
                     image_emb /= image_emb.norm(dim=-1, keepdim=True)
                     image_emb = image_emb.cpu().detach().numpy().astype("float32")[0]
                     out.append(image_emb)
             return np.vstack(out)
         
-        adatest.image_embedding_model = embed_model
+        adaptivetesting.image_embedding_model = embed_model
     
-    return adatest.image_embedding_model
+    return adaptivetesting.image_embedding_model
 
 def cos_sim(a, b):
     """ Cosine distance between two vectors.

@@ -20,14 +20,14 @@ def find_version(*file_paths):
 
 
 setup(
-    name="adatest",
-    version=find_version("adatest", "__init__.py"),
-    url="https://github.com/microsoft/adatest.git",
+    name="adaptivetesting",
+    version=find_version("adaptivetesting", "__init__.py"),
+    url="https://github.com/microsoft/adaptive-testing.git",
     author="Scott Lundberg and Marco Tulio Ribeiro",
     author_email="scott.lundberg@microsoft.com",
     description="Adaptively test and debug any natural language machine learning model.",
     packages=find_packages(exclude=["user_studies", "notebooks", "client"]),
-    package_data={"adatest": ["resources/*"]},
+    package_data={"adaptivetesting": ["resources/*"]},
     install_requires=[
         "aiohttp",
         "aiohttp_security",
