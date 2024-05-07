@@ -27,7 +27,7 @@ setup(
     author_email="scott.lundberg@microsoft.com",
     description="Adaptively test and debug any natural language machine learning model.",
     packages=['adatest'],
-    package_dir={"adatest": "adativetesting"},
+    package_dir={"adatest": "ada[tivetesting"},
     package_data={"adatest": ["resources/*"]},
     install_requires=[
         "aiohttp",
