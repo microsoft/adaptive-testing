@@ -431,7 +431,7 @@ class TestTree():
                 if self.topic_membership_model(test.topic)(test.input) == "off_topic":
                     self._tests.loc[id, "label"] = "off_topic"
                 else:
-                    self._tests.loc[id, "label"] = self.topic_labeling_model(test.topic)(test.input, test.output)
+                    self._tests.loc[id, "label"] = "pass" if self.topic_labeling_model(test.topic)(test.input, test.output) < 0.5 else "fail"
                 self._tests.loc[id, "labeler"] = "imputed"
 
     # def predict_labels(self, topical_io_pairs):
