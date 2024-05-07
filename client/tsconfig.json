@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "../adatest/resources/",
+        "outDir": "../adaptivetesting/resources/",
         "sourceMap": true,
         "noImplicitAny": false,
         "module": "commonjs",

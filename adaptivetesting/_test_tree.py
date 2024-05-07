@@ -48,7 +48,7 @@ class TestTree():
             Assigns an index to underlying tests frame, or auto generates if not provided.
 
         compute_embeddings: boolean
-            If True, use the global adatest.embed to build embeddings of tests in the TestTree.
+            If True, use the global adaptivetesting.embed to build embeddings of tests in the TestTree.
 
         kwargs : dict
             Additional keyword arguments are passed to the pandas DataFrame constructor.
@@ -299,12 +299,12 @@ class TestTree():
         
         Parameters
         ----------
-        scorer : adatest.Scorer or callable
+        scorer : adaptivetesting.Scorer or callable
             The scorer (that wraps a model) to used to score the tests. If a function is provided, it will be wrapped in a scorer.
             Passing a dictionary of scorers will score multiple models at the same time. Note that the models are expected to take
             a list of strings as input, and output either a classification probability vector or a string.
 
-        generator : adatest.Generator or dict[adatest.Generators]
+        generator : adaptivetesting.Generator or dict[adaptivetesting.Generators]
             A source to generate new tests from. Currently supported generator types are language models, existing test trees, or datasets.
 
         auto_save : bool
@@ -329,12 +329,12 @@ class TestTree():
             different randomized LM prompt for test generation, so more threads will result in more diversity, but come at the cost
             of reading more prompt variations.
 
-        prompt_builder : adatest.PromptBuilder
+        prompt_builder : adaptivetesting.PromptBuilder
             A prompt builder to use when generating prompts for new tests. This object controls how the LM prompts
             are created when generating new tests.
 
         active_generator : "default", or a key name if generators is a dictionary
-            Which generator from adatest.generators to use when generating new tests. This should always be set to "default" if
+            Which generator from adaptivetesting.generators to use when generating new tests. This should always be set to "default" if
             generators is just a single generator and not a dictionary of generators.
 
         starting_path : str
@@ -458,7 +458,7 @@ class TestTree():
     #         to_embed.append(input)
     #         to_embed.append(output)
     #         topics[topic].append((i, len(to_embed) - 2, len(to_embed) - 1))
-    #     embeddings = adatest.embed(to_embed)
+    #     embeddings = adaptivetesting.embed(to_embed)
     #     features = [None for i in range(len(topical_io_pairs))]
     #     for topic in topics:
     #         features = []

@@ -1,4 +1,4 @@
-""" A set of generators for AdaTest.
+""" A set of generators for Adaptive Testing.
 """
 import asyncio
 import aiohttp
@@ -310,7 +310,7 @@ class OpenAI(TextCompletionGenerator):
         
         # call the OpenAI API to complete the prompts
         response = openai.Completion.create(
-            model=self.source, prompt=prompt_strings, max_tokens=max_length, user="adatest",
+            model=self.source, prompt=prompt_strings, max_tokens=max_length, user="adaptivetesting",
             temperature=self.temperature, top_p=self.top_p, n=num_samples, stop=self.quote
         )
         suggestion_texts = [choice["text"] for choice in response["choices"]]

@@ -13,7 +13,7 @@ class Scorer():
     def __new__(cls, model, *args, **kwargs):
         """ If we are wrapping an object that is already a Scorer, we just return it.
         """
-        if shap.utils.safe_isinstance(model, "adatest.Scorer"):
+        if shap.utils.safe_isinstance(model, "adaptivetesting.Scorer"):
             return model
         else:
             return super().__new__(cls)
@@ -23,9 +23,9 @@ class Scorer():
         """
 
         # ensure we have a model of type Model
-        if shap.utils.safe_isinstance(getattr(self, "model", None), "adatest.Model") or shap.utils.safe_isinstance(getattr(self, "model", None), "shap.models.Model"):
+        if shap.utils.safe_isinstance(getattr(self, "model", None), "adaptivetesting.Model") or shap.utils.safe_isinstance(getattr(self, "model", None), "shap.models.Model"):
             pass
-        elif shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
+        elif shap.utils.safe_isinstance(model, "adaptivetesting.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             self.model = model
         else:
             self.model = Model(model)
@@ -34,7 +34,7 @@ class Scorer():
         if self.__class__ is Scorer:
 
             # finish early if we are wrapping an object that is already a Scorer (__new__ will have already done the work)
-            if shap.utils.safe_isinstance(model, "adatest.Scorer"):
+            if shap.utils.safe_isinstance(model, "adaptivetesting.Scorer"):
                 return
             
             # see if we are scoring a generator or a classifier

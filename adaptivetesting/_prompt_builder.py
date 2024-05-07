@@ -53,7 +53,7 @@ class PromptBuilder():
 
         Parameters
         ----------
-        test_tree : adatest.TestTree
+        test_tree : adaptivetesting.TestTree
             The test tree to generate prompts from.
         
         topic : str

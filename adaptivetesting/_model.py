@@ -3,7 +3,7 @@ import shap
 
 
 class Model():
-    """ This wraps models used in AdaTest so that have a consistent interface.
+    """ This wraps models used in Adaptive Testing so that have a consistent interface.
 
     This should eventually just be the Model class from SHAP, but we keep a simple version here for now
     so we can easily update it during initial development.
@@ -12,7 +12,7 @@ class Model():
     def __new__(cls, model, *args, **kwargs):
         """ If we are wrapping a model that is already a Model, we just return it.
         """
-        if shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
+        if shap.utils.safe_isinstance(model, "adaptivetesting.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             return model
         else:
             return super().__new__(cls)
@@ -32,7 +32,7 @@ class Model():
         """
 
         # finish early if we are wrapping an object that is already a Model
-        if shap.utils.safe_isinstance(model, "adatest.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
+        if shap.utils.safe_isinstance(model, "adaptivetesting.Model") or shap.utils.safe_isinstance(model, "shap.models.Model"):
             if output_names is not None:
                 self.output_names = output_names
             assert len(kwargs) == 0

@@ -61,7 +61,7 @@ jobs:
     - name: Remove AdaTest source directory
       uses: JesseTG/rm@v1.0.3
       with:
-        path: adatest
+        path: adaptivetesting
     - name: Download wheel artifact
       uses: actions/download-artifact@v3
       with:

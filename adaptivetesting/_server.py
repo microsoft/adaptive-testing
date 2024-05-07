@@ -88,7 +88,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
             interface_html = f"""
 <html>
   <head>
-    <title>AdaTest</title>
+    <title>Adaptive Testing</title>
   </head>
   <body style="font-family: Helvetica Neue, Helvetica, Arial, sans-serif; margin-right: 20px; font-size: 14px;">
     {test_tree_browser._repr_html_(prefix=prefix, environment="web", websocket_server=prefix+"/_ws")}
@@ -138,7 +138,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
         return web.Response(text=f"""
 <html>
   <head>
-    <title>AdaTest Login</title>
+    <title>Adaptive Testing Login</title>
   </head>
   <body style="font-family: arial">
     <form method="post" action="/_auth" style="margin-top: 80px">
@@ -327,7 +327,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
             ])
 
         policy = SessionIdentityPolicy()
-        setup_security(app, policy, AdaTestPolicy())
+        setup_security(app, policy, AdaptiveTestingPolicy())
 
         return app
 
@@ -364,7 +364,7 @@ def serve(test_tree_browsers, host="localhost", port=8080, static_dir=None, auth
     finally:
         loop.run_until_complete(stop_server(state))
 
-class AdaTestPolicy(AbstractAuthorizationPolicy):
+class AdaptiveTestingPolicy(AbstractAuthorizationPolicy):
     async def authorized_userid(self, identity):
         """Retrieve authorized user id.
         Return the user_id of the user identified by the identity

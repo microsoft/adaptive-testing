@@ -301,7 +301,7 @@ class TestTreeBrowser():
             self.test_tree.retrain_topic_membership_model(self.current_topic)
             self._generate_suggestions(filter=msg.get("filter", ""))
             # if self._active_generator_obj is None:
-            #     self._suggestions_error = "No AdaTest generator has been set!"
+            #     self._suggestions_error = "No adaptivetesting generator has been set!"
             # else:
             #     self._generate_suggestions(filter=msg[k].get("filter", ""))
             # # try:

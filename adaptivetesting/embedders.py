@@ -4,7 +4,7 @@ from sklearn.preprocessing import normalize
 import appdirs
 import diskcache
 _embedding_memory_cache = {}
-_embedding_file_cache = diskcache.Cache(appdirs.user_cache_dir("adatest") + "/embeddings.diskcache")
+_embedding_file_cache = diskcache.Cache(appdirs.user_cache_dir("adaptivetesting") + "/embeddings.diskcache")
 
 def _embed(strings, normalize=True):
 
@@ -119,7 +119,7 @@ class TransformersTextEmbedding():
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(model)
         self.model = transformers.AutoModel.from_pretrained(model)
         self.model_name = model
-        self.name = "adatest.embedders.TransformersTextEmbedding(" + self.model_name + "):"
+        self.name = "adaptivetesting.embedders.TransformersTextEmbedding(" + self.model_name + "):"
 
     def __call__(self, strings):
         import torch
@@ -144,7 +144,7 @@ class OpenAITextEmbedding():
             openai.api_key = api_key
         self.replace_newlines = replace_newlines
         self.model_name = model
-        self.name = "adatest.embedders.OpenAITextEmbedding(" + self.model_name + "):"
+        self.name = "adaptivetesting.embedders.OpenAITextEmbedding(" + self.model_name + "):"
 
     def __call__(self, strings):
         import openai

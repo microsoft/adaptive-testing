@@ -51,7 +51,7 @@ def test_to_csv():
         ]
     )
     with tempfile.TemporaryDirectory() as td:
-        target_file = os.path.join(td, "adatest_out.csv")
+        target_file = os.path.join(td, "adaptivetesting_out.csv")
         tree.to_csv(target_file)
         assert os.path.exists(target_file)
 
