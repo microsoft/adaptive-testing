@@ -46,9 +46,9 @@ setup(
         "dev": [
             "black",
             "flake8",
-            "openai",
+            "openai<1",
             "datasets",
-            "transformers",
+            "transformers<4.26",
             "pytest",
             "pytest-mock",
             "torch",
