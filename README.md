@@ -18,23 +18,23 @@ adaptive-testing can test any NLP model you can call with a python function, her
 
 ```python
 import transformers
-import adatest
+import adaptivetesting
 
 # create a HuggingFace sentiment analysis model
 classifier = transformers.pipeline("sentiment-analysis", return_all_scores=True)
 
 # specify the backend generator used to help you write tests
-generator = adatest.generators.OpenAI('curie', api_key=OPENAI_API_KEY)
+generator = adaptivetesting.generators.OpenAI('curie', api_key=OPENAI_API_KEY)
 
 # ...or you can use an open source generator
 #neo = transformers.pipeline('text-generation', model="EleutherAI/gpt-neo-125M")
-#generator = adatest.generators.Transformers(neo.model, neo.tokenizer)
+#generator = adaptivetesting.generators.Transformers(neo.model, neo.tokenizer)
 
 # create a new test tree
-tests = adatest.TestTree("hotel_reviews.csv")
+tests = adaptivetesting.TestTree("hotel_reviews.csv")
 
 # adapt the tests to our model to launch a notebook-based testing interface
-# (wrap with adatest.serve to launch a standalone server)
+# (wrap with adaptivetesting.serve to launch a standalone server)
 tests.adapt(classifier, generator, auto_save=True)
 ```
 

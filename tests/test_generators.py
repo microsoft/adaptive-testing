@@ -3,7 +3,7 @@ import pytest
 
 from transformers import pipeline
 
-from adatest import generators
+from adaptivetesting import generators
 
 TRANSFORMER_PIPELINE_MODELS = ["EleutherAI/gpt-neo-125M"]
 
@@ -155,7 +155,7 @@ class TestOpenAI:
         openai_completion.create.assert_called_with(
             model="curie",
             prompt=['"Great hotel"\n"Bathroom too small"\n"'],
-            user="adatest",
+            user="adaptivetesting",
             max_tokens=100,
             temperature=1.0,
             top_p=0.95,

@@ -1,6 +1,6 @@
 import pytest
 
-import adatest.utils as utils
+import adaptivetesting.utils as utils
 
 
 class TestIsSubTopic:

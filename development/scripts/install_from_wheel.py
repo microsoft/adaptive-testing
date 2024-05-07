@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def build_argument_parser():
-    desc = "Install AdaTest from a wheel file"
+    desc = "Install Adaptive Testing from a wheel file"
 
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
@@ -28,7 +28,7 @@ def main(argv):
     _logger.info("Finding wheel file")
     target_dir = pathlib.Path(args.wheel_dir)
     # Globbing works from Python, but not in Windows builds
-    wheel_list = list(target_dir.glob("adatest*.whl"))
+    wheel_list = list(target_dir.glob("adaptivetesting*.whl"))
     assert len(wheel_list) == 1, f"Bad wheel_list: {wheel_list}"
     wheel_path = wheel_list[0].resolve()
     msg = f"Path to wheel: {wheel_path}"
@@ -36,7 +36,7 @@ def main(argv):
 
     _logger.info("Installing wheel")
     # Use this approach so that extras can be added
-    adatest_spec = f"adatest[dev] @ {wheel_path.as_uri()}"
+    adatest_spec = f"adaptivetesting[dev] @ {wheel_path.as_uri()}"
     subprocess.run(["pip", "install", f"{adatest_spec}"], check=True)
 
 
